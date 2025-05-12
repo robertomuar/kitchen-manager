@@ -7,23 +7,34 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Ejecuta las migraciones.
      */
-  public function up()
-{
-    Schema::create('ingredients', function (Blueprint $table) {
-        $table->id();
-        $table->string('name');
-        $table->decimal('quantity', 8, 2)->default(0);
-        $table->string('unit')->nullable();      // e.g. "kg", "litros", "unidades"
-        $table->date('expires_at')->nullable();  // fecha de caducidad
-        $table->timestamps();
-    });
-}
+    public function up(): void
+    {
+        Schema::create('ingredients', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->float('quantity');
+            $table->string('unit');
 
+            // Creamos la columna ENUM location desde el inicio
+            $table->enum('location', [
+                'Armario de dentro',
+                'Armario de la terraza',
+                'Armario fregadero',
+                'Armario bajo',
+                'Frigorífico',
+                'Congelador',
+            ])->default('Armario de dentro')
+              ->comment('Ubicación exacta del ingrediente en la cocina');
+
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
+        });
+    }
 
     /**
-     * Reverse the migrations.
+     * Revierte las migraciones.
      */
     public function down(): void
     {

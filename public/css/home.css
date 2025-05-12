@@ -110,3 +110,41 @@ footer {
     font-size: 0.9rem;
   }
 }
+/* ========================================================================
+   Sobrescribir fondo y cabecera de la tabla en el card de ingredientes
+   ======================================================================== */
+
+/* Fondo general de la tabla dentro de .card */
+.card .table {
+  background-color: var(--warm-alt-bg) !important;   /* #FFF7EE */
+}
+
+/* Cabecera de la tabla */
+.card .table thead th {
+  background-color: var(--warm-bg) !important;       /* #FFB997 */
+  color: var(--warm-text) !important;                /* #6E5849 */
+}
+
+/* Filas normales */
+.card .table tbody tr > td {
+  background-color: var(--warm-alt-bg) !important;   /* #FFF7EE */
+  color: var(--warm-text) !important;                /* #6E5849 para el texto */
+}
+
+/* Hover sobre filas */
+.card .table-hover tbody tr:hover > td {
+  background-color: var(--warm-hover-bg) !important; /* rgba(255,255,255,0.3) */
+  color: var(--warm-text) !important;
+}
+
+/* Si quieres mantener distintivos para expirado/por expirar, puedes ajustarlos también */
+.card .table-danger > th,
+.card .table-danger > td {
+  background-color: var(--warm-alt-hover) !important; /* #FFD8B1 */
+  color: var(--warm-text) !important;
+}
+.card .table-warning > th,
+.card .table-warning > td {
+  background-color: var(--warm-hover-bg) !important;  /* rgba(255,255,255,0.3) */
+  color: var(--warm-text) !important;
+}

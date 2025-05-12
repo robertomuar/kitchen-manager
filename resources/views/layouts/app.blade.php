@@ -11,6 +11,7 @@
 
   <!-- Navbar personalizado -->
   <link href="{{ asset('css/navbar.css') }}" rel="stylesheet">
+  <link href="{{ asset('css/home.css') }}" rel="stylesheet">
   @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -34,17 +35,19 @@
         <ul class="navbar-nav">
           <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">Inicio</a></li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="recipesDropdown">Recetas</a>
+            <a class="nav-link dropdown-toggle" href="#" id="recipesDropdown" data-bs-toggle="dropdown">Recetas</a>
             <ul class="dropdown-menu" aria-labelledby="recipesDropdown">
               <li><a class="dropdown-item" href="{{ route('recipes.index') }}">Ver todas</a></li>
               <li><a class="dropdown-item" href="{{ route('recipes.create') }}">Nueva receta</a></li>
             </ul>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="ingredientsDropdown">Ingredientes</a>
+            <a class="nav-link dropdown-toggle" href="#" id="ingredientsDropdown" data-bs-toggle="dropdown">Ingredientes</a>
             <ul class="dropdown-menu" aria-labelledby="ingredientsDropdown">
               <li><a class="dropdown-item" href="{{ route('ingredients.index') }}">Ver todos</a></li>
               <li><a class="dropdown-item" href="{{ route('ingredients.create') }}">Añadir ingrediente</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{{ route('shopping-list') }}">Lista de la compra</a></li>
             </ul>
           </li>
           <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a></li>

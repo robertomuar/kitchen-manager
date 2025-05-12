@@ -7,17 +7,21 @@ use App\Models\Ingredient;
 
 class IngredientSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
-        $ingredientes = [
-            ['name'=>'Harina',       'quantity'=>1.5, 'unit'=>'kg',  'expires_at'=>now()->addMonths(6)],
-            ['name'=>'Azúcar',       'quantity'=>0.8, 'unit'=>'kg',  'expires_at'=>now()->addMonths(12)],
-            ['name'=>'Huevos',       'quantity'=>12,  'unit'=>'uds', 'expires_at'=>now()->addWeeks(2)],
-            ['name'=>'Leche',        'quantity'=>2,   'unit'=>'L',   'expires_at'=>now()->addDays(7)],
-            ['name'=>'Mantequilla',  'quantity'=>0.5, 'unit'=>'kg',  'expires_at'=>now()->addMonths(3)],
+        $samples = [
+            ['name' => 'Harina',   'quantity' => 1.5, 'unit' => 'kg', 'location' => 'Armario de dentro',   'expires_at' => now()->addMonths(6)],
+            ['name' => 'Azúcar',   'quantity' => 2,   'unit' => 'kg', 'location' => 'Armario de la terraza','expires_at' => now()->addYear()],
+            ['name' => 'Leche',    'quantity' => 1,   'unit' => 'l',  'location' => 'Frigorífico',         'expires_at' => now()->addDays(7)],
+            ['name' => 'Mantequilla','quantity'=>0.5, 'unit' => 'kg', 'location' => 'Congelador',          'expires_at' => now()->addMonths(2)],
+            ['name' => 'Sal',      'quantity' => 1,   'unit' => 'kg', 'location' => 'Armario fregadero',   'expires_at' => null],
+            ['name' => 'Pasta',    'quantity' => 3,   'unit' => 'paquetes', 'location' => 'Armario bajo','expires_at' => now()->addMonths(12)],
         ];
 
-        foreach ($ingredientes as $data) {
+        foreach ($samples as $data) {
             Ingredient::create($data);
         }
     }
