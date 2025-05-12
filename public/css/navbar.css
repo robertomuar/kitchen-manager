@@ -1,0 +1,136 @@
+/* public/css/navbar.css */
+
+/* — Paleta cálida — */
+:root {
+  --warm-bg: #FFB997;
+  --warm-text: #6E5849;
+  --warm-hover-bg: rgba(255,255,255,0.3);
+  --warm-hover-text: #4A3020;
+  --warm-alt-bg: #FFF7EE;
+  --warm-alt-hover: #FFD8B1;
+}
+
+/* Global */
+body {
+  background-color: var(--warm-alt-bg);
+  color: var(--warm-text);
+}
+a { color: var(--warm-text); transition: color .3s; }
+a:hover { color: var(--warm-hover-text); }
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--warm-bg) !important;
+  border-color: var(--warm-bg) !important;
+}
+.btn-primary:hover {
+  background-color: var(--warm-hover-text) !important;
+  border-color: var(--warm-hover-text) !important;
+}
+
+/* Navbar base */
+.navbar-custom {
+  background-color: var(--warm-bg) !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+/* Links */
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+  color: var(--warm-text) !important;
+  transition: background .3s, color .3s;
+}
+.navbar-custom .navbar-brand:hover,
+.navbar-custom .nav-link:hover {
+  background-color: var(--warm-hover-bg) !important;
+  color: var(--warm-hover-text) !important;
+  border-radius: .25rem;
+}
+
+/* Grid en el container */
+.navbar-grid {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Columna IZQUIERDA: Brand + toggler */
+.grid-left {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  justify-self: start;
+}
+
+/* Columna CENTRAL: menú + buscador */
+.grid-center {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-self: center;
+}
+
+/* Asegurar nav items y buscador en línea */
+.grid-center .navbar-nav {
+  display: flex;
+  gap: .5rem;
+}
+.grid-center .search-center {
+  display: flex;
+  gap: .5rem;
+}
+
+/* Columna DERECHA: Auth */
+.grid-right {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  justify-self: end;
+}
+
+/* Dropdown on hover */
+.navbar-custom .dropdown {
+  position: relative;
+}
+.navbar-custom .dropdown-menu {
+  display: none;
+  position: absolute; top: 100%; left: 0;
+  margin: 0; padding: .5rem 0;
+  background: var(--warm-alt-bg);
+  border: none;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .3s, transform .3s;
+  z-index: 1000;
+}
+.navbar-custom .dropdown:hover > .dropdown-menu,
+.navbar-custom .dropdown-menu:hover {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+.navbar-custom .dropdown-item {
+  color: var(--warm-text) !important;
+  transition: background .3s, color .3s;
+}
+.navbar-custom .dropdown-item:hover {
+  background-color: var(--warm-alt-hover) !important;
+  color: var(--warm-hover-text) !important;
+}
+
+/* Outline buttons */
+.navbar-custom .btn-outline-custom {
+  border: 1px solid var(--warm-text) !important;
+  color: var(--warm-text) !important;
+  transition: background .3s, color .3s;
+}
+.navbar-custom .btn-outline-custom:hover {
+  background-color: var(--warm-text) !important;
+  color: #fff !important;
+}
+
+/* Toggler icon */
+.navbar-custom .navbar-toggler-icon {
+  filter: invert(45%) sepia(10%) saturate(500%) hue-rotate(5deg) !important;
+}
