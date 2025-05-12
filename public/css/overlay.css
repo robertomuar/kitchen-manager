@@ -1,0 +1,56 @@
+/* public/css/overlay.css */
+
+/* Asegura altura completa */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Backdrop para todos los modales */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.95);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Mostrar el backdrop */
+.modal-backdrop.show {
+  display: flex;
+}
+
+/* Panel común */
+.modal-panel {
+  background-color: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 1rem 3rem rgba(0,0,0,0.175);
+  display: inline-block;
+  position: relative;
+  max-width: 90vw;
+}
+
+/* Cerrar */
+.modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  color: #333;
+  cursor: pointer;
+}
+  .modal-backdrop {
+      background-color: rgba(0,0,0,0.95) !important;
+    }
+    .modal-backdrop.show {
+      display: flex !important;
+      opacity: 1 !important;
+    }
+    .modal-panel {
+      background-color: #fff !important;
+      opacity: 1 !important;
+    }
