@@ -12,9 +12,9 @@ class ShoppingListController extends Controller
      */
     public function index()
     {
-        $items = Ingredient::whereColumn('quantity', '<', 'min_quantity')
-                           ->orderBy('name')
-                           ->get();
+        $items = Ingredient::where('user_id', auth()->id())
+    ->whereColumn('quantity', '<', 'min_quantity')
+    ->get();
 
         return view('ingredients.shopping-list', compact('items'));
     }

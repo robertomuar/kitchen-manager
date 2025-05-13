@@ -76,15 +76,19 @@
              
                 <td>{{ $ing->location }}</td>
                 <td>{{ optional($ing->expires_at)->format('d/m/Y') ?? '—' }}</td>
-                <td>
-                  @if(optional($ing->expires_at)->isPast())
-                    <span class="badge bg-danger">Expirado</span>
-                  @elseif(optional($ing->expires_at)->diffInDays(now()) <= 7)
-                    <span class="badge bg-warning text-dark">Por expirar</span>
-                  @else
-                    <span class="badge bg-success">Válido</span>
-                  @endif
-                </td>
+                @php
+  $exp = optional($ing->expires_at);
+@endphp
+<td>
+  @if($exp->isPast())
+    <span class="badge bg-danger">Expirado</span>
+  @elseif($exp->diffInDays(now()) <= 7)
+    <span class="badge bg-warning text-dark">Por expirar</span>
+  @else
+    <span class="badge bg-success">Válido</span>
+  @endif
+</td>
+
                 <td>
                   @if($ing->alarm)
                     <span class="badge bg-danger">¡Comprar!</span>

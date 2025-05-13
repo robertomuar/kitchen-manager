@@ -14,14 +14,16 @@ class Ingredient extends Model
      *
      * @var array<string>
      */
-    protected $fillable = [
-        'name',
-        'quantity',
-        'min_quantity',
-        'unit',
-        'location',
-        'expires_at',
-    ];
+   protected $fillable = [
+    'name',
+    'quantity',
+    'min_quantity',
+    'unit',
+    'location',
+    'expires_at',
+    'user_id', // 👈 ¡ESTE ES EL QUE FALTA!
+];
+
 
     /**
      * Casts automáticos para atributos.
