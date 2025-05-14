@@ -46,7 +46,7 @@
       <!-- Columna CENTRAL -->
       <div class="grid-center collapse navbar-collapse" id="navMenu">
         <ul class="navbar-nav">
-          <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">Inicalmente</a></li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="recipesDropdown" data-bs-toggle="dropdown">Recetas</a>
             <ul class="dropdown-menu" aria-labelledby="recipesDropdown">
