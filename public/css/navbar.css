@@ -2,12 +2,16 @@
 
 /* — Paleta cálida — */
 :root {
+  /* Variables de paleta */
   --warm-bg: #FFB997;
   --warm-text: #6E5849;
   --warm-hover-bg: rgba(255,255,255,0.3);
   --warm-hover-text: #4A3020;
   --warm-alt-bg: #FFF7EE;
   --warm-alt-hover: #FFD8B1;
+
+  /* Tamaño base del logo (ajusta este valor) */
+  --navbar-logo-height: 80px;
 }
 
 /* Global */
@@ -15,8 +19,13 @@ body {
   background-color: var(--warm-alt-bg);
   color: var(--warm-text);
 }
-a { color: var(--warm-text); transition: color .3s; }
-a:hover { color: var(--warm-hover-text); }
+a {
+  color: var(--warm-text);
+  transition: color .3s;
+}
+a:hover {
+  color: var(--warm-hover-text);
+}
 
 /* Buttons */
 .btn-primary {
@@ -32,7 +41,31 @@ a:hover { color: var(--warm-hover-text); }
 .navbar-custom {
   background-color: var(--warm-bg) !important;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  align-items: center; /* Centrar verticalmente items */
 }
+
+/* Ajuste escalado de logo y texto */
+/* Ajuste escalado de logo y texto */
+.navbar-brand img {
+  height: var(--navbar-logo-height);
+  width: auto;
+}
+.navbar-custom .nav-link,
+.navbar-custom .grid-right a {
+  /* Factor reducido a 0.3, con límites */
+  font-size: clamp(14px, calc(var(--navbar-logo-height) * 0.3), 20px);
+  line-height: 1;
+  transition: font-size .3s;
+}
+/* Opcional: límites mínimos y máximos */
+/*
+.navbar-custom .nav-link,
+.navbar-custom .grid-right a {
+  font-size: clamp(16px, calc(var(--navbar-logo-height) * 0.4), 24px);
+  line-height: 1;
+}
+*/
+
 /* Links */
 .navbar-custom .navbar-brand,
 .navbar-custom .nav-link {
@@ -50,7 +83,6 @@ a:hover { color: var(--warm-hover-text); }
 .navbar-grid {
   display: grid !important;
   grid-template-columns: auto 1fr auto;
-  align-items: center;
   gap: 1rem;
   width: 100%;
 }
@@ -70,8 +102,6 @@ a:hover { color: var(--warm-hover-text); }
   gap: 1rem;
   justify-self: center;
 }
-
-/* Asegurar nav items y buscador en línea */
 .grid-center .navbar-nav {
   display: flex;
   gap: .5rem;
