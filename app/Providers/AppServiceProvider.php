@@ -14,11 +14,12 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        //
-    }
+ // app/Providers/AppServiceProvider.php
+
+public function boot()
+{
+    \URL::forceScheme('https');
+    // ... cualquier otro boot
+}
+
 }
