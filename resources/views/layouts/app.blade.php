@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kitchen Manager</title>
+  <title>@yield('title', 'Kitchen Manager')</title>
 
   <!-- Bootstrap CSS & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
 
   <!-- Overrides para forzar opacidad -->
   <style>
-  
+    /* Aquí tus estilos inline si los necesitas */
   </style>
   @stack('styles')
 </head>
@@ -26,7 +26,15 @@
     <div class="container-fluid navbar-grid">
       <!-- Columna IZQUIERDA -->
       <div class="grid-left">
-        <a class="navbar-brand" href="{{ route('home') }}">Cocina</a>
+        <a class="navbar-brand" href="{{ route('home') }}">
+         <img src="{{ asset('images/centollo.png') }}"
+     alt="Kitchen Manager Logo"
+     height="80"
+     width="auto"
+     class="d-inline-block align-text-top">
+
+          {{-- Si prefieres SVG: use asset('images/logo.svg') --}}
+        </a>
         <button class="navbar-toggler" type="button"
                 data-bs-toggle="collapse" data-bs-target="#navMenu"
                 aria-controls="navMenu" aria-expanded="false"
@@ -82,7 +90,9 @@
   </nav>
 
   <main class="flex-grow-1">
-    <div class="container">@yield('content')</div>
+    <div class="container">
+      @yield('content')
+    </div>
   </main>
 
   {{-- Modal Login --}}
@@ -90,7 +100,7 @@
     <div class="modal-panel position-relative">
       <span class="modal-close">&times;</span>
       <h2 class="h4 text-center mb-4">Iniciar sesión</h2>
-      <form method="POST" action="{{ route('login') }}" class="text-left mx-auto" style="width: 280px;">
+      <form method="POST" action="{{ route('login') }}" class="mx-auto" style="width: 280px;">
         @csrf
         <div class="mb-3">
           <label for="email" class="form-label">Correo electrónico</label>
@@ -123,7 +133,7 @@
     <div class="modal-panel position-relative">
       <span class="modal-close">&times;</span>
       <h2 class="h4 text-center mb-4">Regístrate</h2>
-      <form method="POST" action="{{ route('register') }}" class="text-left mx-auto" style="width: 280px;">
+      <form method="POST" action="{{ route('register') }}" class="mx-auto" style="width: 280px;">
         @csrf
         <div class="mb-3">
           <label for="name-register" class="form-label">Nombre</label>
