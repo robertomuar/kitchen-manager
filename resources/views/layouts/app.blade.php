@@ -38,6 +38,7 @@
             alt="Kitchen Manager Logo"
             class="d-inline-block align-text-top"
           >
+         <span class="brand-text">Cocina Samurai</span>
         </a>
         <button class="navbar-toggler" type="button"
                 data-bs-toggle="collapse" data-bs-target="#navMenu"
