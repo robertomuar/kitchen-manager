@@ -26,7 +26,7 @@
     <div class="container-fluid navbar-grid">
       <!-- Columna IZQUIERDA -->
       <div class="grid-left">
-        <a class="navbar-brand" href="{{ route('home') }}">Kitchen Manager RM</a>
+        <a class="navbar-brand" href="{{ route('home') }}">Kitchen Manager</a>
         <button class="navbar-toggler" type="button"
                 data-bs-toggle="collapse" data-bs-target="#navMenu"
                 aria-controls="navMenu" aria-expanded="false"
