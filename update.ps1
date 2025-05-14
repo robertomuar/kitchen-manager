@@ -3,14 +3,14 @@
   Despliegue para kitchen-manager
   — No borra update.ps1 ni nginx/default.conf
   — Limpia sólo public/build
-  — Fuerza uso de docker-compose.yml en la carpeta actual
+  — Invoca docker-compose con la ruta correcta
 #>
 
 Push-Location $PSScriptRoot
 Write-Host "→ Directorio de trabajo: $(Get-Location)" -ForegroundColor Cyan
 Write-Host "=== Despliegue iniciado: $(Get-Date) ===" -ForegroundColor Green
 
-# 1) Reset duro de tracked files
+# 1) Reset duro de archivos versionados
 Write-Host "`n-> git fetch origin && git reset --hard origin/main" -ForegroundColor Yellow
 git fetch origin
 git reset --hard origin/main
@@ -25,7 +25,7 @@ if (Test-Path .\public\build) {
 Write-Host "`n-> git pull origin main" -ForegroundColor Yellow
 git pull origin main
 
-# 4) Compilar frontend en contenedor Node
+# 4) Compilar frontend
 Write-Host "`n-> npm install & npm run build (docker run node:18)" -ForegroundColor Yellow
 docker run --rm `
   -v "${PWD}:/app" `
@@ -46,15 +46,16 @@ Write-Host "`n-> php artisan migrate --force" -ForegroundColor Yellow
 docker exec kitchen_app php artisan migrate --force
 
 # 7) Cache y limpieza
-Write-Host "`n-> php artisan config:clear & cache & route:cache & view:clear" -ForegroundColor Yellow
+Write-Host "`n-> Cache & clear commands" -ForegroundColor Yellow
 docker exec kitchen_app php artisan config:clear
 docker exec kitchen_app php artisan config:cache
 docker exec kitchen_app php artisan route:cache
 docker exec kitchen_app php artisan view:clear
 
-# 8) Rebuild sólo app con ruta al compose file
-Write-Host "`n-> docker-compose -f \"$PSScriptRoot\docker-compose.yml\" up -d --no-deps --build app" -ForegroundColor Yellow
-docker-compose -f "$PSScriptRoot\docker-compose.yml" up -d --no-deps --build app
+# 8) Reconstruir sólo app con ruta explícita al compose
+$composeFile = Join-Path $PSScriptRoot 'docker-compose.yml'
+Write-Host "`n-> docker-compose -f `"$composeFile`" up -d --no-deps --build app" -ForegroundColor Yellow
+docker-compose -f "$composeFile" up -d --no-deps --build app
 
 # 9) Recargar nginx
 Write-Host "`n-> Recargando nginx" -ForegroundColor Yellow
