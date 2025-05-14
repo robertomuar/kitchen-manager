@@ -2,7 +2,6 @@
 
 /* — Paleta cálida — */
 :root {
-  /* Variables de paleta */
   --warm-bg: #FFB997;
   --warm-text: #6E5849;
   --warm-hover-bg: rgba(255,255,255,0.3);
@@ -10,7 +9,7 @@
   --warm-alt-bg: #FFF7EE;
   --warm-alt-hover: #FFD8B1;
 
-  /* Tamaño base del logo (ajusta este valor) */
+  /* Altura del logo (ajústala aquí) */
   --navbar-logo-height: 80px;
 }
 
@@ -41,30 +40,51 @@ a:hover {
 .navbar-custom {
   background-color: var(--warm-bg) !important;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  align-items: center; /* Centrar verticalmente items */
+  align-items: center;
 }
 
-/* Ajuste escalado de logo y texto */
-/* Ajuste escalado de logo y texto */
+/* Logo escalable */
 .navbar-brand img {
   height: var(--navbar-logo-height);
   width: auto;
 }
+
+/* Marca (logo + texto) alineada y escalable */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-brand .brand-text {
+  /* Escala al 25% de la altura del logo, mínimo 14px, máximo 50px */
+  font-size: clamp(
+    14px,
+    calc(var(--navbar-logo-height) * 0.25),
+    50px
+  ) !important;
+  line-height: 1;
+  margin: 0;
+  transition: font-size .3s;
+}
+
+/* Alinea verticalmente los items del nav con los li */
+.navbar-custom .navbar-nav .nav-item {
+  display: flex;
+  align-items: center;
+}
+
+/* Texto escalable según logo en enlaces del nav y botones de auth */
 .navbar-custom .nav-link,
 .navbar-custom .grid-right a {
-  /* Factor reducido a 0.3, con límites */
-  font-size: clamp(14px, calc(var(--navbar-logo-height) * 0.3), 20px);
+  font-size: clamp(
+    14px,
+    calc(var(--navbar-logo-height) * 0.25),
+    50px
+  ) !important;
   line-height: 1;
   transition: font-size .3s;
 }
-/* Opcional: límites mínimos y máximos */
-/*
-.navbar-custom .nav-link,
-.navbar-custom .grid-right a {
-  font-size: clamp(16px, calc(var(--navbar-logo-height) * 0.4), 24px);
-  line-height: 1;
-}
-*/
 
 /* Links */
 .navbar-custom .navbar-brand,
@@ -87,37 +107,10 @@ a:hover {
   width: 100%;
 }
 
-/* Columna IZQUIERDA: Brand + toggler */
-.grid-left {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  justify-self: start;
-}
-
-/* Columna CENTRAL: menú + buscador */
-.grid-center {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  justify-self: center;
-}
-.grid-center .navbar-nav {
-  display: flex;
-  gap: .5rem;
-}
-.grid-center .search-center {
-  display: flex;
-  gap: .5rem;
-}
-
-/* Columna DERECHA: Auth */
-.grid-right {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  justify-self: end;
-}
+/* Columnas del navbar */
+.grid-left  { display: flex;    align-items: center; gap: .5rem; justify-self: start; }
+.grid-center{ display: flex;    align-items: center; gap: 1rem; justify-self: center; }
+.grid-right { display: flex;    align-items: center; gap: .5rem; justify-self: end; }
 
 /* Dropdown on hover */
 .navbar-custom .dropdown {
@@ -163,4 +156,118 @@ a:hover {
 /* Toggler icon */
 .navbar-custom .navbar-toggler-icon {
   filter: invert(45%) sepia(10%) saturate(500%) hue-rotate(5deg) !important;
+}
+/* — Nuevos estilos modernos — */
+/* Glassmorphism: navbar semitransparente y desenfoque */
+.navbar-custom {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Underline animado en enlaces */
+.navbar-custom .nav-link {
+  position: relative;
+  padding-bottom: .25rem;
+}
+.navbar-custom .nav-link::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--warm-text);
+  transition: width .3s ease, left .3s ease;
+  transform: translateX(-50%);
+}
+.navbar-custom .nav-link:hover::after {
+  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Botones “ghost” con micro-animación */
+.navbar-custom .btn-outline-custom {
+  border-width: 2px !important;
+  border-radius: 50px;
+  transition: background .3s, transform .2s;
+}
+.navbar-custom .btn-outline-custom:hover {
+  background-color: var(--warm-text) !important;
+  color: #fff !important;
+  transform: scale(1.05);
+}
+
+
+/* En la parte superior o al final de navbar.css */
+
+.navbar-custom {
+  font-family: 'Poppins', sans-serif;
+}
+:root {
+  --navbar-total-height: 80px; /* igual al height de tu .navbar-custom */
+}
+
+/* Empuja todo el main hacia abajo */
+main {
+  padding-top: var(--navbar-total-height);
+}
+/* — Nuevos estilos modernos — */
+
+/* 1. Glassmorphism: navbar semitransparente y desenfoque */
+.navbar-custom {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: fixed;   /* fijo arriba */
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+/* 2. Reserva espacio para el navbar fijo */
+:root {
+  --navbar-total-height: 80px; /* iguala esto a tu altura real */
+}
+main {
+  padding-top: var(--navbar-total-height);
+}
+
+/* 3. Underline animado en enlaces */
+.navbar-custom .nav-link {
+  position: relative;
+  padding-bottom: .25rem;
+}
+.navbar-custom .nav-link::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--warm-text);
+  transition: width .3s ease;
+  transform: translateX(-50%);
+}
+.navbar-custom .nav-link:hover::after {
+  width: 100%;
+}
+
+/* 4. Botones “ghost” con micro-animación */
+.navbar-custom .btn-outline-custom {
+  border-width: 2px !important;
+  border-radius: 50px;
+  transition: background .3s, transform .2s;
+}
+.navbar-custom .btn-outline-custom:hover {
+  background-color: var(--warm-text) !important;
+  color: #fff !important;
+  transform: scale(1.05);
 }

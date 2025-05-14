@@ -1,4 +1,4 @@
-/* home.css */
+/* public/css/home.css */
 
 /* Paleta de colores cálida */
 :root {
@@ -16,7 +16,8 @@
   min-height: 80vh;
   position: relative;
   overflow: hidden;
-  padding: 4rem 0;
+margin-top: 27px; /* Ajusta el valor según lo necesario */
+  padding: var(--navbar-total-height) 0 4rem 0;
 }
 .hero::before {
   content: '';
@@ -101,6 +102,7 @@ footer {
 @media (max-width: 576px) {
   .hero {
     padding: 3rem 1rem;
+ 
   }
   .hero-title {
     font-size: 2rem;
@@ -147,4 +149,7 @@ footer {
 .card .table-warning > td {
   background-color: var(--warm-hover-bg) !important;  /* rgba(255,255,255,0.3) */
   color: var(--warm-text) !important;
+}
+body, .navbar-custom {
+  font-family: 'Poppins', sans-serif;
 }
