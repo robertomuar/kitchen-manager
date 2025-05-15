@@ -10,12 +10,16 @@ class RecipeController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        // Ahora index (y show si lo añades) quedan públicos; el resto necesita auth
+        $this->middleware('auth')->except(['index'/*, 'show'*/]);
     }
 
     public function index()
     {
-        $recipes = Recipe::withCount('ingredients')->orderBy('title')->paginate(8);
+        $recipes = Recipe::withCount('ingredients')
+                         ->orderBy('title')
+                         ->paginate(8);
+
         return view('recipes.index', compact('recipes'));
     }
 
@@ -41,7 +45,6 @@ class RecipeController extends Controller
             'description' => $data['description'],
         ]);
 
-        // Attach pivote
         foreach ($data['ingredients'] as $ing) {
             $recipe->ingredients()->attach(
                 $ing['id'],
@@ -56,7 +59,7 @@ class RecipeController extends Controller
     {
         $ingredients = Ingredient::orderBy('name')->get();
         $recipe->load('ingredients');
-        return view('recipes.edit', compact('recipe','ingredients'));
+        return view('recipes.edit', compact('recipe', 'ingredients'));
     }
 
     public function update(Request $request, Recipe $recipe)
@@ -75,7 +78,6 @@ class RecipeController extends Controller
             'description' => $data['description'],
         ]);
 
-        // Sync pivote
         $syncData = [];
         foreach ($data['ingredients'] as $ing) {
             $syncData[$ing['id']] = [

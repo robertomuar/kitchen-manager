@@ -45,7 +45,7 @@ html, body {
 }
   .modal-backdrop {
       background-color: rgba(0,0,0,0.95) !important;
-    }
+}
     .modal-backdrop.show {
       display: flex !important;
       opacity: 1 !important;
@@ -53,4 +53,4 @@ html, body {
     .modal-panel {
       background-color: #fff !important;
       opacity: 1 !important;
-    }
+}

@@ -63,7 +63,37 @@
       </p>
     </div>
   </div>
-
+<!-- Modal Overlay de Registro -->
+  <div id="register-modal-backdrop" class="modal-backdrop">
+    <div class="modal-panel position-relative">
+      <span class="modal-close">&times;</span>
+      <h2 class="h4 text-center mb-4">Registro</h2>
+      <form method="POST" action="{{ route('register') }}" class="text-left mx-auto" style="width: 280px;">
+        @csrf
+        <div class="mb-3">
+          <label for="name_register" class="form-label">Nombre</label>
+          <input id="name_register" type="text" name="name" required class="form-control">
+        </div>
+        <div class="mb-3">
+          <label for="email_register" class="form-label">Correo electrónico</label>
+          <input id="email_register" type="email" name="email" required class="form-control">
+        </div>
+        <div class="mb-3">
+          <label for="password_register" class="form-label">Contraseña</label>
+          <input id="password_register" type="password" name="password" required class="form-control">
+        </div>
+        <div class="mb-3">
+          <label for="password_confirmation_register" class="form-label">Confirmar Contraseña</label>
+          <input id="password_confirmation_register" type="password" name="password_confirmation" required class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Registrar</button>
+      </form>
+      <p class="text-center mt-3">
+        ¿Ya tienes cuenta? 
+        <a href="#" class="open-login">Iniciar sesión</a>
+      </p>
+    </div>
+  </div>
   <!-- Características -->
   <section id="features" class="py-5">
     <div class="container">

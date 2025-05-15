@@ -1,47 +1,47 @@
-// resources/js/overlay.js
 $(function() {
-  // Selectores genéricos
   const $loginBg = $('#login-modal-backdrop');
-  const $regBg   = $('#register-modal-backdrop');
-
-  // Triggers
-  const $openLogin       = $('#open-login-modal');
-  const $openReg         = $('#open-register-modal');
-  const $openRegInline   = $('#open-register-modal-inline');
-  const $openLoginInline = $('#open-login-modal-inline');
-
-  // Close buttons
-  const $closeBtns = $('.modal-backdrop .modal-close');
-
-  // Abrir un modal
-  function openModal($bg) {
-    $('.modal-backdrop').removeClass('show'); // cierra cualquier otro
-    $bg.addClass('show');
-  }
-  // Cerrar un modal
-  function closeModal($bg) {
-    $bg.removeClass('show');
-  }
-
-  // Handlers
-  $openLogin.on('click', e => { e.preventDefault(); openModal($loginBg); });
-  $openReg.on('click',   e => { e.preventDefault(); openModal($regBg); });
-
-  $openRegInline.on('click', e => {
-    e.preventDefault();
-    $loginBg.removeClass('show');
-    $regBg.addClass('show');
-  });
-  $('#open-login-modal-inline').on('click', e => {
-    e.preventDefault();
-    $regBg.removeClass('show');
+  
+  function openModal() {
+    $('.modal-backdrop').removeClass('show');
     $loginBg.addClass('show');
+  }
+  
+  // Botón de cabecera
+  $('#open-login-modal').on('click', e => {
+    e.preventDefault();
+    openModal();
   });
-
+  
+  // Cambio entre login y registro
+  $('#open-register-modal-inline').on('click', function(e) {
+    e.preventDefault();
+    $('#login-modal-backdrop').removeClass('show');
+    $('#register-modal-backdrop').addClass('show');
+  });
+  
+  $('#open-login-modal-inline').on('click', function(e) {
+    e.preventDefault();
+    $('#register-modal-backdrop').removeClass('show');
+    $('#login-modal-backdrop').addClass('show');
+  });
+  
+  $('#open-register-modal').on('click', function(e) {
+    e.preventDefault();
+    $('#register-modal-backdrop').addClass('show');
+  });
+  
+  // Cerrar modales
   $('.modal-close').on('click', function() {
     $(this).closest('.modal-backdrop').removeClass('show');
   });
+  
   $('.modal-backdrop').on('click', function(e) {
     if (e.target === this) $(this).removeClass('show');
+  });
+  
+  // Intercepta SOLO enlaces con clase auth-required
+  $(document).on('click', 'a.auth-required', function(e) {
+    e.preventDefault();
+    openModal();
   });
 });
