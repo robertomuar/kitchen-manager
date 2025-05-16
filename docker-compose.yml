@@ -11,6 +11,8 @@ services:
       - ./:/var/www
     depends_on:
       - db
+    networks:
+      - kitchen-net
 
   db:
     image: mysql:8.0
@@ -23,6 +25,8 @@ services:
       MYSQL_ROOT_PASSWORD: root_secret
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - kitchen-net
 
   nginx:
     image: nginx:stable-alpine
@@ -31,14 +35,16 @@ services:
       - "8080:80"
       - "8443:443"
     volumes:
-      - ./:/var/www
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./certs:/etc/nginx/certs
+      - ./:/var/www:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
     depends_on:
       - app
+    networks:
+      - kitchen-net
 
   duckdns:
-    image: linuxserver/duckdns:latest
+    image: lscr.io/linuxserver/duckdns:latest
     container_name: kitchen_duckdns
     restart: unless-stopped
     environment:
@@ -46,9 +52,14 @@ services:
       PGID: 1000
       TZ: Europe/Madrid
       SUBDOMAINS: homekitchen
-      TOKEN: f13efdef-7cbc-4993-b8e5-457af8efbde9
+      TOKEN: your-duckdns-token
     volumes:
       - ./duckdns:/config
+    networks:
+      - kitchen-net
 
 volumes:
   db_data:
+
+networks:
+  kitchen-net:
