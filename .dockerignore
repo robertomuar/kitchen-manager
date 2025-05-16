@@ -1,8 +1,0 @@
-node_modules
-vendor
-public/build
-.env
-.env.*
-.git
-.gitignore
-.vscode
