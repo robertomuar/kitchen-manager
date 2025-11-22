@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    /* Tarjeta base oscura (para envolver tablas, formularios, etc.) */
+    .km-card {
+        @apply rounded-2xl border border-slate-800/80 bg-slate-950/80
+            shadow-sm backdrop-blur-sm;
+    }
+
+    /* Tabla base oscura */
+    .km-table {
+        @apply min-w-full text-sm text-slate-100;
+    }
+
+    .km-table thead {
+        @apply bg-slate-900/90 text-[11px] uppercase tracking-wide text-slate-400;
+    }
+
+    .km-table th {
+        @apply px-4 py-3 text-left font-medium;
+    }
+
+    .km-table tbody tr {
+        @apply border-t border-slate-800/80;
+    }
+
+    .km-table tbody tr:nth-child(even) {
+        @apply bg-slate-900/40;
+    }
+
+    .km-table tbody tr:hover {
+        @apply bg-slate-800/70;
+    }
+
+    .km-table td {
+        @apply px-4 py-2 align-middle text-sm text-slate-100;
+    }
+
+    /* Para pequeñas etiquetas tipo estado */
+    .km-badge-green {
+        @apply inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5
+            text-[11px] font-medium text-emerald-300;
+    }
+
+    .km-badge-red {
+        @apply inline-flex items-center rounded-full bg-rose-500/15 px-2 py-0.5
+            text-[11px] font-medium text-rose-300;
+    }
+
+    .km-badge-amber {
+        @apply inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5
+            text-[11px] font-medium text-amber-300;
+    }
+}
