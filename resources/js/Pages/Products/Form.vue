@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const props = defineProps({
     product: {
@@ -127,6 +128,115 @@ const lookupBarcode = async () => {
         lookupLoading.value = false;
     }
 };
+
+// ---- ESCÁNER CON CÁMARA (html5-qrcode) ----
+const scannerVisible = ref(false);
+const scannerInstance = ref(null);
+const scannerError = ref('');
+const scanning = ref(false);
+
+const SCANNER_ELEMENT_ID = 'barcode-scanner';
+
+/**
+ * Inicia el escáner con la cámara trasera (si existe)
+ */
+const startScanner = async () => {
+    scannerError.value = '';
+
+    // Evitar usar en entorno sin window (por si acaso)
+    if (typeof window === 'undefined') {
+        scannerError.value =
+            'El escáner solo está disponible en el navegador.';
+        return;
+    }
+
+    if (scannerInstance.value) {
+        return;
+    }
+
+    try {
+        const html5QrCode = new Html5Qrcode(SCANNER_ELEMENT_ID);
+        scannerInstance.value = html5QrCode;
+
+        scanning.value = true;
+
+        await html5QrCode.start(
+            { facingMode: 'environment' }, // cámara trasera en móvil
+            {
+                fps: 10,
+                qrbox: {
+                    width: 250,
+                    height: 250,
+                },
+            },
+            async (decodedText /* , decodedResult */) => {
+                // Cuando escaneamos correctamente
+                form.barcode = decodedText;
+
+                // Buscamos datos online automáticamente
+                await lookupBarcode();
+
+                // Paramos la cámara
+                await stopScanner();
+                scannerVisible.value = false;
+            },
+            (errorMessage) => {
+                // Errores de lectura continuos (podemos ignorarlos)
+                // console.debug('Scan error', errorMessage);
+            },
+        );
+    } catch (e) {
+        console.error(e);
+        scannerError.value =
+            'No se pudo iniciar la cámara. Revisa permisos del navegador.';
+        scanning.value = false;
+        if (scannerInstance.value) {
+            try {
+                await scannerInstance.value.stop();
+                await scannerInstance.value.clear();
+            } catch (_) {}
+            scannerInstance.value = null;
+        }
+    }
+};
+
+/**
+ * Detiene el escáner si está activo
+ */
+const stopScanner = async () => {
+    if (scannerInstance.value) {
+        try {
+            if (scanning.value) {
+                await scannerInstance.value.stop();
+            }
+            await scannerInstance.value.clear();
+        } catch (e) {
+            console.error(e);
+        }
+        scannerInstance.value = null;
+    }
+    scanning.value = false;
+};
+
+/**
+ * Mostrar / ocultar el panel de escaneo
+ */
+const toggleScanner = async () => {
+    scannerError.value = '';
+
+    if (!scannerVisible.value) {
+        scannerVisible.value = true;
+        await startScanner();
+    } else {
+        scannerVisible.value = false;
+        await stopScanner();
+    }
+};
+
+// Por si se cierra la página con la cámara encendida
+onBeforeUnmount(async () => {
+    await stopScanner();
+});
 </script>
 
 <template>
@@ -166,7 +276,7 @@ const lookupBarcode = async () => {
                         class="space-y-6"
                         @submit.prevent="submit"
                     >
-                        <!-- CÓDIGO DE BARRAS + BOTÓN BUSCAR -->
+                        <!-- CÓDIGO DE BARRAS + BOTONES -->
                         <div class="space-y-1">
                             <label
                                 for="barcode"
@@ -174,18 +284,19 @@ const lookupBarcode = async () => {
                             >
                                 Código de barras
                                 <span class="text-xs text-slate-500">
-                                    (opcional, pero recomendado)
+                                    (puedes introducirlo o escanearlo)
                                 </span>
                             </label>
 
-                            <div class="flex gap-2">
+                            <div class="flex flex-wrap gap-2">
                                 <input
                                     id="barcode"
                                     v-model="form.barcode"
                                     type="text"
                                     class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
                                            text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none
+                                           sm:flex-1"
                                     placeholder="Ej: 8412345678901"
                                 />
 
@@ -196,6 +307,14 @@ const lookupBarcode = async () => {
                                     class="inline-flex items-center rounded-xl bg-indigo-500 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-indigo-500/40 hover:bg-indigo-600 disabled:opacity-60 disabled:cursor-wait"
                                 >
                                     {{ lookupLoading ? 'Buscando...' : 'Buscar datos online' }}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="toggleScanner"
+                                    class="inline-flex items-center rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-200"
+                                >
+                                    {{ scannerVisible ? 'Cerrar cámara' : 'Escanear con cámara' }}
                                 </button>
                             </div>
 
@@ -215,6 +334,36 @@ const lookupBarcode = async () => {
                                 class="mt-1 text-xs text-rose-600"
                             >
                                 {{ lookupError }}
+                            </p>
+                        </div>
+
+                        <!-- PANEL DEL ESCÁNER -->
+                        <div
+                            v-if="scannerVisible"
+                            class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"
+                        >
+                            <p class="mb-2 font-semibold">
+                                Escanear código de barras
+                            </p>
+
+                            <div
+                                :id="SCANNER_ELEMENT_ID"
+                                class="mx-auto aspect-[3/4] w-full max-w-xs overflow-hidden rounded-lg border border-slate-300 bg-black/80"
+                            ></div>
+
+                            <p
+                                v-if="scannerError"
+                                class="mt-2 text-xs text-rose-600"
+                            >
+                                {{ scannerError }}
+                            </p>
+                            <p
+                                v-else
+                                class="mt-2 text-xs text-slate-500"
+                            >
+                                Apunta con la cámara al código de barras. Al
+                                leerlo se rellenará el código y se buscarán los
+                                datos automáticamente.
                             </p>
                         </div>
 
@@ -259,7 +408,7 @@ const lookupBarcode = async () => {
                                     min="0"
                                     class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
                                            text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus;border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
                                     placeholder="1, 0.5, 3..."
                                 />
                                 <InputError
