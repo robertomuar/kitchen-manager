@@ -7,83 +7,68 @@ use Illuminate\Support\Facades\Http;
 
 class BarcodeLookupController extends Controller
 {
-    /**
-     * Endpoint para consultar un código de barras en OpenFoodFacts
-     * y devolver un JSON simplificado para el frontend.
-     */
-    public function __invoke(Request $request, string $barcode)
+    public function lookup(Request $request)
     {
-        $barcode = trim($barcode);
+        $data = $request->validate([
+            'barcode' => ['required', 'string', 'max:50'],
+        ]);
 
-        if ($barcode === '' || strlen($barcode) < 6) {
-            return response()->json([
-                'found'   => false,
-                'message' => 'invalid_barcode',
-            ], 422);
-        }
+        $barcode = $data['barcode'];
 
         try {
-            $response = Http::timeout(8)
-                ->acceptJson()
-                ->get("https://world.openfoodfacts.org/api/v0/product/{$barcode}.json");
+            // Ejemplo con OpenFoodFacts
+            $response = Http::timeout(5)->get(
+                'https://world.openfoodfacts.org/api/v2/product/' . $barcode
+            );
+
+            if (! $response->ok()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo contactar con el servicio externo.',
+                ], 502);
+            }
+
+            $payload = $response->json();
+
+            if (($payload['status'] ?? 0) !== 1 || empty($payload['product'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se ha encontrado información para este código.',
+                ], 404);
+            }
+
+            $product = $payload['product'];
+
+            $name = $product['product_name_es']
+                ?? $product['product_name']
+                ?? null;
+
+            $quantityStr = $product['quantity'] ?? null; // p.ej. "500 g"
+
+            $defaultQuantity = null;
+            $defaultUnit     = null;
+
+            if ($quantityStr) {
+                if (preg_match('/(\d+(?:[.,]\d+)?)\s*(\w+)/u', $quantityStr, $m)) {
+                    $defaultQuantity = (float) str_replace(',', '.', $m[1]);
+                    $defaultUnit     = strtolower($m[2]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'name'               => $name,
+                    'default_quantity'   => $defaultQuantity,
+                    'default_unit'       => $defaultUnit,
+                    'default_pack_size'  => null,
+                ],
+            ]);
         } catch (\Throwable $e) {
-            report($e);
-
             return response()->json([
-                'found'   => false,
-                'message' => 'request_error',
-            ], 500);
-        }
-
-        if (! $response->ok()) {
-            return response()->json([
-                'found'   => false,
-                'message' => 'http_' . $response->status(),
+                'success' => false,
+                'message' => 'Error consultando el servicio externo.',
             ], 502);
         }
-
-        $json = $response->json();
-
-        if (($json['status'] ?? 0) !== 1 || empty($json['product'])) {
-            return response()->json([
-                'found'   => false,
-                'message' => 'not_found',
-            ]);
-        }
-
-        $p = $json['product'];
-
-        // Intentamos separar valor y unidad a partir de "1 L", "500 g", etc.
-        $parsedQuantity = $this->parseQuantity($p['quantity'] ?? null);
-
-        return response()->json([
-            'found'          => true,
-            'name'           => $p['product_name']        ?? null,
-            'brands'         => $p['brands']              ?? null,
-            'generic_name'   => $p['generic_name']        ?? null,
-            'quantity'       => $p['quantity']            ?? null,
-            'packaging'      => $p['packaging']           ?? null,
-            'quantity_value' => $parsedQuantity['value']  ?? null,
-            'quantity_unit'  => $parsedQuantity['unit']   ?? null,
-        ]);
-    }
-
-    /**
-     * Intenta extraer número y unidad de un texto tipo "1 L", "500 g", etc.
-     */
-    protected function parseQuantity(?string $raw): array
-    {
-        if (! $raw) {
-            return ['value' => null, 'unit' => null];
-        }
-
-        if (preg_match('/([\d.,]+)\s*([a-zA-Z]+)/', $raw, $m)) {
-            $value = (float) str_replace(',', '.', $m[1]);
-            $unit  = strtolower($m[2]);
-
-            return ['value' => $value, 'unit' => $unit];
-        }
-
-        return ['value' => null, 'unit' => null];
     }
 }
