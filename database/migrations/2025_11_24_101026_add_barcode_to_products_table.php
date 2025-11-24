@@ -6,20 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->string('barcode', 50)
-                ->nullable()
-                ->after('name')
-                ->index();
-        });
+        // Solo añadimos la columna si NO existe
+        if (! Schema::hasColumn('products', 'barcode')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->string('barcode', 50)
+                    ->nullable()
+                    ->after('name');
+            });
+        }
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('barcode');
-        });
+        // Solo intentamos eliminarla si existe
+        if (Schema::hasColumn('products', 'barcode')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->dropColumn('barcode');
+            });
+        }
     }
 };
