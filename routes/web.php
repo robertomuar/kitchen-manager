@@ -8,11 +8,10 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\KitchenShareController;
+use App\Http\Controllers\BarcodeLookupController;   // ✅ NUEVO
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\BarcodeLookupController;
-
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -23,7 +22,6 @@ Route::get('/', function () {
     ]);
 });
 
-// Todo lo privado va con auth (SIN verified para no exigir verificación de email)
 Route::middleware(['auth'])->group(function () {
     // === DASHBOARD ===
     Route::get('/dashboard', function () {
@@ -35,21 +33,18 @@ Route::middleware(['auth'])->group(function () {
         $urgentLimit = $today->copy()->addDays(2);
 
         $stats = [
-            'products_count'      => Product::where('user_id', $ownerId)->count(),
-            'locations_count'     => Location::where('user_id', $ownerId)->count(),
-            'stock_items_count'   => StockItem::where('user_id', $ownerId)->count(),
-
-            'low_stock_count' => StockItem::where('user_id', $ownerId)
+            'products_count'        => Product::where('user_id', $ownerId)->count(),
+            'locations_count'       => Location::where('user_id', $ownerId)->count(),
+            'stock_items_count'     => StockItem::where('user_id', $ownerId)->count(),
+            'low_stock_count'       => StockItem::where('user_id', $ownerId)
                 ->whereNotNull('min_quantity')
                 ->whereColumn('quantity', '<', 'min_quantity')
                 ->count(),
-
-            'soon_expiring_count' => StockItem::where('user_id', $ownerId)
+            'soon_expiring_count'   => StockItem::where('user_id', $ownerId)
                 ->whereNotNull('expires_at')
                 ->whereDate('expires_at', '>=', $today)
                 ->whereDate('expires_at', '<=', $soonLimit)
                 ->count(),
-
             'urgent_expiring_count' => StockItem::where('user_id', $ownerId)
                 ->whereNotNull('expires_at')
                 ->whereDate('expires_at', '>=', $today)
@@ -81,6 +76,10 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('dashboard');
 
+    // ✅ NUEVO: proxy para buscar códigos de barras
+    Route::get('/api/barcode-lookup/{barcode}', BarcodeLookupController::class)
+        ->name('barcode.lookup');
+
     // Productos
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
@@ -88,8 +87,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-    Route::get('/products/barcode/lookup', [ProductController::class, 'lookupByBarcode'])
-    ->name('products.barcode.lookup');
 
     // Stock
     Route::get('/stock', [StockItemController::class, 'index'])->name('stock.index');
@@ -119,9 +116,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::get('/api/barcodes/{barcode}', [BarcodeLookupController::class, 'lookup'])
-        ->name('barcodes.lookup');
 });
 
 require __DIR__ . '/auth.php';

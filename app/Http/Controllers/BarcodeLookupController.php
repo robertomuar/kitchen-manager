@@ -8,63 +8,82 @@ use Illuminate\Support\Facades\Http;
 class BarcodeLookupController extends Controller
 {
     /**
-     * Devuelve info básica del producto a partir del código de barras.
-     * Usa la API pública de OpenFoodFacts.
+     * Endpoint para consultar un código de barras en OpenFoodFacts
+     * y devolver un JSON simplificado para el frontend.
      */
-    public function lookup(Request $request, string $barcode)
+    public function __invoke(Request $request, string $barcode)
     {
-        // Limpiamos un poco el código (por si vienen espacios)
         $barcode = trim($barcode);
 
-        if ($barcode === '') {
+        if ($barcode === '' || strlen($barcode) < 6) {
             return response()->json([
-                'message' => 'Código vacío.',
+                'found'   => false,
+                'message' => 'invalid_barcode',
             ], 422);
         }
 
-        // Llamada a OpenFoodFacts
-        $response = Http::acceptJson()
-            ->get("https://world.openfoodfacts.org/api/v0/product/{$barcode}.json");
+        try {
+            $response = Http::timeout(8)
+                ->acceptJson()
+                ->get("https://world.openfoodfacts.org/api/v0/product/{$barcode}.json");
+        } catch (\Throwable $e) {
+            report($e);
 
-        if (! $response->successful()) {
             return response()->json([
-                'message' => 'No se pudo consultar la API externa.',
+                'found'   => false,
+                'message' => 'request_error',
+            ], 500);
+        }
+
+        if (! $response->ok()) {
+            return response()->json([
+                'found'   => false,
+                'message' => 'http_' . $response->status(),
             ], 502);
         }
 
         $json = $response->json();
 
-        if (($json['status'] ?? 0) !== 1) {
+        if (($json['status'] ?? 0) !== 1 || empty($json['product'])) {
             return response()->json([
-                'message' => 'Producto no encontrado en la base de datos pública.',
-            ], 404);
+                'found'   => false,
+                'message' => 'not_found',
+            ]);
         }
 
-        $product = $json['product'] ?? [];
+        $p = $json['product'];
 
-        $name        = $product['product_name'] ?? null;
-        $quantityRaw = $product['quantity'] ?? null;
-
-        $defaultQuantity = null;
-        $defaultUnit     = null;
-
-        if ($quantityRaw) {
-            // Ejemplos típicos: "500 g", "1 L", "33 cl"
-            // Sacamos número y dejamos el resto como unidad
-            if (preg_match('/([\d.,]+)/', $quantityRaw, $m)) {
-                $number = str_replace(',', '.', $m[1]);
-                $defaultQuantity = is_numeric($number) ? (float) $number : null;
-
-                $unitPart = trim(str_replace($m[1], '', $quantityRaw));
-                $defaultUnit = $unitPart !== '' ? $unitPart : null;
-            }
-        }
+        // Intentamos separar valor y unidad a partir de "1 L", "500 g", etc.
+        $parsedQuantity = $this->parseQuantity($p['quantity'] ?? null);
 
         return response()->json([
-            'barcode'          => $barcode,
-            'name'             => $name,
-            'default_quantity' => $defaultQuantity,
-            'default_unit'     => $defaultUnit,
+            'found'          => true,
+            'name'           => $p['product_name']        ?? null,
+            'brands'         => $p['brands']              ?? null,
+            'generic_name'   => $p['generic_name']        ?? null,
+            'quantity'       => $p['quantity']            ?? null,
+            'packaging'      => $p['packaging']           ?? null,
+            'quantity_value' => $parsedQuantity['value']  ?? null,
+            'quantity_unit'  => $parsedQuantity['unit']   ?? null,
         ]);
+    }
+
+    /**
+     * Intenta extraer número y unidad de un texto tipo "1 L", "500 g", etc.
+     */
+    protected function parseQuantity(?string $raw): array
+    {
+        if (! $raw) {
+            return ['value' => null, 'unit' => null];
+        }
+
+        if (preg_match('/([\d.,]+)\s*([a-zA-Z]+)/', $raw, $m)) {
+            $value = (float) str_replace(',', '.', $m[1]);
+            $unit  = strtolower($m[2]);
+
+            return ['value' => $value, 'unit' => $unit];
+        }
+
+        return ['value' => null, 'unit' => null];
     }
 }

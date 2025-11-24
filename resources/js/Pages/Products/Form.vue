@@ -40,7 +40,6 @@ const isEdit = computed(
 
 const form = useForm({
     barcode: props.product?.barcode ?? '',
-
     name: props.product?.name ?? '',
     default_quantity: props.product?.default_quantity ?? '',
     default_unit: props.product?.default_unit ?? '',
@@ -57,6 +56,163 @@ const submitLabel = computed(() =>
     isEdit.value ? 'Guardar cambios' : 'Crear producto',
 );
 
+// ---- Estado para barcode / lookup ----
+const barcodeError = ref('');
+const isLookingUp = ref(false);
+
+// ---- Estado para el escáner de cámara ----
+const isScannerOpen = ref(false);
+const scannerInstance = ref(null);
+const SCANNER_ELEMENT_ID = 'barcode-scanner';
+
+// Buscar datos en Laravel (que a su vez pregunta a OpenFoodFacts)
+const lookupBarcode = async () => {
+    barcodeError.value = '';
+
+    const code = (form.barcode || '').trim();
+
+    if (!code || code.length < 6) {
+        barcodeError.value = 'Introduce un código de barras válido.';
+        return;
+    }
+
+    try {
+        isLookingUp.value = true;
+
+        const url = route('barcode.lookup', { barcode: code });
+
+        const response = await fetch(url, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Respuesta HTTP no válida: ' + response.status);
+        }
+
+        const data = await response.json();
+
+        if (!data.found) {
+            barcodeError.value =
+                'No se encontró información para este código.';
+            return;
+        }
+
+        // Rellenar nombre si está vacío
+        if (!form.name && data.name) {
+            form.name = data.name;
+        }
+
+        // Rellenar cantidad base / unidad si están vacíos y se pudo parsear algo
+        if (!form.default_quantity && data.quantity_value) {
+            form.default_quantity = data.quantity_value;
+        }
+
+        if (!form.default_unit && data.quantity_unit) {
+            form.default_unit = data.quantity_unit;
+        }
+
+        // Rellenar notas con info interesante (si no hay nada escrito)
+        if (!form.notes) {
+            const parts = [];
+
+            if (data.brands) {
+                parts.push(`Marca: ${data.brands}`);
+            }
+            if (data.generic_name) {
+                parts.push(data.generic_name);
+            }
+            if (data.quantity) {
+                parts.push(`Cantidad paquete: ${data.quantity}`);
+            }
+            if (data.packaging) {
+                parts.push(`Envase: ${data.packaging}`);
+            }
+
+            if (parts.length) {
+                form.notes = parts.join(' · ');
+            }
+        }
+    } catch (error) {
+        console.error('Error consultando código de barras:', error);
+        barcodeError.value =
+            'No se pudo consultar la información. Inténtalo de nuevo.';
+    } finally {
+        isLookingUp.value = false;
+    }
+};
+
+// Iniciar escáner de cámara
+const startScanner = async () => {
+    barcodeError.value = '';
+
+    if (isScannerOpen.value) {
+        return;
+    }
+
+    try {
+        const html5Qrcode = new Html5Qrcode(SCANNER_ELEMENT_ID);
+        scannerInstance.value = html5Qrcode;
+        isScannerOpen.value = true;
+
+        await html5Qrcode.start(
+            { facingMode: 'environment' },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 150 },
+            },
+            (decodedText) => {
+                // Cuando escaneamos, rellenamos el código y lanzamos búsqueda
+                form.barcode = decodedText;
+                stopScanner();
+                lookupBarcode();
+            },
+            () => {
+                // errores de escaneo: los ignoramos
+            },
+        );
+    } catch (err) {
+        console.error('Error iniciando cámara', err);
+        barcodeError.value =
+            'No se pudo acceder a la cámara. Revisa los permisos del navegador.';
+        isScannerOpen.value = false;
+        if (scannerInstance.value) {
+            try {
+                await scannerInstance.value.stop();
+                await scannerInstance.value.clear();
+            } catch {}
+            scannerInstance.value = null;
+        }
+    }
+};
+
+const stopScanner = async () => {
+    if (!scannerInstance.value) {
+        isScannerOpen.value = false;
+        return;
+    }
+
+    try {
+        await scannerInstance.value.stop();
+        await scannerInstance.value.clear();
+    } catch (err) {
+        console.warn('Error parando escáner', err);
+    } finally {
+        scannerInstance.value = null;
+        isScannerOpen.value = false;
+    }
+};
+
+onBeforeUnmount(() => {
+    if (scannerInstance.value) {
+        scannerInstance.value.stop().catch(() => {});
+        scannerInstance.value.clear().catch(() => {});
+    }
+});
+
+// Envío del formulario
 const submit = () => {
     if (isEdit.value) {
         form.put(route('products.update', props.product.id));
@@ -64,179 +220,6 @@ const submit = () => {
         form.post(route('products.store'));
     }
 };
-
-// ---- Estado para la búsqueda por código ----
-const lookupLoading = ref(false);
-const lookupMessage = ref('');
-const lookupError = ref('');
-
-/**
- * Llama al backend para buscar datos reales por código de barras
- */
-const lookupBarcode = async () => {
-    lookupMessage.value = '';
-    lookupError.value = '';
-
-    if (!form.barcode) {
-        lookupError.value = 'Introduce primero un código de barras.';
-        return;
-    }
-
-    try {
-        lookupLoading.value = true;
-
-        const response = await window.axios.get(
-            route('products.barcode.lookup'),
-            {
-                params: { barcode: form.barcode },
-            },
-        );
-
-        const data = response.data;
-
-        if (!data.found) {
-            lookupError.value =
-                data.message || 'No se encontró información para este código.';
-            return;
-        }
-
-        const suggested = data.suggested ?? {};
-
-        // Solo rellenamos campos vacíos para no pisar lo que ya hayas escrito
-        if (!form.name && suggested.name) {
-            form.name = suggested.name;
-        }
-
-        if (!form.default_quantity && suggested.default_quantity) {
-            form.default_quantity = suggested.default_quantity;
-        }
-
-        if (!form.default_unit && suggested.default_unit) {
-            form.default_unit = suggested.default_unit;
-        }
-
-        lookupMessage.value =
-            'Datos sugeridos aplicados. Revisa antes de guardar.';
-    } catch (error) {
-        if (error.response?.data?.message) {
-            lookupError.value = error.response.data.message;
-        } else {
-            lookupError.value =
-                'No se pudo consultar la información. Inténtalo de nuevo.';
-        }
-    } finally {
-        lookupLoading.value = false;
-    }
-};
-
-// ---- ESCÁNER CON CÁMARA (html5-qrcode) ----
-const scannerVisible = ref(false);
-const scannerInstance = ref(null);
-const scannerError = ref('');
-const scanning = ref(false);
-
-const SCANNER_ELEMENT_ID = 'barcode-scanner';
-
-/**
- * Inicia el escáner con la cámara trasera (si existe)
- */
-const startScanner = async () => {
-    scannerError.value = '';
-
-    // Evitar usar en entorno sin window (por si acaso)
-    if (typeof window === 'undefined') {
-        scannerError.value =
-            'El escáner solo está disponible en el navegador.';
-        return;
-    }
-
-    if (scannerInstance.value) {
-        return;
-    }
-
-    try {
-        const html5QrCode = new Html5Qrcode(SCANNER_ELEMENT_ID);
-        scannerInstance.value = html5QrCode;
-
-        scanning.value = true;
-
-        await html5QrCode.start(
-            { facingMode: 'environment' }, // cámara trasera en móvil
-            {
-                fps: 10,
-                qrbox: {
-                    width: 250,
-                    height: 250,
-                },
-            },
-            async (decodedText /* , decodedResult */) => {
-                // Cuando escaneamos correctamente
-                form.barcode = decodedText;
-
-                // Buscamos datos online automáticamente
-                await lookupBarcode();
-
-                // Paramos la cámara
-                await stopScanner();
-                scannerVisible.value = false;
-            },
-            (errorMessage) => {
-                // Errores de lectura continuos (podemos ignorarlos)
-                // console.debug('Scan error', errorMessage);
-            },
-        );
-    } catch (e) {
-        console.error(e);
-        scannerError.value =
-            'No se pudo iniciar la cámara. Revisa permisos del navegador.';
-        scanning.value = false;
-        if (scannerInstance.value) {
-            try {
-                await scannerInstance.value.stop();
-                await scannerInstance.value.clear();
-            } catch (_) {}
-            scannerInstance.value = null;
-        }
-    }
-};
-
-/**
- * Detiene el escáner si está activo
- */
-const stopScanner = async () => {
-    if (scannerInstance.value) {
-        try {
-            if (scanning.value) {
-                await scannerInstance.value.stop();
-            }
-            await scannerInstance.value.clear();
-        } catch (e) {
-            console.error(e);
-        }
-        scannerInstance.value = null;
-    }
-    scanning.value = false;
-};
-
-/**
- * Mostrar / ocultar el panel de escaneo
- */
-const toggleScanner = async () => {
-    scannerError.value = '';
-
-    if (!scannerVisible.value) {
-        scannerVisible.value = true;
-        await startScanner();
-    } else {
-        scannerVisible.value = false;
-        await stopScanner();
-    }
-};
-
-// Por si se cierra la página con la cámara encendida
-onBeforeUnmount(async () => {
-    await stopScanner();
-});
 </script>
 
 <template>
@@ -272,11 +255,8 @@ onBeforeUnmount(async () => {
                 <div
                     class="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-900/20 text-slate-900"
                 >
-                    <form
-                        class="space-y-6"
-                        @submit.prevent="submit"
-                    >
-                        <!-- CÓDIGO DE BARRAS + BOTONES -->
+                    <form class="space-y-6" @submit.prevent="submit">
+                        <!-- Código de barras -->
                         <div class="space-y-1">
                             <label
                                 for="barcode"
@@ -288,83 +268,69 @@ onBeforeUnmount(async () => {
                                 </span>
                             </label>
 
-                            <div class="flex flex-wrap gap-2">
+                            <div class="flex flex-col gap-2 sm:flex-row">
                                 <input
                                     id="barcode"
                                     v-model="form.barcode"
                                     type="text"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
+                                    inputmode="numeric"
+                                    class="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
                                            text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none
-                                           sm:flex-1"
-                                    placeholder="Ej: 8412345678901"
+                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    placeholder="Ej: 8410101010101"
                                 />
 
-                                <button
-                                    type="button"
-                                    @click="lookupBarcode"
-                                    :disabled="lookupLoading"
-                                    class="inline-flex items-center rounded-xl bg-indigo-500 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-indigo-500/40 hover:bg-indigo-600 disabled:opacity-60 disabled:cursor-wait"
+                                <div
+                                    class="flex gap-2 sm:flex-col sm:gap-1 sm:w-52"
                                 >
-                                    {{ lookupLoading ? 'Buscando...' : 'Buscar datos online' }}
-                                </button>
+                                    <button
+                                        type="button"
+                                        class="flex-1 rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-60"
+                                        :disabled="isLookingUp || !form.barcode"
+                                        @click="lookupBarcode"
+                                    >
+                                        {{ isLookingUp
+                                            ? 'Buscando...'
+                                            : 'Buscar datos online' }}
+                                    </button>
 
-                                <button
-                                    type="button"
-                                    @click="toggleScanner"
-                                    class="inline-flex items-center rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-200"
-                                >
-                                    {{ scannerVisible ? 'Cerrar cámara' : 'Escanear con cámara' }}
-                                </button>
+                                    <button
+                                        type="button"
+                                        class="flex-1 rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-200"
+                                        @click="isScannerOpen ? stopScanner() : startScanner()"
+                                    >
+                                        {{
+                                            isScannerOpen
+                                                ? 'Cerrar cámara'
+                                                : 'Escanear con cámara'
+                                        }}
+                                    </button>
+                                </div>
                             </div>
 
-                            <InputError
-                                class="mt-1 text-xs text-rose-600"
-                                :message="form.errors.barcode"
-                            />
-
                             <p
-                                v-if="lookupMessage"
-                                class="mt-1 text-xs text-emerald-600"
-                            >
-                                {{ lookupMessage }}
-                            </p>
-                            <p
-                                v-if="lookupError"
+                                v-if="barcodeError"
                                 class="mt-1 text-xs text-rose-600"
                             >
-                                {{ lookupError }}
+                                {{ barcodeError }}
                             </p>
                         </div>
 
-                        <!-- PANEL DEL ESCÁNER -->
+                        <!-- Vista del escáner -->
                         <div
-                            v-if="scannerVisible"
-                            class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"
+                            v-if="isScannerOpen"
+                            class="rounded-2xl border border-slate-300 bg-slate-900/95 p-3 text-slate-100"
                         >
-                            <p class="mb-2 font-semibold">
-                                Escanear código de barras
+                            <p class="mb-2 text-xs text-slate-300">
+                                Apunta con la cámara al código de barras. Al
+                                detectar un código válido, se rellenará el
+                                campo automáticamente.
                             </p>
 
                             <div
                                 :id="SCANNER_ELEMENT_ID"
-                                class="mx-auto aspect-[3/4] w-full max-w-xs overflow-hidden rounded-lg border border-slate-300 bg-black/80"
+                                class="h-64 w-full overflow-hidden rounded-xl bg-slate-950"
                             ></div>
-
-                            <p
-                                v-if="scannerError"
-                                class="mt-2 text-xs text-rose-600"
-                            >
-                                {{ scannerError }}
-                            </p>
-                            <p
-                                v-else
-                                class="mt-2 text-xs text-slate-500"
-                            >
-                                Apunta con la cámara al código de barras. Al
-                                leerlo se rellenará el código y se buscarán los
-                                datos automáticamente.
-                            </p>
                         </div>
 
                         <!-- Nombre -->
@@ -406,7 +372,7 @@ onBeforeUnmount(async () => {
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
+                                    class="block w-full rounded-md border border-slate-300 bg.white px-3 py-2 text-sm
                                            text-slate-900 placeholder-slate-400 shadow-sm
                                            focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
                                     placeholder="1, 0.5, 3..."
