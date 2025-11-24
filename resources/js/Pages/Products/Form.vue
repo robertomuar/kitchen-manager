@@ -1,9 +1,11 @@
 <script setup>
-import { computed, ref, onBeforeUnmount } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import axios from 'axios';
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import { Html5Qrcode } from 'html5-qrcode';
+import BarcodeScanner from '@/Components/BarcodeScanner.vue';
 
 const props = defineProps({
     product: {
@@ -56,169 +58,82 @@ const submitLabel = computed(() =>
     isEdit.value ? 'Guardar cambios' : 'Crear producto',
 );
 
-// ---- Estado para barcode / lookup ----
-const barcodeError = ref('');
-const isLookingUp = ref(false);
-
-// ---- Estado para el escáner de cámara ----
+// Estado para lookup y escáner
 const isScannerOpen = ref(false);
-const scannerInstance = ref(null);
-const SCANNER_ELEMENT_ID = 'barcode-scanner';
+const isLookingUp = ref(false);
+const lookupError = ref('');
 
-// Buscar datos en Laravel (que a su vez pregunta a OpenFoodFacts)
-const lookupBarcode = async () => {
-    barcodeError.value = '';
-
-    const code = (form.barcode || '').trim();
-
-    if (!code || code.length < 6) {
-        barcodeError.value = 'Introduce un código de barras válido.';
-        return;
-    }
-
-    try {
-        isLookingUp.value = true;
-
-        const url = route('barcode.lookup', { barcode: code });
-
-        const response = await fetch(url, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Respuesta HTTP no válida: ' + response.status);
-        }
-
-        const data = await response.json();
-
-        if (!data.found) {
-            barcodeError.value =
-                'No se encontró información para este código.';
-            return;
-        }
-
-        // Rellenar nombre si está vacío
-        if (!form.name && data.name) {
-            form.name = data.name;
-        }
-
-        // Rellenar cantidad base / unidad si están vacíos y se pudo parsear algo
-        if (!form.default_quantity && data.quantity_value) {
-            form.default_quantity = data.quantity_value;
-        }
-
-        if (!form.default_unit && data.quantity_unit) {
-            form.default_unit = data.quantity_unit;
-        }
-
-        // Rellenar notas con info interesante (si no hay nada escrito)
-        if (!form.notes) {
-            const parts = [];
-
-            if (data.brands) {
-                parts.push(`Marca: ${data.brands}`);
-            }
-            if (data.generic_name) {
-                parts.push(data.generic_name);
-            }
-            if (data.quantity) {
-                parts.push(`Cantidad paquete: ${data.quantity}`);
-            }
-            if (data.packaging) {
-                parts.push(`Envase: ${data.packaging}`);
-            }
-
-            if (parts.length) {
-                form.notes = parts.join(' · ');
-            }
-        }
-    } catch (error) {
-        console.error('Error consultando código de barras:', error);
-        barcodeError.value =
-            'No se pudo consultar la información. Inténtalo de nuevo.';
-    } finally {
-        isLookingUp.value = false;
-    }
-};
-
-// Iniciar escáner de cámara
-const startScanner = async () => {
-    barcodeError.value = '';
-
-    if (isScannerOpen.value) {
-        return;
-    }
-
-    try {
-        const html5Qrcode = new Html5Qrcode(SCANNER_ELEMENT_ID);
-        scannerInstance.value = html5Qrcode;
-        isScannerOpen.value = true;
-
-        await html5Qrcode.start(
-            { facingMode: 'environment' },
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 150 },
-            },
-            (decodedText) => {
-                // Cuando escaneamos, rellenamos el código y lanzamos búsqueda
-                form.barcode = decodedText;
-                stopScanner();
-                lookupBarcode();
-            },
-            () => {
-                // errores de escaneo: los ignoramos
-            },
-        );
-    } catch (err) {
-        console.error('Error iniciando cámara', err);
-        barcodeError.value =
-            'No se pudo acceder a la cámara. Revisa los permisos del navegador.';
-        isScannerOpen.value = false;
-        if (scannerInstance.value) {
-            try {
-                await scannerInstance.value.stop();
-                await scannerInstance.value.clear();
-            } catch {}
-            scannerInstance.value = null;
-        }
-    }
-};
-
-const stopScanner = async () => {
-    if (!scannerInstance.value) {
-        isScannerOpen.value = false;
-        return;
-    }
-
-    try {
-        await scannerInstance.value.stop();
-        await scannerInstance.value.clear();
-    } catch (err) {
-        console.warn('Error parando escáner', err);
-    } finally {
-        scannerInstance.value = null;
-        isScannerOpen.value = false;
-    }
-};
-
-onBeforeUnmount(() => {
-    if (scannerInstance.value) {
-        scannerInstance.value.stop().catch(() => {});
-        scannerInstance.value.clear().catch(() => {});
-    }
-});
-
-// Envío del formulario
+// Enviar formulario (crear / editar)
 const submit = () => {
     if (isEdit.value) {
         form.put(route('products.update', props.product.id));
     } else {
         form.post(route('products.store'));
     }
+};
+
+// Buscar info del código de barras llamando a Laravel
+const lookupBarcode = async () => {
+    if (!form.barcode) {
+        alert('Introduce primero un código de barras.');
+        return;
+    }
+
+    try {
+        isLookingUp.value = true;
+        lookupError.value = '';
+
+        // 🚫 Antes: const url = route('barcode.lookup');
+        // ✅ Ahora: URL directa, evitando Ziggy
+        const response = await axios.post('/barcode/lookup', {
+            barcode: form.barcode,
+        });
+
+        if (!response.data || !response.data.success || !response.data.data) {
+            lookupError.value =
+                response.data?.message ??
+                'No se han encontrado datos para este código.';
+            return;
+        }
+
+        const data = response.data.data;
+
+        // Rellenamos solo si el usuario no ha escrito nada
+        if (data.name && !form.name) {
+            form.name = data.name;
+        }
+
+        if (
+            data.default_quantity !== null &&
+            data.default_quantity !== undefined &&
+            form.default_quantity === ''
+        ) {
+            form.default_quantity = data.default_quantity;
+        }
+
+        if (data.default_unit && !form.default_unit) {
+            form.default_unit = data.default_unit;
+        }
+
+        if (!data.name && !data.default_quantity && !data.default_unit) {
+            lookupError.value =
+                'No hay datos útiles para este código, tendrás que rellenarlo a mano.';
+        }
+    } catch (error) {
+        console.error('Error consultando código de barras:', error);
+        lookupError.value =
+            'No se pudo consultar la información. Inténtalo de nuevo.';
+    } finally {
+        isLookingUp.value = false;
+    }
+};
+
+// Cuando el escáner lee un código
+const onBarcodeScanned = (code) => {
+    form.barcode = code;
+    isScannerOpen.value = false;
+    // Lanzamos el lookup automáticamente
+    lookupBarcode();
 };
 </script>
 
@@ -238,8 +153,7 @@ const submit = () => {
                         </h1>
                         <p class="mt-1 text-sm text-slate-400">
                             Define un producto que utilizas en tu cocina:
-                            código de barras, nombre, cantidad base, unidad y
-                            ubicación habitual.
+                            nombre, cantidad base, unidad y ubicación habitual.
                         </p>
                     </div>
 
@@ -255,8 +169,11 @@ const submit = () => {
                 <div
                     class="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-900/20 text-slate-900"
                 >
-                    <form class="space-y-6" @submit.prevent="submit">
-                        <!-- Código de barras -->
+                    <form
+                        class="space-y-6"
+                        @submit.prevent="submit"
+                    >
+                        <!-- CÓDIGO DE BARRAS -->
                         <div class="space-y-1">
                             <label
                                 for="barcode"
@@ -264,73 +181,88 @@ const submit = () => {
                             >
                                 Código de barras
                                 <span class="text-xs text-slate-500">
-                                    (puedes introducirlo o escanearlo)
+                                    (opcional, pero muy recomendado)
                                 </span>
                             </label>
-
-                            <div class="flex flex-col gap-2 sm:flex-row">
+                            <div class="flex flex-col gap-2 md:flex-row">
                                 <input
                                     id="barcode"
                                     v-model="form.barcode"
                                     type="text"
-                                    inputmode="numeric"
-                                    class="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
+                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
                                            text-slate-900 placeholder-slate-400 shadow-sm
                                            focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
-                                    placeholder="Ej: 8410101010101"
+                                    placeholder="Ej: 8410100101010"
                                 />
 
                                 <div
-                                    class="flex gap-2 sm:flex-col sm:gap-1 sm:w-52"
+                                    class="flex flex-row gap-2 md:flex-col md:w-56"
                                 >
                                     <button
                                         type="button"
-                                        class="flex-1 rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-60"
-                                        :disabled="isLookingUp || !form.barcode"
+                                        :disabled="isLookingUp || form.processing"
                                         @click="lookupBarcode"
+                                        class="inline-flex flex-1 items-center justify-center rounded-md border border-indigo-500/80 bg-indigo-500/90 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-60 disabled:cursor-wait"
                                     >
-                                        {{ isLookingUp
-                                            ? 'Buscando...'
-                                            : 'Buscar datos online' }}
+                                        {{
+                                            isLookingUp
+                                                ? 'Buscando...'
+                                                : 'Buscar datos online'
+                                        }}
                                     </button>
 
                                     <button
                                         type="button"
-                                        class="flex-1 rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-200"
-                                        @click="isScannerOpen ? stopScanner() : startScanner()"
+                                        @click="isScannerOpen = true"
+                                        class="inline-flex flex-1 items-center justify-center rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-200"
                                     >
-                                        {{
-                                            isScannerOpen
-                                                ? 'Cerrar cámara'
-                                                : 'Escanear con cámara'
-                                        }}
+                                        Escanear con cámara
                                     </button>
                                 </div>
                             </div>
 
-                            <p
-                                v-if="barcodeError"
+                            <p class="mt-1 text-xs text-slate-500">
+                                Puedes escribir el código a mano o escanearlo
+                                con la cámara del móvil/PC.
+                            </p>
+
+                            <InputError
                                 class="mt-1 text-xs text-rose-600"
+                                :message="form.errors.barcode"
+                            />
+
+                            <p
+                                v-if="lookupError"
+                                class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2"
                             >
-                                {{ barcodeError }}
+                                {{ lookupError }}
                             </p>
                         </div>
 
-                        <!-- Vista del escáner -->
+                        <!-- ESCÁNER DE CÓDIGOS (cámara) -->
                         <div
                             v-if="isScannerOpen"
-                            class="rounded-2xl border border-slate-300 bg-slate-900/95 p-3 text-slate-100"
+                            class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3"
                         >
-                            <p class="mb-2 text-xs text-slate-300">
-                                Apunta con la cámara al código de barras. Al
-                                detectar un código válido, se rellenará el
-                                campo automáticamente.
-                            </p>
-
                             <div
-                                :id="SCANNER_ELEMENT_ID"
-                                class="h-64 w-full overflow-hidden rounded-xl bg-slate-950"
-                            ></div>
+                                class="mb-2 flex items-center justify-between gap-2"
+                            >
+                                <p class="text-xs font-medium text-slate-700">
+                                    Escanear código de barras
+                                </p>
+                                <button
+                                    type="button"
+                                    class="text-xs text-slate-500 hover:text-slate-800"
+                                    @click="isScannerOpen = false"
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+
+                            <BarcodeScanner
+                                @scanned="onBarcodeScanned"
+                                @closed="isScannerOpen = false"
+                            />
                         </div>
 
                         <!-- Nombre -->
@@ -372,7 +304,7 @@ const submit = () => {
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    class="block w-full rounded-md border border-slate-300 bg.white px-3 py-2 text-sm
+                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
                                            text-slate-900 placeholder-slate-400 shadow-sm
                                            focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
                                     placeholder="1, 0.5, 3..."
