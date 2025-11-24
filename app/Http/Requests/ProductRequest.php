@@ -8,7 +8,8 @@ class ProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        // Ya controlamos el acceso con el middleware auth
+        return true;
     }
 
     /**
@@ -17,12 +18,16 @@ class ProductRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'barcode' => ['nullable', 'string', 'max:50'],
+
             'name' => ['required', 'string', 'max:255'],
+
             'default_quantity' => ['nullable', 'numeric', 'min:0'],
-            'default_unit' => ['nullable', 'string', 'max:20'],
-            'default_pack_size' => ['nullable', 'integer', 'min:1'],
-            'location_id' => ['nullable', 'exists:locations,id'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'default_unit'     => ['nullable', 'string', 'max:20'],
+            'default_pack_size'=> ['nullable', 'integer', 'min:1'],
+
+            'location_id'      => ['nullable', 'exists:locations,id'],
+            'notes'            => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

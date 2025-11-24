@@ -11,6 +11,8 @@ use App\Http\Controllers\KitchenShareController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\BarcodeLookupController;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -86,6 +88,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::get('/products/barcode/lookup', [ProductController::class, 'lookupByBarcode'])
+    ->name('products.barcode.lookup');
 
     // Stock
     Route::get('/stock', [StockItemController::class, 'index'])->name('stock.index');
@@ -115,6 +119,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/api/barcodes/{barcode}', [BarcodeLookupController::class, 'lookup'])
+        ->name('barcodes.lookup');
 });
 
 require __DIR__ . '/auth.php';

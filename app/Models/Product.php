@@ -12,15 +12,16 @@ class Product extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'barcode',           // 👈 código de barras
         'default_quantity',
         'default_unit',
         'default_pack_size',
-        'location_id',   // 🔴 IMPORTANTE: para que se guarde la ubicación
+        'location_id',       // ubicación habitual
         'notes',
     ];
 
     protected $casts = [
-        'default_quantity' => 'float',
+        'default_quantity'  => 'float',
         'default_pack_size' => 'integer',
     ];
 

@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
@@ -38,12 +38,12 @@ const isEdit = computed(
 );
 
 const form = useForm({
+    barcode: props.product?.barcode ?? '',
+
     name: props.product?.name ?? '',
-    default_quantity:
-        props.product?.default_quantity ?? '',
+    default_quantity: props.product?.default_quantity ?? '',
     default_unit: props.product?.default_unit ?? '',
-    default_pack_size:
-        props.product?.default_pack_size ?? '',
+    default_pack_size: props.product?.default_pack_size ?? '',
     location_id: props.product?.location_id ?? '',
     notes: props.product?.notes ?? '',
 });
@@ -61,6 +61,70 @@ const submit = () => {
         form.put(route('products.update', props.product.id));
     } else {
         form.post(route('products.store'));
+    }
+};
+
+// ---- Estado para la búsqueda por código ----
+const lookupLoading = ref(false);
+const lookupMessage = ref('');
+const lookupError = ref('');
+
+/**
+ * Llama al backend para buscar datos reales por código de barras
+ */
+const lookupBarcode = async () => {
+    lookupMessage.value = '';
+    lookupError.value = '';
+
+    if (!form.barcode) {
+        lookupError.value = 'Introduce primero un código de barras.';
+        return;
+    }
+
+    try {
+        lookupLoading.value = true;
+
+        const response = await window.axios.get(
+            route('products.barcode.lookup'),
+            {
+                params: { barcode: form.barcode },
+            },
+        );
+
+        const data = response.data;
+
+        if (!data.found) {
+            lookupError.value =
+                data.message || 'No se encontró información para este código.';
+            return;
+        }
+
+        const suggested = data.suggested ?? {};
+
+        // Solo rellenamos campos vacíos para no pisar lo que ya hayas escrito
+        if (!form.name && suggested.name) {
+            form.name = suggested.name;
+        }
+
+        if (!form.default_quantity && suggested.default_quantity) {
+            form.default_quantity = suggested.default_quantity;
+        }
+
+        if (!form.default_unit && suggested.default_unit) {
+            form.default_unit = suggested.default_unit;
+        }
+
+        lookupMessage.value =
+            'Datos sugeridos aplicados. Revisa antes de guardar.';
+    } catch (error) {
+        if (error.response?.data?.message) {
+            lookupError.value = error.response.data.message;
+        } else {
+            lookupError.value =
+                'No se pudo consultar la información. Inténtalo de nuevo.';
+        }
+    } finally {
+        lookupLoading.value = false;
     }
 };
 </script>
@@ -81,7 +145,8 @@ const submit = () => {
                         </h1>
                         <p class="mt-1 text-sm text-slate-400">
                             Define un producto que utilizas en tu cocina:
-                            nombre, cantidad base, unidad y ubicación habitual.
+                            código de barras, nombre, cantidad base, unidad y
+                            ubicación habitual.
                         </p>
                     </div>
 
@@ -101,6 +166,58 @@ const submit = () => {
                         class="space-y-6"
                         @submit.prevent="submit"
                     >
+                        <!-- CÓDIGO DE BARRAS + BOTÓN BUSCAR -->
+                        <div class="space-y-1">
+                            <label
+                                for="barcode"
+                                class="block text-sm font-medium text-slate-800"
+                            >
+                                Código de barras
+                                <span class="text-xs text-slate-500">
+                                    (opcional, pero recomendado)
+                                </span>
+                            </label>
+
+                            <div class="flex gap-2">
+                                <input
+                                    id="barcode"
+                                    v-model="form.barcode"
+                                    type="text"
+                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
+                                           text-slate-900 placeholder-slate-400 shadow-sm
+                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    placeholder="Ej: 8412345678901"
+                                />
+
+                                <button
+                                    type="button"
+                                    @click="lookupBarcode"
+                                    :disabled="lookupLoading"
+                                    class="inline-flex items-center rounded-xl bg-indigo-500 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-indigo-500/40 hover:bg-indigo-600 disabled:opacity-60 disabled:cursor-wait"
+                                >
+                                    {{ lookupLoading ? 'Buscando...' : 'Buscar datos online' }}
+                                </button>
+                            </div>
+
+                            <InputError
+                                class="mt-1 text-xs text-rose-600"
+                                :message="form.errors.barcode"
+                            />
+
+                            <p
+                                v-if="lookupMessage"
+                                class="mt-1 text-xs text-emerald-600"
+                            >
+                                {{ lookupMessage }}
+                            </p>
+                            <p
+                                v-if="lookupError"
+                                class="mt-1 text-xs text-rose-600"
+                            >
+                                {{ lookupError }}
+                            </p>
+                        </div>
+
                         <!-- Nombre -->
                         <div class="space-y-1">
                             <label
@@ -142,7 +259,7 @@ const submit = () => {
                                     min="0"
                                     class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
                                            text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                           focus;border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
                                     placeholder="1, 0.5, 3..."
                                 />
                                 <InputError
