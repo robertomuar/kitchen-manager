@@ -19,6 +19,5 @@ if (token) {
 }
 
 // IMPORTANTE: no ponemos axios.defaults.baseURL.
-//
-// Así, cuando hagas form.post('/login') o axios.post('/barcode/lookup'),
-// usará siempre el mismo origen que la página (http o https) y NO forzará http://.
+// Así usará https://kitchenmanager.duckdns.org/login automáticamente
+// y no mezclará http/https.

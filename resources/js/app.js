@@ -18,24 +18,14 @@ createInertiaApp({
         const vueApp = createApp({ render: () => h(App, props) });
 
         vueApp.use(plugin);
-
-        // Registrar Link globalmente
         vueApp.component('Link', Link);
 
-        /**
-         * Helper route(...) MUY SIMPLE para no depender de Ziggy
-         * y que no reviente los componentes que ya lo usan.
-         *
-         * - Si le pasas '/login' => devuelve '/login'
-         * - Si le pasas 'login'  => lo traduce a '/login'
-         * - Si le pasas URL completa http/https => la deja tal cual
-         */
+        // Route helper simple para que Welcome, Layout, etc. no revienten
         const simpleRoute = (nameOrPath) => {
             if (!nameOrPath) {
                 return '/';
             }
 
-            // Si ya es URL absoluta o path absoluto, la devolvemos tal cual
             if (
                 nameOrPath.startsWith('http://') ||
                 nameOrPath.startsWith('https://') ||
@@ -44,22 +34,17 @@ createInertiaApp({
                 return nameOrPath;
             }
 
-            // Mapa de rutas por nombre (lo típico de Breeze + lo tuyo)
             const map = {
-                // Auth
                 login: '/login',
                 register: '/register',
                 'password.request': '/forgot-password',
-                'password.email': '/forgot-password',
                 'password.reset': '/reset-password',
-                'password.store': '/reset-password',
                 'verification.notice': '/verify-email',
                 'verification.send': '/email/verification-notification',
                 'profile.edit': '/profile',
                 'profile.update': '/profile',
                 'profile.destroy': '/profile',
 
-                // App principal
                 dashboard: '/dashboard',
                 'products.index': '/products',
                 'products.create': '/products/create',
@@ -67,7 +52,6 @@ createInertiaApp({
                 'locations.create': '/locations/create',
             };
 
-            // Si existe en el mapa, la usamos; si no, devolvemos "/nombre"
             return map[nameOrPath] || `/${nameOrPath}`;
         };
 

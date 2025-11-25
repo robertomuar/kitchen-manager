@@ -6,16 +6,19 @@
             name="viewport"
             content="width=device-width, initial-scale=1"
         />
+
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title inertia>{{ config('app.name', 'KitchenManager') }}</title>
 
+        <!-- Fuente por defecto de Breeze -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link
             href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap"
             rel="stylesheet"
         />
 
+        {{-- ⚠️ Nada raro, solo el JS principal --}}
         @vite(['resources/js/app.js'])
         @inertiaHead
     </head>
