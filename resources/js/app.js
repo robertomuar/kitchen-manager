@@ -8,10 +8,162 @@ import { createInertiaApp, Link } from '@inertiajs/vue3';
 
 const appName = import.meta.env.VITE_APP_NAME || 'KitchenManager';
 
+/**
+ * Mapa simple de rutas -> paths.
+ * NO usa dominios absolutos, solo rutas relativas para evitar Mixed Content.
+ */
+const normalizeId = (params) => {
+    if (params === undefined || params === null) return '';
+    if (typeof params === 'string' || typeof params === 'number') {
+        return String(params);
+    }
+    if (typeof params === 'object') {
+        if (params.id !== undefined && params.id !== null) return String(params.id);
+        if (params.value !== undefined && params.value !== null) return String(params.value);
+    }
+    return '';
+};
+
+const routeMap = {
+    // --- Auth ---
+    login: () => '/login',
+    register: () => '/register',
+    'password.request': () => '/forgot-password',
+    'password.email': () => '/forgot-password',
+    'password.reset': (token) => `/reset-password/${encodeURIComponent(normalizeId(token))}`,
+    'password.store': () => '/reset-password',
+    'verification.notice': () => '/verify-email',
+    'verification.send': () => '/email/verification-notification',
+    'password.confirm': () => '/confirm-password',
+    'password.update': () => '/password',
+    logout: () => '/logout',
+
+    // --- Perfil ---
+    'profile.edit': () => '/profile',
+    'profile.update': () => '/profile',
+    'profile.destroy': () => '/profile',
+
+    // --- Dashboard ---
+    dashboard: () => '/dashboard',
+
+    // --- Productos ---
+    'products.index': () => '/products',
+    'products.create': () => '/products/create',
+    'products.store': () => '/products',
+    'products.edit': (product) =>
+        `/products/${encodeURIComponent(normalizeId(product))}`,
+    'products.update': (product) =>
+        `/products/${encodeURIComponent(normalizeId(product))}`,
+    'products.destroy': (product) =>
+        `/products/${encodeURIComponent(normalizeId(product))}`,
+
+    // --- Stock ---
+    'stock.index': () => '/stock',
+    'stock.create': () => '/stock/create',
+    'stock.store': () => '/stock',
+    'stock.edit': (item) =>
+        `/stock/${encodeURIComponent(normalizeId(item))}`,
+    'stock.update': (item) =>
+        `/stock/${encodeURIComponent(normalizeId(item))}`,
+    'stock.destroy': (item) =>
+        `/stock/${encodeURIComponent(normalizeId(item))}`,
+    'stock.replenishment.export': () => '/stock/replenishment/export',
+
+    // --- Ubicaciones ---
+    'locations.index': () => '/locations',
+    'locations.create': () => '/locations/create',
+    'locations.store': () => '/locations',
+    'locations.edit': (location) =>
+        `/locations/${encodeURIComponent(normalizeId(location))}`,
+    'locations.update': (location) =>
+        `/locations/${encodeURIComponent(normalizeId(location))}`,
+    'locations.destroy': (location) =>
+        `/locations/${encodeURIComponent(normalizeId(location))}`,
+
+    // --- Compartir cocina ---
+    'kitchen.share.store': () => '/kitchen/share',
+    'kitchen.share.destroy': (share) =>
+        `/kitchen/share/${encodeURIComponent(normalizeId(share))}`,
+
+    // --- Lookup código de barras ---
+    'barcode.lookup': () => '/barcode/lookup',
+};
+
+/**
+ * Helper global route() compatible con:
+ *   - route('login')
+ *   - route('products.edit', id)
+ *   - route().current('dashboard')
+ *   - route().has('locations.index')
+ */
+const routeFn = (nameOrPath = null, params = null) => {
+    // Si se llama sin argumentos: route().current(...)
+    if (!nameOrPath) {
+        return routeFn;
+    }
+
+    // Si ya nos pasan una URL absoluta o relativa, la respetamos
+    if (
+        typeof nameOrPath === 'string' &&
+        (nameOrPath.startsWith('http://') ||
+            nameOrPath.startsWith('https://') ||
+            nameOrPath.startsWith('/'))
+    ) {
+        return nameOrPath;
+    }
+
+    const builder = routeMap[nameOrPath];
+
+    if (typeof builder === 'function') {
+        return builder(params);
+    }
+
+    if (typeof builder === 'string') {
+        return builder;
+    }
+
+    // Fallback: asumimos que el nombre es un path.
+    return `/${nameOrPath}`;
+};
+
+// route().current('dashboard') o route().current(['products.index', 'products.create'])
+routeFn.current = (names) => {
+    if (!names) return false;
+
+    const list = Array.isArray(names) ? names : [names];
+    const currentPath =
+        window.location.pathname.replace(/\/+$/, '') || '/';
+
+    return list.some((name) => {
+        const builder = routeMap[name];
+        if (!builder) return false;
+
+        const path =
+            typeof builder === 'function' ? builder() : builder;
+        if (!path) return false;
+
+        const normalized =
+            path.replace(/\/+$/, '') || '/';
+
+        return (
+            currentPath === normalized ||
+            (normalized !== '/' &&
+                currentPath.startsWith(normalized + '/'))
+        );
+    });
+};
+
+// route().has('locations.index')
+routeFn.has = (name) =>
+    Object.prototype.hasOwnProperty.call(routeMap, name);
+
+// lo colgamos de Vue y del window, como hacía Ziggy
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
+        const pages = import.meta.glob('./Pages/**/*.vue', {
+            eager: true,
+        });
         return pages[`./Pages/${name}.vue`];
     },
     setup({ el, App, props, plugin }) {
@@ -20,164 +172,8 @@ createInertiaApp({
         vueApp.use(plugin);
         vueApp.component('Link', Link);
 
-        /**
-         * Mapa mínimo de rutas de Laravel que usamos en el frontend.
-         * Todo son rutas RELATIVAS para evitar Mixed Content.
-         */
-        const routeMap = {
-            // --- Auth ---
-            login: '/login',
-            register: '/register',
-            'password.request': '/forgot-password',
-            'password.reset': '/reset-password/:token',
-            'verification.notice': '/verify-email',
-            'verification.send': '/email/verification-notification',
-            'password.confirm': '/confirm-password',
-            'password.update': '/password',
-            'profile.edit': '/profile',
-            'profile.update': '/profile',
-            'profile.destroy': '/profile',
-            logout: '/logout',
-
-            // --- Dashboard ---
-            dashboard: '/dashboard',
-
-            // --- Productos ---
-            'products.index': '/products',
-            'products.create': '/products/create',
-            'products.edit': '/products/:product/edit',
-            'products.store': '/products',
-            'products.update': '/products/:product',
-            'products.destroy': '/products/:product',
-
-            // --- Stock ---
-            'stock.index': '/stock',
-            'stock.create': '/stock/create',
-            'stock.edit': '/stock/:stockItem/edit',
-            'stock.store': '/stock',
-            'stock.update': '/stock/:stockItem',
-            'stock.destroy': '/stock/:stockItem',
-            'stock.replenishment.export': '/stock/replenishment/export',
-
-            // --- Ubicaciones ---
-            'locations.index': '/locations',
-            'locations.create': '/locations/create',
-            'locations.edit': '/locations/:location/edit',
-            'locations.store': '/locations',
-            'locations.update': '/locations/:location',
-            'locations.destroy': '/locations/:location',
-
-            // --- Compartir cocina ---
-            'kitchen.share.store': '/kitchen/share',
-            'kitchen.share.destroy': '/kitchen/share/:share',
-
-            // --- Lookup código de barras ---
-            'barcode.lookup': '/barcode/lookup',
-        };
-
-        /**
-         * Construye la URL a partir del nombre de ruta y parámetros.
-         * Soporta:
-         *   route('products.edit', 5)
-         *   route('products.edit', { product: 5 })
-         */
-        const buildPath = (name, params = null) => {
-            const template = routeMap[name];
-
-            if (!template) {
-                // Fallback: si no conocemos el nombre, devolvemos "/nombre"
-                return `/${name}`;
-            }
-
-            // Si la ruta no tiene placeholders, la devolvemos tal cual
-            if (!template.includes(':')) {
-                return template;
-            }
-
-            let url = template;
-
-            // Permitir route('ruta', id) o route('ruta', { clave: id })
-            if (params !== null && params !== undefined) {
-                if (typeof params !== 'object' || Array.isArray(params)) {
-                    // Usamos el primer placeholder que aparezca
-                    const match = url.match(/:([A-Za-z_]+)/);
-                    if (match) {
-                        url = url.replace(
-                            `:${match[1]}`,
-                            encodeURIComponent(
-                                Array.isArray(params) ? params[0] : params,
-                            ),
-                        );
-                    }
-                } else {
-                    Object.entries(params).forEach(([key, value]) => {
-                        url = url.replace(
-                            `:${key}`,
-                            encodeURIComponent(value),
-                        );
-                    });
-                }
-            }
-
-            // Si quedara algún placeholder sin rellenar, lo limpiamos
-            return url.replace(/:([A-Za-z_]+)/g, '');
-        };
-
-        /**
-         * Helper route “tipo Ziggy” muy simplificado.
-         *
-         * Uso:
-         *   route('login')
-         *   route('products.edit', 5)
-         *   route().current('dashboard')
-         *   route().has('locations.index')
-         */
-        function route(nameOrPath, params = null) {
-            // Compatibilidad con route().current(...) y route().has(...)
-            if (nameOrPath === undefined || nameOrPath === null) {
-                return {
-                    current: (name) => route.current(name),
-                    has: (name) => route.has(name),
-                };
-            }
-
-            if (typeof nameOrPath !== 'string') {
-                return '/';
-            }
-
-            // Si ya es URL absoluta o path, lo devolvemos tal cual
-            if (
-                nameOrPath.startsWith('http://') ||
-                nameOrPath.startsWith('https://') ||
-                nameOrPath.startsWith('/')
-            ) {
-                return nameOrPath;
-            }
-
-            // Nombre de ruta de Laravel
-            return buildPath(nameOrPath, params);
-        }
-
-        route.has = (name) =>
-            Object.prototype.hasOwnProperty.call(routeMap, name);
-
-        route.current = (name) => {
-            const target = buildPath(name);
-
-            if (typeof window === 'undefined') {
-                return false;
-            }
-
-            const currentPath =
-                window.location.pathname.replace(/\/+$/, '') || '/';
-            const targetPath = target.replace(/\/+$/, '') || '/';
-
-            return currentPath === targetPath;
-        };
-
-        // Disponible en los componentes Vue y como window.route (como Ziggy)
-        vueApp.config.globalProperties.route = route;
-        window.route = route;
+        vueApp.config.globalProperties.route = routeFn;
+        window.route = routeFn;
 
         vueApp.mount(el);
     },

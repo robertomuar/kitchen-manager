@@ -1,23 +1,16 @@
 // resources/js/bootstrap.js
 
+import 'vite/modulepreload-polyfill';
+
 import axios from 'axios';
 
 window.axios = axios;
 
-// Peticiones AJAX estándar
+// Cabecera estándar para peticiones AJAX
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-// CSRF
-const token = document.head.querySelector('meta[name="csrf-token"]');
+// Usar cookies de la misma origin (sesión + XSRF-TOKEN)
+window.axios.defaults.withCredentials = true;
 
-if (token) {
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
-} else {
-    console.error(
-        'CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token',
-    );
-}
-
-// IMPORTANTE: no ponemos axios.defaults.baseURL.
-// Así usará https://kitchenmanager.duckdns.org/login automáticamente
-// y no mezclará http/https.
+// NO añadimos manualmente X-CSRF-TOKEN, Laravel + axios
+// ya se entienden vía cookie XSRF-TOKEN -> cabecera X-XSRF-TOKEN.
