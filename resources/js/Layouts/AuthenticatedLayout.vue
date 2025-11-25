@@ -1,13 +1,23 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
+const page = usePage();
+
+// URL actual, tipo "/dashboard", "/products", etc.
+const currentUrl = computed(() => page.url);
+
+// Helpers para marcar activo el menú
+const isDashboard = computed(() => currentUrl.value.startsWith('/dashboard'));
+const isProducts = computed(() => currentUrl.value.startsWith('/products'));
+const isStock = computed(() => currentUrl.value.startsWith('/stock'));
+const isLocations = computed(() => currentUrl.value.startsWith('/locations'));
 </script>
 
 <template>
@@ -30,7 +40,7 @@ const showingNavigationDropdown = ref(false);
         <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-4">
             <!-- Navbar -->
             <nav
-                class="relative z-20 mt-4 mb-4 flex h-14 items-center justify-between rounded-2xl border border-slate-800/80 bg-slate-950/80 px-3 py-2 shadow-lg shadow-slate-950/60 backdrop-blur-sm"
+                class="mt-4 mb-4 flex h-14 items-center justify-between rounded-2xl border border-slate-800/80 bg-slate-950/80 px-3 py-2 shadow-lg shadow-slate-950/60 backdrop-blur-sm"
             >
                 <div class="flex items-center gap-4">
                     <!-- Logo + nombre app -->
@@ -59,29 +69,29 @@ const showingNavigationDropdown = ref(false);
                     <div class="hidden space-x-4 sm:flex">
                         <NavLink
                             :href="route('dashboard')"
-                            :active="route().current('dashboard')"
+                            :active="isDashboard"
                         >
                             Panel
                         </NavLink>
 
                         <NavLink
                             :href="route('products.index')"
-                            :active="route().current('products.index')"
+                            :active="isProducts"
                         >
                             Productos
                         </NavLink>
 
                         <NavLink
                             :href="route('stock.index')"
-                            :active="route().current('stock.index')"
+                            :active="isStock"
                         >
                             Stock
                         </NavLink>
 
                         <NavLink
-                            v-if="route().has('locations.index')"
+                            v-if="route('locations.index')"
                             :href="route('locations.index')"
-                            :active="route().current('locations.index')"
+                            :active="isLocations"
                         >
                             Ubicaciones
                         </NavLink>
@@ -187,29 +197,29 @@ const showingNavigationDropdown = ref(false);
                 <div class="space-y-1 pb-3">
                     <ResponsiveNavLink
                         :href="route('dashboard')"
-                        :active="route().current('dashboard')"
+                        :active="isDashboard"
                     >
                         Panel
                     </ResponsiveNavLink>
 
                     <ResponsiveNavLink
                         :href="route('products.index')"
-                        :active="route().current('products.index')"
+                        :active="isProducts"
                     >
                         Productos
                     </ResponsiveNavLink>
 
                     <ResponsiveNavLink
                         :href="route('stock.index')"
-                        :active="route().current('stock.index')"
+                        :active="isStock"
                     >
                         Stock
                     </ResponsiveNavLink>
 
                     <ResponsiveNavLink
-                        v-if="route().has('locations.index')"
+                        v-if="route('locations.index')"
                         :href="route('locations.index')"
-                        :active="route().current('locations.index')"
+                        :active="isLocations"
                     >
                         Ubicaciones
                     </ResponsiveNavLink>
