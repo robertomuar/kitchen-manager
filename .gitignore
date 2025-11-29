@@ -20,3 +20,12 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+/public/build
+/public/hot
+
+/public/build
+/public/hot
+
+/public/build
+/public/hot

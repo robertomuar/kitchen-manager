@@ -1,11 +1,14 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import BarcodeScanner from '@/Components/BarcodeScanner.vue';
+
+const BarcodeScanner = defineAsyncComponent(() =>
+    import('@/Components/BarcodeScanner.vue'),
+);
 
 const props = defineProps({
     product: {
@@ -62,6 +65,7 @@ const submitLabel = computed(() =>
 const isScannerOpen = ref(false);
 const isLookingUp = ref(false);
 const lookupError = ref('');
+const scannerError = ref('');
 
 // Enviar formulario (crear / editar)
 const submit = () => {
@@ -131,9 +135,21 @@ const lookupBarcode = async () => {
 // Cuando el escáner lee un código
 const onBarcodeScanned = (code) => {
     form.barcode = code;
+    scannerError.value = '';
     isScannerOpen.value = false;
     // Lanzamos el lookup automáticamente
     lookupBarcode();
+};
+
+const onScannerError = (errorMessage) => {
+    scannerError.value =
+        typeof errorMessage === 'string'
+            ? errorMessage
+            : 'No se pudo iniciar el escáner. Comprueba los permisos de cámara.';
+};
+
+const onScannerClosed = () => {
+    isScannerOpen.value = false;
 };
 </script>
 
@@ -261,8 +277,16 @@ const onBarcodeScanned = (code) => {
 
                             <BarcodeScanner
                                 @scanned="onBarcodeScanned"
-                                @closed="isScannerOpen = false"
+                                @error="onScannerError"
+                                @closed="onScannerClosed"
                             />
+
+                            <p
+                                v-if="scannerError"
+                                class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                            >
+                                {{ scannerError }}
+                            </p>
                         </div>
 
                         <!-- Nombre -->

@@ -23,20 +23,22 @@ const verificationLinkSent = computed(
 
 <template>
     <GuestLayout>
-        <Head title="Email Verification" />
+        <Head title="Verifica tu email" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Thanks for signing up! Before getting started, could you verify your
-            email address by clicking on the link we just emailed to you? If you
-            didn't receive the email, we will gladly send you another.
+        <div class="mb-4 text-sm text-gray-700">
+            Antes de entrar en tu cocina digital necesitamos confirmar tu
+            dirección de correo. Haz clic en el enlace que acabamos de enviarte;
+            es la forma más segura de proteger tus datos y evitar accesos no
+            autorizados.
         </div>
 
         <div
             class="mb-4 text-sm font-medium text-green-600"
             v-if="verificationLinkSent"
         >
-            A new verification link has been sent to the email address you
-            provided during registration.
+            Te hemos reenviado un nuevo enlace de verificación. Revisa también
+            la carpeta de spam o "Promociones" si no lo ves en la bandeja de
+            entrada.
         </div>
 
         <form @submit.prevent="submit">
@@ -45,7 +47,7 @@ const verificationLinkSent = computed(
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Resend Verification Email
+                    Reenviar enlace
                 </PrimaryButton>
 
                 <Link
@@ -53,7 +55,7 @@ const verificationLinkSent = computed(
                     method="post"
                     as="button"
                     class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >Log Out</Link
+                    >Cerrar sesión</Link
                 >
             </div>
         </form>
