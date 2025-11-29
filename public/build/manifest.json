@@ -1,11 +1,23 @@
 {
+  "resources/js/Components/BarcodeScanner.vue": {
+    "file": "assets/BarcodeScanner-CfZbFrwb.js",
+    "name": "BarcodeScanner",
+    "src": "resources/js/Components/BarcodeScanner.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
   "resources/js/app.js": {
-    "file": "assets/app-DhDzyLWx.js",
+    "file": "assets/app-dgdnxp_3.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
+    "dynamicImports": [
+      "resources/js/Components/BarcodeScanner.vue"
+    ],
     "css": [
-      "assets/app-B1KN7-S4.css"
+      "assets/app-BdcHtAbD.css"
     ]
   }
 }
