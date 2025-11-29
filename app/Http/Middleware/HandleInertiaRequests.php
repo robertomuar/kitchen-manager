@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -32,7 +33,14 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user'            => $request->user(),
+                'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+                'emailVerified'   => $request->user()?->hasVerifiedEmail(),
+            ],
+            'flash' => [
+                'status'  => session('status'),
+                'success' => session('success'),
+                'error'   => session('error'),
             ],
         ];
     }

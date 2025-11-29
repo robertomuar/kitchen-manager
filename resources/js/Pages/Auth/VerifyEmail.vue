@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     status: {
@@ -12,6 +12,10 @@ const props = defineProps({
 
 const form = useForm({});
 
+const page = usePage();
+
+const userEmail = computed(() => page.props.auth?.user?.email ?? '');
+
 const submit = () => {
     form.post(route('verification.send'));
 };
@@ -19,33 +23,38 @@ const submit = () => {
 const verificationLinkSent = computed(
     () => props.status === 'verification-link-sent',
 );
+
+const resendDisabled = computed(
+    () => form.processing || verificationLinkSent.value,
+);
 </script>
 
 <template>
     <GuestLayout>
-        <Head title="Email Verification" />
+        <Head title="Verifica tu correo" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Thanks for signing up! Before getting started, could you verify your
-            email address by clicking on the link we just emailed to you? If you
-            didn't receive the email, we will gladly send you another.
+        <div class="mb-4 text-sm text-gray-700">
+            Necesitamos confirmar la dirección
+            <span class="font-semibold">{{ userEmail }}</span> antes de darte
+            acceso completo. Hemos enviado un enlace de verificación a tu buzón;
+            solo tienes que abrirlo y pulsar el botón para validar tu cuenta.
         </div>
 
         <div
-            class="mb-4 text-sm font-medium text-green-600"
+            class="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-700"
             v-if="verificationLinkSent"
         >
-            A new verification link has been sent to the email address you
-            provided during registration.
+            ¡Listo! Te hemos reenviado un correo con el enlace de verificación.
+            Revisa también la carpeta de spam o promociones.
         </div>
 
         <form @submit.prevent="submit">
-            <div class="mt-4 flex items-center justify-between">
+            <div class="mt-4 flex items-center justify-between gap-3">
                 <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
+                    :class="{ 'opacity-50': resendDisabled }"
+                    :disabled="resendDisabled"
                 >
-                    Resend Verification Email
+                    Reenviar enlace seguro
                 </PrimaryButton>
 
                 <Link
@@ -53,9 +62,15 @@ const verificationLinkSent = computed(
                     method="post"
                     as="button"
                     class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >Log Out</Link
+                    >Cambiar de cuenta</Link
                 >
             </div>
         </form>
+
+        <p class="mt-6 text-xs text-gray-500">
+            Este paso protege tu cocina compartida y evita accesos no deseados.
+            Si el enlace tarda, espera unos segundos o solicita uno nuevo para
+            mantener la sesión protegida.
+        </p>
     </GuestLayout>
 </template>

@@ -1,45 +1,12 @@
 <script setup>
 import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue';
-import { Html5Qrcode } from 'html5-qrcode';
 
-const emit = defineEmits(['detected', 'error']);
+const emit = defineEmits(['scanned', 'error', 'closed']);
 
 const html5QrCode = ref(null);
+const isStarting = ref(false);
 
-const startScanner = async () => {
-    try {
-        // El div con este id está en el template
-        html5QrCode.value = new Html5Qrcode('barcode-scanner');
-
-        await html5QrCode.value.start(
-            { facingMode: 'environment' }, // cámara trasera en móvil
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-            },
-            async (decodedText, decodedResult) => {
-                try {
-                    // Paramos el escáner tras la primera lectura
-                    await html5QrCode.value.stop();
-                    await html5QrCode.value.clear();
-                } catch (e) {
-                    // ignoramos errores al parar
-                }
-
-                emit('detected', decodedText);
-            },
-            (errorMessage) => {
-                // Errores de escaneo continuos, los ignoramos
-                // Si quieres log:
-                // console.debug(errorMessage);
-            },
-        );
-    } catch (e) {
-        emit('error', e);
-    }
-};
-
-const stopScanner = async () => {
+const stopScanner = async (emitClose = false) => {
     if (!html5QrCode.value) return;
 
     try {
@@ -49,6 +16,45 @@ const stopScanner = async () => {
         // ignoramos
     } finally {
         html5QrCode.value = null;
+        if (emitClose) {
+            emit('closed');
+        }
+    }
+};
+
+const startScanner = async () => {
+    if (isStarting.value) return;
+
+    isStarting.value = true;
+
+    try {
+        // Carga diferida para no penalizar el render inicial de la página
+        const { Html5Qrcode } = await import('html5-qrcode');
+
+        // El div con este id está en el template
+        html5QrCode.value = new Html5Qrcode('barcode-scanner', {
+            verbose: false,
+        });
+
+        await html5QrCode.value.start(
+            { facingMode: 'environment' }, // cámara trasera en móvil
+            {
+                fps: 12,
+                qrbox: { width: 260, height: 260 },
+            },
+            async (decodedText) => {
+                await stopScanner();
+                emit('scanned', decodedText);
+            },
+            () => {
+                // Ignoramos errores de escaneo continuos para no saturar la consola
+            },
+        );
+    } catch (e) {
+        emit('error', e);
+        await stopScanner(true);
+    } finally {
+        isStarting.value = false;
     }
 };
 
