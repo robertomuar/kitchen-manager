@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
@@ -16,8 +16,29 @@ const page = usePage();
 
 const userEmail = computed(() => page.props.auth?.user?.email ?? '');
 
+const resendCooldown = ref(0);
+let cooldownTimer = null;
+
+const startCooldown = () => {
+    resendCooldown.value = 60;
+
+    if (cooldownTimer) clearInterval(cooldownTimer);
+
+    cooldownTimer = setInterval(() => {
+        if (resendCooldown.value <= 0) {
+            clearInterval(cooldownTimer);
+            cooldownTimer = null;
+            return;
+        }
+
+        resendCooldown.value -= 1;
+    }, 1000);
+};
+
 const submit = () => {
-    form.post(route('verification.send'));
+    form.post(route('verification.send'), {
+        onSuccess: () => startCooldown(),
+    });
 };
 
 const verificationLinkSent = computed(
@@ -25,8 +46,18 @@ const verificationLinkSent = computed(
 );
 
 const resendDisabled = computed(
-    () => form.processing || verificationLinkSent.value,
+    () => form.processing || resendCooldown.value > 0,
 );
+
+onMounted(() => {
+    if (verificationLinkSent.value) {
+        startCooldown();
+    }
+});
+
+onUnmounted(() => {
+    if (cooldownTimer) clearInterval(cooldownTimer);
+});
 </script>
 
 <template>
@@ -49,13 +80,28 @@ const resendDisabled = computed(
         </div>
 
         <form @submit.prevent="submit">
-            <div class="mt-4 flex items-center justify-between gap-3">
-                <PrimaryButton
-                    :class="{ 'opacity-50': resendDisabled }"
-                    :disabled="resendDisabled"
-                >
-                    Reenviar enlace seguro
-                </PrimaryButton>
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center gap-3">
+                    <PrimaryButton
+                        :class="{ 'opacity-50': resendDisabled }"
+                        :disabled="resendDisabled"
+                    >
+                        <span v-if="resendCooldown === 0">
+                            Reenviar enlace seguro
+                        </span>
+                        <span v-else>
+                            Espera {{ resendCooldown }}s
+                        </span>
+                    </PrimaryButton>
+
+                    <p
+                        v-if="resendCooldown > 0"
+                        class="text-xs text-gray-500"
+                    >
+                        Para evitar abusos, puedes reenviar el correo cuando termine
+                        la cuenta regresiva.
+                    </p>
+                </div>
 
                 <Link
                     :href="route('logout')"
