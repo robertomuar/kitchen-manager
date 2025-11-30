@@ -85,6 +85,7 @@ onUnmounted(() => {
                     <PrimaryButton
                         :class="{ 'opacity-50': resendDisabled }"
                         :disabled="resendDisabled"
+                        type="submit"
                     >
                         <span v-if="resendCooldown === 0">
                             Reenviar enlace seguro
