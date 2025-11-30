@@ -1,14 +1,11 @@
 <script setup>
-import { computed, defineAsyncComponent, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
-
-const BarcodeScanner = defineAsyncComponent(() =>
-    import('@/Components/BarcodeScanner.vue'),
-);
+import BarcodeScanner from '@/Components/BarcodeScanner.vue';
 
 const props = defineProps({
     product: {
@@ -132,23 +129,23 @@ const lookupBarcode = async () => {
     }
 };
 
+const openScanner = () => {
+    scannerError.value = '';
+    isScannerOpen.value = true;
+};
+
 // Cuando el escáner lee un código
 const onBarcodeScanned = (code) => {
     form.barcode = code;
-    scannerError.value = '';
     isScannerOpen.value = false;
     // Lanzamos el lookup automáticamente
     lookupBarcode();
 };
 
-const onScannerError = (errorMessage) => {
+const onScannerError = (error) => {
+    console.error('No se pudo usar la cámara:', error);
     scannerError.value =
-        typeof errorMessage === 'string'
-            ? errorMessage
-            : 'No se pudo iniciar el escáner. Comprueba los permisos de cámara.';
-};
-
-const onScannerClosed = () => {
+        'No pudimos acceder a la cámara. Revisa los permisos del navegador o prueba con otro dispositivo.';
     isScannerOpen.value = false;
 };
 </script>
@@ -229,7 +226,7 @@ const onScannerClosed = () => {
 
                                     <button
                                         type="button"
-                                        @click="isScannerOpen = true"
+                                        @click="openScanner"
                                         class="inline-flex flex-1 items-center justify-center rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-200"
                                     >
                                         Escanear con cámara
@@ -278,12 +275,11 @@ const onScannerClosed = () => {
                             <BarcodeScanner
                                 @scanned="onBarcodeScanned"
                                 @error="onScannerError"
-                                @closed="onScannerClosed"
+                                @closed="isScannerOpen = false"
                             />
-
                             <p
                                 v-if="scannerError"
-                                class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                                class="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
                             >
                                 {{ scannerError }}
                             </p>

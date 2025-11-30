@@ -64,3 +64,21 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Cómo copiar estos cambios a tu proyecto
+
+Si quieres reutilizar este código en otro repositorio de Laravel, estas son dos formas simples de hacerlo:
+
+1. **Usar Git para traer el último commit**
+   - Añade este repositorio como remoto temporal: `git remote add kitchen-origin <url-de-este-repo>`.
+   - Trae los commits: `git fetch kitchen-origin`.
+   - Aplica el último cambio de seguridad y escáner: `git cherry-pick kitchen-origin/work`.
+   - Quita el remoto temporal si ya no lo necesitas: `git remote remove kitchen-origin`.
+
+2. **Copiar archivos de manera manual**
+   - Descarga o clona este repositorio en una carpeta temporal.
+   - Copia las vistas y componentes ajustados (por ejemplo, `resources/js/Components/BarcodeScanner.vue`, `resources/js/Pages/Auth/VerifyEmail.vue`, `resources/js/Pages/Products/Form.vue`).
+   - Si usas build de frontend, vuelve a ejecutar `npm install` y `npm run build` en tu proyecto para regenerar los assets.
+   - Revisa el middleware y las rutas (`app/Http/Middleware/HandleInertiaRequests.php` y `routes/web.php`) para que coincidan con tus reglas de verificación de email.
+
+Con cualquiera de las dos opciones, recuerda ejecutar tus pruebas y validar que la verificación de correo y el escáner funcionan en tu entorno.

@@ -22,7 +22,7 @@ Route::get('/', function () {
     ]);
 });
 
-// Todo lo privado requiere sesión y email verificado
+// Todo lo privado va con auth + verified para garantizar correos validados
 Route::middleware(['auth', 'verified'])->group(function () {
     // === DASHBOARD ===
     Route::get('/dashboard', function () {
