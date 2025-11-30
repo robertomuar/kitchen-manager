@@ -64,6 +64,11 @@ const isLookingUp = ref(false);
 const lookupError = ref('');
 const scannerError = ref('');
 
+const sanitizeBarcode = (code) =>
+    typeof code === 'string' || typeof code === 'number'
+        ? String(code).trim()
+        : '';
+
 // Enviar formulario (crear / editar)
 const submit = () => {
     if (isEdit.value) {
@@ -136,7 +141,15 @@ const openScanner = () => {
 
 // Cuando el escáner lee un código
 const onBarcodeScanned = (code) => {
-    form.barcode = code;
+    const sanitized = sanitizeBarcode(code);
+
+    if (!sanitized) {
+        scannerError.value =
+            'El escáner no pudo leer el código. Intenta acercarte un poco más y vuelve a probar.';
+        return;
+    }
+
+    form.barcode = sanitized;
     isScannerOpen.value = false;
     // Lanzamos el lookup automáticamente
     lookupBarcode();

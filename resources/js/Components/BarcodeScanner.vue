@@ -29,7 +29,8 @@ const startScanner = async () => {
 
     try {
         // Carga diferida para no penalizar el render inicial de la página
-        const { Html5Qrcode } = await import('html5-qrcode');
+        const { Html5Qrcode, Html5QrcodeSupportedFormats } =
+            await import('html5-qrcode');
 
         // El div con este id está en el template
         html5QrCode.value = new Html5Qrcode('barcode-scanner', {
@@ -41,6 +42,13 @@ const startScanner = async () => {
             {
                 fps: 12,
                 qrbox: { width: 260, height: 260 },
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.QR_CODE,
+                ],
             },
             async (decodedText) => {
                 await stopScanner();
