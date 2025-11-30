@@ -19,7 +19,6 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
-        "@zxing/browser": "^0.1.5",
         "html5-qrcode": "^2.3.8"
     }
 }
