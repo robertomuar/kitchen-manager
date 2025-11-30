@@ -17,5 +17,13 @@ window.axios.defaults.withCredentials = true;
 // mantendrá http porque window.location.origin reflejará ese protocolo.
 window.axios.defaults.baseURL = window.location.origin;
 
-// NO añadimos manualmente X-CSRF-TOKEN, Laravel + axios
-// ya se entienden vía cookie XSRF-TOKEN -> cabecera X-XSRF-TOKEN.
+// Aseguramos el token CSRF en todas las peticiones.
+const csrfToken = document.head.querySelector('meta[name="csrf-token"]');
+
+if (csrfToken?.content) {
+    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken.content;
+} else {
+    console.error(
+        'Token CSRF no encontrado. Verifica que <meta name="csrf-token" ...> exista en el layout.'
+    );
+}
