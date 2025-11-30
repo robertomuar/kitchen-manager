@@ -6,6 +6,13 @@ import '../css/app.css';
 import { createApp, h } from 'vue';
 import { createInertiaApp, Link } from '@inertiajs/vue3';
 
+if (typeof route !== 'undefined') {
+    const originalRoute = route;
+
+    window.route = (name, params, absolute = false) =>
+        originalRoute(name, params, absolute);
+}
+
 const appName = import.meta.env.VITE_APP_NAME || 'KitchenManager';
 
 /**
