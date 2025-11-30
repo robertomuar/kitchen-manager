@@ -67,7 +67,7 @@ const removeAccess = (shareId) => {
             </div>
 
             <div class="flex items-center gap-3">
-                <PrimaryButton :disabled="form.processing">
+                <PrimaryButton :disabled="form.processing" type="submit">
                     Compartir cocina
                 </PrimaryButton>
 

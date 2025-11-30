@@ -100,7 +100,7 @@ const submit = () => {
 
         <!-- Botón -->
         <div class="flex items-center gap-3">
-            <PrimaryButton :disabled="form.processing">
+            <PrimaryButton :disabled="form.processing" type="submit">
                 Guardar cambios
             </PrimaryButton>
 
