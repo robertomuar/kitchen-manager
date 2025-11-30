@@ -92,7 +92,7 @@ const maxWidthClass = computed(() => {
                 leave-to-class="opacity-0"
             >
                 <div
-                    v-show="show"
+                    v-show="props.show"
                     class="fixed inset-0 transform transition-all"
                     @click="close"
                 >
@@ -111,7 +111,7 @@ const maxWidthClass = computed(() => {
                 leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
                 <div
-                    v-show="show"
+                    v-show="props.show"
                     class="mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full"
                     :class="maxWidthClass"
                 >
