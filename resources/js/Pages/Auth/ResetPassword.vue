@@ -92,6 +92,7 @@ const submit = () => {
                 <PrimaryButton
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
+                    type="submit"
                 >
                     Reset Password
                 </PrimaryButton>

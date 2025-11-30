@@ -4,11 +4,16 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const form = useForm({
     password: '',
 });
+
+const username = computed(
+    () => usePage().props.auth.user?.email ?? usePage().props.auth.user?.name ?? ''
+);
 
 const submit = () => {
     form.post(route('password.confirm'), {
@@ -27,6 +32,16 @@ const submit = () => {
         </div>
 
         <form @submit.prevent="submit">
+            <input
+                type="text"
+                name="username"
+                :value="username"
+                autocomplete="username"
+                class="sr-only"
+                tabindex="-1"
+                aria-hidden="true"
+            />
+
             <div>
                 <InputLabel for="password" value="Password" />
                 <TextInput
@@ -46,6 +61,7 @@ const submit = () => {
                     class="ms-4"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
+                    type="submit"
                 >
                     Confirm
                 </PrimaryButton>
