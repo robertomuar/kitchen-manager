@@ -59,6 +59,7 @@ const submit = () => {
                 <PrimaryButton
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
+                    type="submit"
                 >
                     Email Password Reset Link
                 </PrimaryButton>
