@@ -76,13 +76,10 @@ const maxWidthClass = computed(() => {
 
 <template>
     <dialog
-        class="z-50 m-0 min-h-full min-w-full overflow-y-auto bg-transparent backdrop:bg-slate-900/70"
         ref="dialog"
+        class="z-50 m-0 min-h-full min-w-full overflow-y-auto bg-transparent backdrop:bg-slate-950/80"
     >
-        <div
-            class="fixed inset-0 z-50 overflow-y-auto px-4 py-6 sm:px-0"
-            scroll-region
-        >
+        <div class="fixed inset-0 z-50 overflow-y-auto px-4 py-10 sm:px-0" scroll-region>
             <Transition
                 enter-active-class="ease-out duration-300"
                 enter-from-class="opacity-0"
@@ -93,13 +90,9 @@ const maxWidthClass = computed(() => {
             >
                 <div
                     v-show="show"
-                    class="fixed inset-0 transform transition-all"
+                    class="fixed inset-0 transform bg-slate-950/70 transition-all"
                     @click="close"
-                >
-                    <div
-                        class="absolute inset-0 bg-gray-500 opacity-75"
-                    />
-                </div>
+                />
             </Transition>
 
             <Transition
@@ -112,10 +105,45 @@ const maxWidthClass = computed(() => {
             >
                 <div
                     v-show="show"
-                    class="mb-6 transform overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/95 text-slate-100 shadow-2xl transition-all sm:mx-auto sm:w-full"
+                    class="mb-10 transform overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/95 text-slate-50 shadow-2xl ring-1 ring-slate-700/60 transition-all sm:mx-auto sm:w-full"
                     :class="maxWidthClass"
                 >
-                    <slot v-if="showSlot" />
+                    <div v-if="$slots.title || closeable" class="flex items-start justify-between gap-3 border-b border-slate-800/70 px-5 py-4 sm:px-6">
+                        <h3 class="text-base font-semibold leading-6 text-slate-100">
+                            <slot name="title" />
+                        </h3>
+
+                        <button
+                            v-if="closeable"
+                            type="button"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800/70 text-slate-300 transition hover:bg-slate-700/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                            @click="close"
+                        >
+                            <span class="sr-only">Cerrar</span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                class="h-5 w-5"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div v-if="showSlot" class="space-y-6 px-5 py-6 sm:px-6 sm:py-7">
+                        <slot name="content">
+                            <slot />
+                        </slot>
+                    </div>
+
+                    <div v-if="$slots.footer" class="border-t border-slate-800/70 bg-slate-950/60 px-5 py-4 sm:px-6">
+                        <slot name="footer" />
+                    </div>
                 </div>
             </Transition>
         </div>
