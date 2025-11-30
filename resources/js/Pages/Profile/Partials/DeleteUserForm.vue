@@ -72,7 +72,6 @@ const closeModal = () => {
 
             <template #content>
                 <form class="space-y-4 p-6 sm:p-8" @submit.prevent="deleteUser">
-                <form class="space-y-4" @submit.prevent="deleteUser">
                     <input
                         type="text"
                         name="username"
@@ -84,7 +83,6 @@ const closeModal = () => {
                     />
 
                     <p class="text-sm text-slate-200">
-                    <p class="text-sm text-slate-300">
                         ¿Seguro que quieres eliminar tu cuenta? Una vez eliminada,
                         todos tus datos serán borrados de forma permanente.
                     </p>
@@ -102,8 +100,8 @@ const closeModal = () => {
                             v-model="form.password"
                             type="password"
                             autocomplete="current-password"
-                            class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
-                            class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 shadow-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                            class="mt-1"
+                            variant="dark"
                             placeholder="Introduce tu contraseña para confirmar"
                         />
 
@@ -121,7 +119,6 @@ const closeModal = () => {
                         <DangerButton
                             type="submit"
                             class="ml-2"
-                            :class="{ 'opacity-25': form.processing }"
                             :disabled="form.processing"
                         >
                             Eliminar cuenta
