@@ -1,6 +1,6 @@
 <script setup>
-import { ref, nextTick } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { ref, nextTick, computed } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
 
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -16,6 +16,10 @@ const deletionError = ref('');
 const form = useForm({
     password: '',
 });
+
+const username = computed(
+    () => usePage().props.auth.user?.email ?? usePage().props.auth.user?.name ?? ''
+);
 
 const confirmUserDeletion = () => {
     confirmingUserDeletion.value = true;
@@ -68,6 +72,16 @@ const closeModal = () => {
 
             <template #content>
                 <form class="space-y-4" @submit.prevent="deleteUser">
+                    <input
+                        type="text"
+                        name="username"
+                        :value="username"
+                        autocomplete="username"
+                        class="sr-only"
+                        tabindex="-1"
+                        aria-hidden="true"
+                    />
+
                     <p class="text-sm text-slate-300">
                         ¿Seguro que quieres eliminar tu cuenta? Una vez eliminada,
                         todos tus datos serán borrados de forma permanente.

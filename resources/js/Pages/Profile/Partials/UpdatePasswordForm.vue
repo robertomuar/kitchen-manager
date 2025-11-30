@@ -1,5 +1,6 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
 
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -12,6 +13,10 @@ const form = useForm({
     password_confirmation: '',
 });
 
+const username = computed(
+    () => usePage().props.auth.user?.email ?? usePage().props.auth.user?.name ?? ''
+);
+
 const updatePassword = () => {
     form.put(route('password.update'), {
         preserveScroll: true,
@@ -23,6 +28,16 @@ const updatePassword = () => {
 <template>
     <!-- SOLO el formulario, sin tarjetas ni cabeceras -->
     <form @submit.prevent="updatePassword" class="space-y-6 max-w-xl">
+        <input
+            type="text"
+            name="username"
+            :value="username"
+            autocomplete="username"
+            class="sr-only"
+            tabindex="-1"
+            aria-hidden="true"
+        />
+
         <!-- Contraseña actual -->
         <div>
             <InputLabel
