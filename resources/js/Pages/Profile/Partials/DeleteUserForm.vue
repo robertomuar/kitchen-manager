@@ -12,6 +12,7 @@ import InputError from '@/Components/InputError.vue';
 const confirmingUserDeletion = ref(false);
 const passwordInput = ref(null);
 const deletionError = ref('');
+const formId = 'delete-account-form';
 
 const form = useForm({
     password: '',
@@ -71,7 +72,11 @@ const closeModal = () => {
             </template>
 
             <template #content>
-                <form class="space-y-4 p-6 sm:p-8" @submit.prevent="deleteUser">
+                <form
+                    :id="formId"
+                    class="space-y-4"
+                    @submit.prevent="deleteUser"
+                >
                     <input
                         type="text"
                         name="username"
@@ -82,16 +87,23 @@ const closeModal = () => {
                         aria-hidden="true"
                     />
 
-                    <p class="text-sm text-slate-200">
-                        ¿Seguro que quieres eliminar tu cuenta? Una vez eliminada,
-                        todos tus datos serán borrados de forma permanente.
-                    </p>
+                    <div class="space-y-1">
+                        <p class="text-sm text-slate-200">
+                            Esta acción es definitiva. Si eliminas tu cuenta se
+                            borrarán todas tus ubicaciones, productos y stock
+                            asociados.
+                        </p>
+                        <p class="text-sm text-amber-200/90">
+                            Escribe tu contraseña para confirmar que eres la
+                            persona titular.
+                        </p>
+                    </div>
 
-                    <div>
+                    <div class="space-y-2">
                         <InputLabel
                             for="password"
                             value="Contraseña"
-                            class="text-slate-200"
+                            class="text-slate-100"
                         />
 
                         <TextInput
@@ -107,24 +119,27 @@ const closeModal = () => {
 
                         <InputError
                             :message="form.errors.password || deletionError"
-                            class="mt-2"
+                            class="mt-1"
                         />
                     </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-1">
-                        <SecondaryButton type="button" @click="closeModal">
-                            Cancelar
-                        </SecondaryButton>
-
-                        <DangerButton
-                            type="submit"
-                            class="ml-2"
-                            :disabled="form.processing"
-                        >
-                            Eliminar cuenta
-                        </DangerButton>
-                    </div>
                 </form>
+            </template>
+
+            <template #footer>
+                <div class="flex flex-wrap items-center justify-end gap-3">
+                    <SecondaryButton type="button" @click="closeModal">
+                        Cancelar
+                    </SecondaryButton>
+
+                    <DangerButton
+                        :form="formId"
+                        type="submit"
+                        class="ml-0 sm:ml-2"
+                        :disabled="form.processing"
+                    >
+                        Eliminar cuenta
+                    </DangerButton>
+                </div>
             </template>
         </Modal>
     </div>
