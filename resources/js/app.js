@@ -6,12 +6,21 @@ import '../css/app.css';
 import { createApp, h } from 'vue';
 import { createInertiaApp, Link } from '@inertiajs/vue3';
 
-if (typeof route !== 'undefined') {
-    const originalRoute = route;
+const originalRoute = typeof route !== 'undefined' ? route : null;
 
-    window.route = (name, params, absolute = false) =>
-        originalRoute(name, params, absolute);
-}
+const toRelativeUrl = (value) => {
+    if (!value) return '';
+    if (typeof value !== 'string') return '';
+    if (value.startsWith('/')) return value;
+
+    try {
+        const parsed = new URL(value, window.location.origin);
+        return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch (error) {
+        console.warn('[route] No se pudo normalizar la URL', value, error);
+        return value;
+    }
+};
 
 const appName = import.meta.env.VITE_APP_NAME || 'KitchenManager';
 
@@ -103,7 +112,7 @@ const routeMap = {
  *   - route().current('dashboard')
  *   - route().has('locations.index')
  */
-const routeFn = (nameOrPath = null, params = null) => {
+const routeFn = (nameOrPath = null, params = null, absolute = false) => {
     // Si se llama sin argumentos: route().current(...)
     if (!nameOrPath) {
         return routeFn;
@@ -116,7 +125,12 @@ const routeFn = (nameOrPath = null, params = null) => {
             nameOrPath.startsWith('https://') ||
             nameOrPath.startsWith('/'))
     ) {
-        return nameOrPath;
+        return absolute ? nameOrPath : toRelativeUrl(nameOrPath);
+    }
+
+    if (originalRoute) {
+        const url = originalRoute(nameOrPath, params, true);
+        return absolute ? url : toRelativeUrl(url);
     }
 
     const builder = routeMap[nameOrPath];
@@ -130,7 +144,10 @@ const routeFn = (nameOrPath = null, params = null) => {
     }
 
     // Fallback: asumimos que el nombre es un path.
-    return `/${nameOrPath}`;
+    const path = `/${nameOrPath}`;
+    return absolute
+        ? new URL(path, window.location.origin).toString()
+        : path;
 };
 
 // route().current('dashboard') o route().current(['products.index', 'products.create'])
@@ -139,14 +156,10 @@ routeFn.current = (names) => {
 
     const list = Array.isArray(names) ? names : [names];
     const currentPath =
-        window.location.pathname.replace(/\/+$/, '') || '/';
+        toRelativeUrl(window.location.pathname).replace(/\/+$/, '') || '/';
 
     return list.some((name) => {
-        const builder = routeMap[name];
-        if (!builder) return false;
-
-        const path =
-            typeof builder === 'function' ? builder() : builder;
+        const path = routeFn(name);
         if (!path) return false;
 
         const normalized =
@@ -161,8 +174,11 @@ routeFn.current = (names) => {
 };
 
 // route().has('locations.index')
-routeFn.has = (name) =>
-    Object.prototype.hasOwnProperty.call(routeMap, name);
+routeFn.has = (name) => {
+    if (originalRoute?.has) return originalRoute.has(name);
+
+    return Object.prototype.hasOwnProperty.call(routeMap, name);
+};
 
 // lo colgamos de Vue y del window, como hacía Ziggy
 createInertiaApp({
