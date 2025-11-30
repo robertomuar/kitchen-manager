@@ -4,7 +4,7 @@ import './bootstrap';
 import '../css/app.css';
 
 import { createApp, h } from 'vue';
-import { createInertiaApp, Link } from '@inertiajs/vue3';
+import { createInertiaApp, Link, router } from '@inertiajs/vue3';
 
 const originalRoute = typeof route !== 'undefined' ? route : null;
 
@@ -104,6 +104,22 @@ const routeMap = {
     // --- Lookup código de barras ---
     'barcode.lookup': () => '/barcode/lookup',
 };
+
+// Aseguramos que todas las peticiones de Inertia incluyan el token CSRF.
+const csrfToken = document.head.querySelector('meta[name="csrf-token"]');
+
+if (csrfToken?.content) {
+    router.on('before', (visit) => {
+        visit.headers = {
+            ...visit.headers,
+            'X-CSRF-TOKEN': visit.headers?.['X-CSRF-TOKEN'] ?? csrfToken.content,
+        };
+    });
+} else {
+    console.error(
+        'Token CSRF no encontrado. Verifica que <meta name="csrf-token" ...> exista en el layout.'
+    );
+}
 
 /**
  * Helper global route() compatible con:
