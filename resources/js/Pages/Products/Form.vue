@@ -1,11 +1,12 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import axios from 'axios';
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import BarcodeScanner from '@/Components/BarcodeScanner.vue';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
 const props = defineProps({
     product: {
@@ -40,7 +41,7 @@ const isEdit = computed(
     () => props.mode === 'edit' || !!props.product?.id,
 );
 
-const form = useForm({
+const form = useCsrfForm({
     barcode: props.product?.barcode ?? '',
     name: props.product?.name ?? '',
     default_quantity: props.product?.default_quantity ?? '',

@@ -1,8 +1,9 @@
 <script setup>
 import { computed, watch } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
 const props = defineProps({
     stockItem: {
@@ -49,7 +50,7 @@ const isEdit = computed(
     () => props.mode === 'edit' || !!baseItem?.id,
 );
 
-const form = useForm({
+const form = useCsrfForm({
     product_id: baseItem?.product_id ?? '',
     quantity: baseItem?.quantity ?? '',
     unit: baseItem?.unit ?? '',

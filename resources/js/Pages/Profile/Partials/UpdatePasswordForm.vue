@@ -1,13 +1,14 @@
 <script setup>
 import { computed } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
-const form = useForm({
+const form = useCsrfForm({
     current_password: '',
     password: '',
     password_confirmation: '',

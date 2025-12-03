@@ -4,7 +4,8 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
 const props = defineProps({
     email: {
@@ -17,7 +18,7 @@ const props = defineProps({
     },
 });
 
-const form = useForm({
+const form = useCsrfForm({
     token: props.token,
     email: props.email,
     password: '',
