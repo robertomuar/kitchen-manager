@@ -1,8 +1,9 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
 const props = defineProps({
     location: {
@@ -17,7 +18,7 @@ const props = defineProps({
 
 const isEdit = computed(() => props.mode === 'edit' || !!props.location?.id);
 
-const form = useForm({
+const form = useCsrfForm({
     name: props.location?.name ?? '',
     description: props.location?.description ?? '',
     color: props.location?.color ?? '#000000',

@@ -2,7 +2,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
 const props = defineProps({
     status: {
@@ -10,7 +11,7 @@ const props = defineProps({
     },
 });
 
-const form = useForm({});
+const form = useCsrfForm({});
 
 const page = usePage();
 

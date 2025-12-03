@@ -5,7 +5,8 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
 defineProps({
     canResetPassword: {
@@ -16,7 +17,7 @@ defineProps({
     },
 });
 
-const form = useForm({
+const form = useCsrfForm({
     email: '',
     password: '',
     remember: false,

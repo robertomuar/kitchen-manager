@@ -1,11 +1,12 @@
 <script setup>
 import { computed } from 'vue';
-import { useForm, usePage, Link } from '@inertiajs/vue3';
+import { usePage, Link } from '@inertiajs/vue3';
 
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
 const props = defineProps({
     mustVerifyEmail: {
@@ -20,7 +21,7 @@ const props = defineProps({
 
 const user = computed(() => usePage().props.auth.user);
 
-const form = useForm({
+const form = useCsrfForm({
     name: user.value?.name ?? '',
     email: user.value?.email ?? '',
 });

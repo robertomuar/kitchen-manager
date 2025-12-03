@@ -1,6 +1,6 @@
 <script setup>
 import { ref, nextTick, computed } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -8,13 +8,14 @@ import Modal from '@/Components/Modal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
+import { useCsrfForm } from '@/Composables/useCsrfForm';
 
 const confirmingUserDeletion = ref(false);
 const passwordInput = ref(null);
 const deletionError = ref('');
 const formId = 'delete-account-form';
 
-const form = useForm({
+const form = useCsrfForm({
     password: '',
 });
 
