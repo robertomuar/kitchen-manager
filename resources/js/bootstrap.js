@@ -24,7 +24,8 @@ const resolveCsrfToken = () => {
     return null;
 };
 
-export const csrfToken = resolveCsrfToken();
+export const getCsrfToken = () => resolveCsrfToken();
+export const csrfToken = getCsrfToken();
 
 window.axios = axios;
 
@@ -40,6 +41,16 @@ window.axios.defaults.withCredentials = true;
 window.axios.defaults.baseURL = window.location.origin;
 
 // Aseguramos el token CSRF en todas las peticiones axios (auth, formularios, etc.).
-if (csrfToken) {
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-}
+window.axios.interceptors.request.use((config) => {
+    const token = getCsrfToken();
+
+    if (!config.headers) {
+        config.headers = {};
+    }
+
+    if (token) {
+        config.headers['X-CSRF-TOKEN'] = token;
+    }
+
+    return config;
+});
