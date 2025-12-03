@@ -1,6 +1,7 @@
 // resources/js/app.js
 
 import './bootstrap';
+import { csrfToken } from './bootstrap';
 import '../css/app.css';
 
 import { createApp, h } from 'vue';
@@ -106,15 +107,34 @@ const routeMap = {
 };
 
 // Aseguramos que todas las peticiones de Inertia incluyan el token CSRF.
-const csrfToken = document.head.querySelector('meta[name="csrf-token"]');
+// Además de la cabecera, añadimos `_token` al payload cuando Inertia envía
+// formularios JSON/FormData para evitar errores 419 al autenticar o cerrar sesión.
+const applyCsrfToVisit = (visit) => {
+    const headers = { ...visit.headers };
 
-if (csrfToken?.content) {
-    router.on('before', (visit) => {
-        visit.headers = {
-            ...visit.headers,
-            'X-CSRF-TOKEN': visit.headers?.['X-CSRF-TOKEN'] ?? csrfToken.content,
-        };
-    });
+    if (csrfToken && !headers['X-CSRF-TOKEN']) {
+        headers['X-CSRF-TOKEN'] = csrfToken;
+    }
+
+    if (csrfToken && visit.data !== undefined) {
+        if (visit.data instanceof FormData) {
+            if (!visit.data.has('_token')) {
+                visit.data.set('_token', csrfToken);
+            }
+        } else if (
+            visit.data !== null &&
+            typeof visit.data === 'object' &&
+            !visit.data._token
+        ) {
+            visit.data = { _token: csrfToken, ...visit.data };
+        }
+    }
+
+    visit.headers = headers;
+};
+
+if (csrfToken) {
+    router.on('before', (visit) => applyCsrfToVisit(visit));
 } else {
     console.error(
         'Token CSRF no encontrado. Verifica que <meta name="csrf-token" ...> exista en el layout.'
