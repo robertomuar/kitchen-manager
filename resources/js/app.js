@@ -134,7 +134,12 @@ const applyCsrfToVisit = (visit) => {
 };
 
 if (csrfToken) {
-    router.on('before', (visit) => applyCsrfToVisit(visit));
+    router.on('before', (event) => {
+        const visit = event?.detail?.visit ?? event;
+        if (!visit) return;
+
+        applyCsrfToVisit(visit);
+    });
 } else {
     console.error(
         'Token CSRF no encontrado. Verifica que <meta name="csrf-token" ...> exista en el layout.'

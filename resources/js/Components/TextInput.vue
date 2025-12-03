@@ -42,9 +42,14 @@ const inputClasses = computed(() => {
     ];
 });
 
+const canAutofocus = () => {
+    const active = document.activeElement;
+    return !active || active === document.body || active === document.documentElement;
+};
+
 onMounted(() => {
-    // Respetar el autofocus si el input lo tiene
-    if (input.value && input.value.hasAttribute('autofocus')) {
+    // Respetar el autofocus si el input lo tiene, pero sin interrumpir otro foco activo
+    if (input.value && input.value.hasAttribute('autofocus') && canAutofocus()) {
         input.value.focus();
     }
 });
