@@ -1,7 +1,7 @@
 // resources/js/app.js
 
 import './bootstrap';
-import { csrfToken } from './bootstrap';
+import { getCsrfToken } from './bootstrap';
 import '../css/app.css';
 
 import { createApp, h } from 'vue';
@@ -110,6 +110,7 @@ const routeMap = {
 // Además de la cabecera, añadimos `_token` al payload cuando Inertia envía
 // formularios JSON/FormData para evitar errores 419 al autenticar o cerrar sesión.
 const applyCsrfToVisit = (visit) => {
+    const csrfToken = getCsrfToken();
     const headers = { ...visit.headers };
 
     if (csrfToken && !headers['X-CSRF-TOKEN']) {
@@ -133,7 +134,7 @@ const applyCsrfToVisit = (visit) => {
     visit.headers = headers;
 };
 
-if (csrfToken) {
+if (getCsrfToken()) {
     router.on('before', (event) => {
         const visit = event?.detail?.visit ?? event;
         if (!visit) return;
