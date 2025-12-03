@@ -4,17 +4,54 @@ import 'vite/modulepreload-polyfill';
 
 import axios from 'axios';
 
+const readMetaCsrfToken = () => {
+    const token = document.head.querySelector('meta[name="csrf-token"]')?.content?.trim();
+    return token || null;
+};
+
+const readCookieCsrfToken = () => {
+    const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
+    if (match?.[1]) {
+        try {
+            return decodeURIComponent(match[1]);
+        } catch (error) {
+            console.warn('No se pudo decodificar la cookie XSRF-TOKEN', error);
+            return match[1];
+        }
+    }
+
+    return null;
+};
+
+const ensureMetaCsrfToken = (token) => {
+    if (!token) return null;
+
+    let metaTag = document.head.querySelector('meta[name="csrf-token"]');
+    if (!metaTag) {
+        metaTag = document.createElement('meta');
+        metaTag.setAttribute('name', 'csrf-token');
+        document.head.appendChild(metaTag);
+    }
+
+    if (metaTag.content !== token) {
+        metaTag.setAttribute('content', token);
+    }
+
+    return token;
+};
+
 const resolveCsrfToken = () => {
-    const metaToken = document.head.querySelector('meta[name="csrf-token"]')?.content;
+    // 1) Token esperado en la etiqueta <meta name="csrf-token" ...>
+    const metaToken = readMetaCsrfToken();
     if (metaToken) {
         return metaToken;
     }
 
-    // Fallback defensivo: intenta recuperar el token almacenado en la cookie XSRF-TOKEN
+    // 2) Fallback defensivo: intenta recuperar el token almacenado en la cookie XSRF-TOKEN
     // (Laravel la envía automáticamente en respuestas web).
-    const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
-    if (match?.[1]) {
-        return decodeURIComponent(match[1]);
+    const cookieToken = readCookieCsrfToken();
+    if (cookieToken) {
+        return ensureMetaCsrfToken(cookieToken);
     }
 
     console.error(
@@ -50,6 +87,16 @@ window.axios.interceptors.request.use((config) => {
 
     if (token) {
         config.headers['X-CSRF-TOKEN'] = token;
+        config.headers['X-XSRF-TOKEN'] = token;
+
+        // Refuerza el token en el payload para formularios que usan FormData/JSON.
+        if (config.data instanceof FormData) {
+            if (!config.data.has('_token')) {
+                config.data.set('_token', token);
+            }
+        } else if (config.data && typeof config.data === 'object' && !config.data._token) {
+            config.data = { _token: token, ...config.data };
+        }
     }
 
     return config;
