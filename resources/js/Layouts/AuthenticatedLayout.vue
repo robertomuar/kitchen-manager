@@ -6,8 +6,10 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
+import { getCsrfToken } from '@/bootstrap';
 
 const showingNavigationDropdown = ref(false);
+const csrfToken = getCsrfToken() ?? '';
 </script>
 
 <template>
@@ -124,13 +126,19 @@ const showingNavigationDropdown = ref(false);
                                 <DropdownLink :href="route('profile.edit')">
                                     Perfil
                                 </DropdownLink>
-                                <DropdownLink
-                                    :href="route('logout')"
-                                    method="post"
-                                    as="button"
-                                >
-                                    Cerrar sesión
-                                </DropdownLink>
+                                <form :action="route('logout')" method="post">
+                                    <input
+                                        type="hidden"
+                                        name="_token"
+                                        :value="csrfToken"
+                                    />
+                                    <button
+                                        type="submit"
+                                        class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                    >
+                                        Cerrar sesión
+                                    </button>
+                                </form>
                             </template>
                         </Dropdown>
                     </div>
@@ -230,13 +238,19 @@ const showingNavigationDropdown = ref(false);
                         <ResponsiveNavLink :href="route('profile.edit')">
                             Perfil
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('logout')"
-                            method="post"
-                            as="button"
-                        >
-                            Cerrar sesión
-                        </ResponsiveNavLink>
+                        <form :action="route('logout')" method="post">
+                            <input
+                                type="hidden"
+                                name="_token"
+                                :value="csrfToken"
+                            />
+                            <button
+                                type="submit"
+                                class="block w-full rounded-lg border border-transparent ps-4 pe-4 py-2 text-start text-sm font-medium text-slate-300 hover:border-slate-700 hover:bg-slate-900/60 hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 focus:ring-offset-slate-950"
+                            >
+                                Cerrar sesión
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

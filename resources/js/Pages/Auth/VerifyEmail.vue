@@ -2,8 +2,9 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { useCsrfForm } from '@/Composables/useCsrfForm';
+import { getCsrfToken } from '@/bootstrap';
 
 const props = defineProps({
     status: {
@@ -12,6 +13,7 @@ const props = defineProps({
 });
 
 const form = useCsrfForm({});
+const csrfToken = computed(() => getCsrfToken() ?? '');
 
 const page = usePage();
 
@@ -105,13 +107,23 @@ onUnmounted(() => {
                     </p>
                 </div>
 
-                <Link
-                    :href="route('logout')"
+                <form
+                    class="flex justify-end"
                     method="post"
-                    as="button"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >Cambiar de cuenta</Link
+                    :action="route('logout')"
                 >
+                    <input
+                        type="hidden"
+                        name="_token"
+                        :value="csrfToken"
+                    />
+                    <button
+                        type="submit"
+                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >
+                        Cambiar de cuenta
+                    </button>
+                </form>
             </div>
         </form>
 
