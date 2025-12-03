@@ -115,6 +115,7 @@ const applyCsrfToVisit = (visit) => {
 
     if (csrfToken && !headers['X-CSRF-TOKEN']) {
         headers['X-CSRF-TOKEN'] = csrfToken;
+        headers['X-XSRF-TOKEN'] = csrfToken;
     }
 
     if (csrfToken && visit.data !== undefined) {
