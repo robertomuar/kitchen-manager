@@ -9,7 +9,10 @@ import { Link } from '@inertiajs/vue3';
 import { getCsrfToken } from '@/bootstrap';
 
 const showingNavigationDropdown = ref(false);
-const csrfToken = getCsrfToken() ?? '';
+
+// Leer el token CSRF cada vez que el componente se vuelve a renderizar para
+// evitar usar valores antiguos cuando la sesión se renueva o el token rota.
+const resolveCsrfToken = () => getCsrfToken() ?? '';
 </script>
 
 <template>
@@ -130,7 +133,7 @@ const csrfToken = getCsrfToken() ?? '';
                                     <input
                                         type="hidden"
                                         name="_token"
-                                        :value="csrfToken"
+                                        :value="resolveCsrfToken()"
                                     />
                                     <button
                                         type="submit"
@@ -242,7 +245,7 @@ const csrfToken = getCsrfToken() ?? '';
                             <input
                                 type="hidden"
                                 name="_token"
-                                :value="csrfToken"
+                                :value="resolveCsrfToken()"
                             />
                             <button
                                 type="submit"
