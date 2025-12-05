@@ -61,8 +61,46 @@ const resolveCsrfToken = () => {
     return null;
 };
 
+const syncCsrfTokenFromCookie = () => {
+    const cookieToken = readCookieCsrfToken();
+
+    if (cookieToken) {
+        return ensureMetaCsrfToken(cookieToken);
+    }
+
+    return null;
+};
+
+let csrfRefreshPromise = null;
+
+const refreshCsrfToken = async () => {
+    if (csrfRefreshPromise) return csrfRefreshPromise;
+
+    csrfRefreshPromise = (async () => {
+        try {
+            await axios.get('/sanctum/csrf-cookie', {
+                withCredentials: true,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+        } catch (error) {
+            console.warn('No se pudo refrescar el token CSRF', error);
+            return null;
+        } finally {
+            csrfRefreshPromise = null;
+        }
+
+        return syncCsrfTokenFromCookie() ?? resolveCsrfToken();
+    })();
+
+    return csrfRefreshPromise;
+};
+
 export const getCsrfToken = () => resolveCsrfToken();
 export const csrfToken = getCsrfToken();
+export const syncCsrf = () => syncCsrfTokenFromCookie();
+export const refreshCsrf = () => refreshCsrfToken();
 
 window.axios = axios;
 
@@ -101,3 +139,42 @@ window.axios.interceptors.request.use((config) => {
 
     return config;
 });
+
+window.axios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const status = error?.response?.status;
+        const originalRequest = error?.config;
+
+        if (status === 419 && originalRequest && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            const token = await refreshCsrfToken();
+
+            if (token) {
+                if (!originalRequest.headers) {
+                    originalRequest.headers = {};
+                }
+
+                originalRequest.headers['X-CSRF-TOKEN'] = token;
+                originalRequest.headers['X-XSRF-TOKEN'] = token;
+
+                if (originalRequest.data instanceof FormData) {
+                    if (!originalRequest.data.has('_token')) {
+                        originalRequest.data.set('_token', token);
+                    }
+                } else if (
+                    originalRequest.data !== null &&
+                    typeof originalRequest.data === 'object' &&
+                    !originalRequest.data?._token
+                ) {
+                    originalRequest.data = { _token: token, ...originalRequest.data };
+                }
+
+                return window.axios(originalRequest);
+            }
+        }
+
+        return Promise.reject(error);
+    },
+);
