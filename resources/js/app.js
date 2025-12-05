@@ -132,6 +132,25 @@ const refreshPageIfAuthChanged = (page) => {
     }
 };
 
+/**
+ * Fuerza un refresco completo del navegador en cada navegación GET para
+ * evitar errores 419 por estado desincronizado al cambiar de página.
+ */
+const forceFullReloadOnNavigation = (event) => {
+    const visit = event?.detail?.visit ?? event;
+    if (!visit) return;
+
+    if ((visit.method ?? 'get').toLowerCase() !== 'get') return;
+
+    const targetUrl = toRelativeUrl(visit.url ?? '');
+    const currentUrl = toRelativeUrl(window.location.href);
+
+    if (!targetUrl || targetUrl === currentUrl) return;
+
+    event?.preventDefault?.();
+    window.location.assign(targetUrl);
+};
+
 // Aseguramos que todas las peticiones de Inertia incluyan el token CSRF.
 // Además de la cabecera, añadimos `_token` al payload cuando Inertia envía
 // formularios JSON/FormData para evitar errores 419 al autenticar o cerrar sesión.
@@ -173,6 +192,8 @@ if (getCsrfToken()) {
         'Token CSRF no encontrado. Verifica que <meta name="csrf-token" ...> exista en el layout.'
     );
 }
+
+router.on('before', forceFullReloadOnNavigation);
 
 /**
  * Helper global route() compatible con:
