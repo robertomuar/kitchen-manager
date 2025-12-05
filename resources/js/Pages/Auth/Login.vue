@@ -7,6 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useCsrfForm } from '@/Composables/useCsrfForm';
+import { onMounted, ref } from 'vue';
 
 defineProps({
     canResetPassword: {
@@ -21,6 +22,16 @@ const form = useCsrfForm({
     email: '',
     password: '',
     remember: false,
+});
+
+const emailInput = ref(null);
+
+onMounted(() => {
+    const active = document.activeElement;
+
+    if (!active || active === document.body || active === document.documentElement) {
+        emailInput.value?.focus?.();
+    }
 });
 
 const submit = () => {
@@ -48,8 +59,8 @@ const submit = () => {
                     class="mt-1 block w-full"
                     v-model="form.email"
                     required
-                    autofocus
                     autocomplete="username"
+                    ref="emailInput"
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />

@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/vue3';
-import { getCsrfToken } from '@/bootstrap';
+import { getCsrfToken, refreshCsrf } from '@/bootstrap';
 
 /**
  * Envuelve useForm para añadir y refrescar el token CSRF en cada envío.
@@ -10,19 +10,26 @@ export function useCsrfForm(initialValues = {}) {
         ...initialValues,
     });
 
-    const refreshCsrfToken = () => {
-        const token = getCsrfToken();
+    const refreshCsrfToken = async () => {
+        let token = getCsrfToken();
+
+        if (!token) {
+            token = await refreshCsrf();
+        }
+
         if (token) {
             form._token = token;
         }
+
+        return token;
     };
 
     const wrapSubmission = (methodName) => {
         const original = form[methodName];
         if (typeof original !== 'function') return;
 
-        form[methodName] = (...args) => {
-            refreshCsrfToken();
+        form[methodName] = async (...args) => {
+            await refreshCsrfToken();
             return original.apply(form, args);
         };
     };
