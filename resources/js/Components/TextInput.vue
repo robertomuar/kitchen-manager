@@ -17,8 +17,17 @@ const emit = defineEmits(['update:modelValue']);
 
 const input = ref(null);
 
+const isReadyToFocus = () => {
+    if (!input.value) return false;
+
+    const element = input.value;
+    const isVisible = element.offsetParent !== null && !element.disabled;
+
+    return isVisible;
+};
+
 const focus = () => {
-    if (input.value) {
+    if (isReadyToFocus()) {
         input.value.focus();
     }
 };
@@ -50,7 +59,11 @@ const canAutofocus = () => {
 onMounted(() => {
     // Respetar el autofocus si el input lo tiene, pero sin interrumpir otro foco activo
     if (input.value && input.value.hasAttribute('autofocus') && canAutofocus()) {
-        input.value.focus();
+        requestAnimationFrame(() => {
+            if (isReadyToFocus()) {
+                input.value.focus();
+            }
+        });
     }
 });
 
