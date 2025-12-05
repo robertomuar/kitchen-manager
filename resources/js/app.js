@@ -1,7 +1,7 @@
 // resources/js/app.js
 
 import './bootstrap';
-import { getCsrfToken } from './bootstrap';
+import { getCsrfToken, syncCsrf } from './bootstrap';
 import '../css/app.css';
 
 import { createApp, h } from 'vue';
@@ -104,6 +104,32 @@ const routeMap = {
 
     // --- Lookup código de barras ---
     'barcode.lookup': () => '/barcode/lookup',
+};
+
+const extractAuthUserId = (page) => page?.props?.auth?.user?.id ?? null;
+let authStateInitialized = false;
+let lastAuthUserId = null;
+
+const refreshPageIfAuthChanged = (page) => {
+    if (!page) return;
+
+    const currentUserId = extractAuthUserId(page);
+
+    if (!authStateInitialized) {
+        authStateInitialized = true;
+        lastAuthUserId = currentUserId;
+        syncCsrf();
+        return;
+    }
+
+    const hasChanged = lastAuthUserId !== currentUserId;
+
+    lastAuthUserId = currentUserId;
+    syncCsrf();
+
+    if (hasChanged) {
+        window.location.reload();
+    }
 };
 
 // Aseguramos que todas las peticiones de Inertia incluyan el token CSRF.
@@ -233,6 +259,19 @@ createInertiaApp({
         return pages[`./Pages/${name}.vue`];
     },
     setup({ el, App, props, plugin }) {
+        const initialPage =
+            props?.initialPage ??
+            (() => {
+                try {
+                    return JSON.parse(el?.dataset?.page ?? '{}');
+                } catch (error) {
+                    console.warn('No se pudo leer la página inicial', error);
+                    return null;
+                }
+            })();
+
+        refreshPageIfAuthChanged(initialPage);
+
         const vueApp = createApp({ render: () => h(App, props) });
 
         vueApp.use(plugin);
@@ -246,4 +285,9 @@ createInertiaApp({
     progress: {
         color: '#4B5563',
     },
+});
+
+router.on('success', (event) => {
+    const page = event?.detail?.page ?? event;
+    refreshPageIfAuthChanged(page);
 });
