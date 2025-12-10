@@ -34,9 +34,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $urgentLimit = $today->copy()->addDays(2);
 
         $stats = [
-            'products_count'       => Product::where('user_id', $ownerId)->count(),
-            'locations_count'      => Location::where('user_id', $ownerId)->count(),
-            'stock_items_count'    => StockItem::where('user_id', $ownerId)->count(),
+            'products_count'        => Product::where('user_id', $ownerId)->count(),
+            'locations_count'       => Location::where('user_id', $ownerId)->count(),
+            'stock_items_count'     => StockItem::where('user_id', $ownerId)->count(),
 
             'low_stock_count' => StockItem::where('user_id', $ownerId)
                 ->whereNotNull('min_quantity')

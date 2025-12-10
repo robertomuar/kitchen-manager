@@ -1,42 +1,42 @@
+// resources/js/Composables/useCsrfForm.js
+
 import { useForm } from '@inertiajs/vue3';
-import { getCsrfToken, refreshCsrf } from '@/bootstrap';
+import { getCsrfToken } from '@/bootstrap';
 
 /**
- * Envuelve useForm para añadir y refrescar el token CSRF en cada envío.
+ * Pequeño wrapper sobre useForm que añade automáticamente el _token
+ * a los datos que se envían en cualquier petición del formulario.
+ *
+ * Puedes usarlo igual que useForm:
+ *   const form = useCsrfForm({ ... });
+ *   form.post(route('algo'));
  */
-export function useCsrfForm(initialValues = {}) {
-    const form = useForm({
-        _token: getCsrfToken(),
-        ...initialValues,
-    });
+export function useCsrfForm(initialData) {
+    const form = useForm(initialData);
 
-    const refreshCsrfToken = async () => {
-        let token = getCsrfToken();
-
+    form.transform((data) => {
+        const token = getCsrfToken();
         if (!token) {
-            token = await refreshCsrf();
+            return data;
         }
 
-        if (token) {
-            form._token = token;
+        // Si ya hay _token en los datos, no lo tocamos
+        if (data instanceof FormData) {
+            if (!data.has('_token')) {
+                data.set('_token', token);
+            }
+            return data;
         }
 
-        return token;
-    };
+        if (data && typeof data === 'object' && !data._token) {
+            return {
+                _token: token,
+                ...data,
+            };
+        }
 
-    const wrapSubmission = (methodName) => {
-        const original = form[methodName];
-        if (typeof original !== 'function') return;
-
-        form[methodName] = async (...args) => {
-            await refreshCsrfToken();
-            return original.apply(form, args);
-        };
-    };
-
-    ['submit', 'post', 'put', 'patch', 'delete'].forEach(wrapSubmission);
-
-    form.refreshCsrfToken = refreshCsrfToken;
+        return data;
+    });
 
     return form;
 }

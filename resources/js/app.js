@@ -47,7 +47,8 @@ const routeMap = {
     register: () => '/register',
     'password.request': () => '/forgot-password',
     'password.email': () => '/forgot-password',
-    'password.reset': (token) => `/reset-password/${encodeURIComponent(normalizeId(token))}`,
+    'password.reset': (token) =>
+        `/reset-password/${encodeURIComponent(normalizeId(token))}`,
     'password.store': () => '/reset-password',
     'verification.notice': () => '/verify-email',
     'verification.send': () => '/email/verification-notification',
@@ -134,7 +135,7 @@ const refreshPageIfAuthChanged = (page) => {
 
 /**
  * Fuerza un refresco completo del navegador en cada navegación GET para
- * evitar errores 419 por estado desincronizado al cambiar de página.
+ * evitar estados raros.
  */
 const forceFullReloadOnNavigation = (event) => {
     const visit = event?.detail?.visit ?? event;
@@ -153,10 +154,10 @@ const forceFullReloadOnNavigation = (event) => {
 
 // Aseguramos que todas las peticiones de Inertia incluyan el token CSRF.
 // Además de la cabecera, añadimos `_token` al payload cuando Inertia envía
-// formularios JSON/FormData para evitar errores 419 al autenticar o cerrar sesión.
+// formularios JSON/FormData para evitar errores 419.
 const applyCsrfToVisit = (visit) => {
     const csrfToken = getCsrfToken();
-    const headers = { ...visit.headers };
+    const headers = { ...(visit.headers || {}) };
 
     if (csrfToken && !headers['X-CSRF-TOKEN']) {
         headers['X-CSRF-TOKEN'] = csrfToken;
@@ -252,8 +253,7 @@ routeFn.current = (names) => {
         const path = routeFn(name);
         if (!path) return false;
 
-        const normalized =
-            path.replace(/\/+$/, '') || '/';
+        const normalized = path.replace(/\/+$/, '') || '/';
 
         return (
             currentPath === normalized ||
@@ -270,7 +270,6 @@ routeFn.has = (name) => {
     return Object.prototype.hasOwnProperty.call(routeMap, name);
 };
 
-// lo colgamos de Vue y del window, como hacía Ziggy
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
