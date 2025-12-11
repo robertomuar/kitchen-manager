@@ -10,6 +10,7 @@ use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\KitchenShareController;
 use App\Http\Controllers\BarcodeLookupController;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,6 +22,59 @@ Route::get('/', function () {
         'phpVersion'     => PHP_VERSION,
     ]);
 });
+
+/**
+ * DEBUG: ver qué productos devuelve la búsqueda por código de barras
+ * Ignora scopes globales y user_id, para comprobar que la BD del server
+ * contiene lo que esperamos.
+ *
+ * Ejemplo:
+ *   /debug/barcode?barcode=8720181214004
+ */
+Route::get('/debug/barcode', function (Request $request) {
+    $raw = trim($request->query('barcode', ''));
+
+    $numeric = preg_replace('/\D+/', '', $raw);
+
+    $candidates = array_values(array_unique(array_filter([
+        $raw,
+        $numeric,
+    ])));
+
+    $products = Product::withoutGlobalScopes()
+        ->where(function ($q) use ($candidates) {
+            foreach ($candidates as $code) {
+                $q->orWhere('barcode', $code);
+            }
+        })
+        ->get([
+            'id',
+            'name',
+            'barcode',
+            'default_quantity',
+            'default_unit',
+            'default_pack_size',
+            'user_id',
+        ]);
+
+    return response()->json([
+        'input' => [
+            'raw'        => $raw,
+            'numeric'    => $numeric,
+            'candidates' => $candidates,
+        ],
+        'count' => $products->count(),
+        'items' => $products,
+    ]);
+})->name('debug.barcode');
+
+/**
+ * Lookup de código de barras (AJAX)
+ * La dejamos FUERA del grupo auth para evitar redirecciones raras.
+ * Sigue protegida por CSRF, así que sólo se usará bien desde tu front.
+ */
+Route::post('/barcode/lookup', [BarcodeLookupController::class, 'lookup'])
+    ->name('barcode.lookup');
 
 // Todo lo privado va con auth + verified para garantizar correos validados
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -34,9 +88,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $urgentLimit = $today->copy()->addDays(2);
 
         $stats = [
-            'products_count'        => Product::where('user_id', $ownerId)->count(),
-            'locations_count'       => Location::where('user_id', $ownerId)->count(),
-            'stock_items_count'     => StockItem::where('user_id', $ownerId)->count(),
+            'products_count'       => Product::where('user_id', $ownerId)->count(),
+            'locations_count'      => Location::where('user_id', $ownerId)->count(),
+            'stock_items_count'    => StockItem::where('user_id', $ownerId)->count(),
 
             'low_stock_count' => StockItem::where('user_id', $ownerId)
                 ->whereNotNull('min_quantity')
@@ -87,10 +141,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-
-    // === LOOKUP CÓDIGO DE BARRAS (AJAX) ===
-    Route::post('/barcode/lookup', [BarcodeLookupController::class, 'lookup'])
-        ->name('barcode.lookup');
 
     // === STOCK ===
     Route::get('/stock', [StockItemController::class, 'index'])->name('stock.index');
