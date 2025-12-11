@@ -27,7 +27,7 @@ class BarcodeLookupController extends Controller
             ], 422);
         }
 
-        // Candidatos: tal cual lo ha puesto el usuario + solo dígitos
+        // Candidatos para la BD (texto tal cual + solo dígitos)
         $candidateBarcodes = array_values(array_unique(array_filter([
             $rawBarcode,
             $numericBarcode,
@@ -39,8 +39,80 @@ class BarcodeLookupController extends Controller
             'candidates' => $candidateBarcodes,
         ]);
 
+        // Código "normalizado" que usaremos en las APIs externas
+        $barcodeForExternal = $numericBarcode !== '' ? $numericBarcode : $rawBarcode;
+
         /**
-         * 1) BÚSQUEDA LOCAL EN TU PROPIA BASE DE DATOS
+         * 1) PRIMERO: INTENTAR EN APIS EXTERNAS (si están activadas)
+         *
+         * BARCODE_USE_EXTERNAL en .env:
+         *   true  -> intenta APIs externas primero
+         *   false -> salta directamente a la BD local
+         */
+        $useExternal = filter_var(env('BARCODE_USE_EXTERNAL', true), FILTER_VALIDATE_BOOLEAN);
+
+        if ($useExternal) {
+            try {
+                $external = $this->lookupExternalProduct($barcodeForExternal);
+            } catch (\Throwable $e) {
+                // Cualquier error de red / HTTP se registra, pero NO rompe la petición
+                Log::error('❌ Barcode lookup: external lookup failed with exception', [
+                    'barcode' => $barcodeForExternal,
+                    'error'   => $e->getMessage(),
+                ]);
+                $external = null;
+            }
+
+            if ($external) {
+                [$name, $quantityStr, $brands] = $external;
+
+                if ($name && $brands) {
+                    $name = trim($name . ' (' . $brands . ')');
+                }
+
+                [$defaultQuantity, $defaultUnit, $defaultPackSize] = $this->parseQuantity($quantityStr);
+
+                if ($name || $defaultQuantity || $defaultUnit || $defaultPackSize) {
+                    Log::info('✅ Barcode lookup external hit', [
+                        'barcode'   => $barcodeForExternal,
+                        'name'      => $name,
+                        'quantity'  => $defaultQuantity,
+                        'unit'      => $defaultUnit,
+                        'pack_size' => $defaultPackSize,
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'source'  => 'external',
+                        'data'    => [
+                            'barcode'           => $barcodeForExternal,
+                            'name'              => $name,
+                            'default_quantity'  => $defaultQuantity,
+                            'default_unit'      => $defaultUnit,
+                            'default_pack_size' => $defaultPackSize,
+                        ],
+                    ]);
+                }
+
+                Log::info('❌ Barcode lookup: external data not useful', [
+                    'barcode'      => $barcodeForExternal,
+                    'quantity_raw' => $quantityStr ?? null,
+                    'brands'       => $brands ?? null,
+                ]);
+            } else {
+                Log::info('❌ Barcode lookup: no external data found', [
+                    'barcode' => $barcodeForExternal,
+                ]);
+            }
+        } else {
+            Log::info('ℹ️ Barcode lookup: external disabled, skipping external lookup', [
+                'raw'     => $rawBarcode,
+                'numeric' => $numericBarcode,
+            ]);
+        }
+
+        /**
+         * 2) SI NO HAY NADA ÚTIL EN LAS APIS, BUSCAMOS EN TU BD LOCAL
          *
          * IMPORTANTE: usamos withoutGlobalScopes() para IGNORAR filtros por user_id
          * u otros scopes globales. Queremos que valga cualquier producto con ese
@@ -56,7 +128,7 @@ class BarcodeLookupController extends Controller
             ->first();
 
         if ($localProduct) {
-            Log::info('✅ Barcode lookup local hit', [
+            Log::info('✅ Barcode lookup local fallback hit', [
                 'product_id' => $localProduct->id,
                 'name'       => $localProduct->name,
                 'barcode'    => $localProduct->barcode,
@@ -76,90 +148,12 @@ class BarcodeLookupController extends Controller
         }
 
         /**
-         * 2) SI EN TU BD NO HAY NADA, PROBAMOS EN FUENTES EXTERNAS
-         *
-         * Puedes controlar si usarlas o no con BARCODE_USE_EXTERNAL en .env:
-         *   BARCODE_USE_EXTERNAL=true   -> usa externas
-         *   BARCODE_USE_EXTERNAL=false  -> solo BD local
+         * 3) Ni externas ni local: nada encontrado
          */
-        $useExternal = filter_var(env('BARCODE_USE_EXTERNAL', true), FILTER_VALIDATE_BOOLEAN);
-
-        if (! $useExternal) {
-            Log::info('ℹ️ Barcode lookup: external disabled and no local match', [
-                'raw'     => $rawBarcode,
-                'numeric' => $numericBarcode,
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No se encontraron datos para este código en tu base de datos. Rellena el producto a mano y se quedará guardado para futuros escaneos.',
-            ], 404);
-        }
-
-        $barcodeForExternal = $numericBarcode !== '' ? $numericBarcode : $rawBarcode;
-
-        try {
-            $external = $this->lookupExternalProduct($barcodeForExternal);
-        } catch (\Throwable $e) {
-            // Cualquier error de red / HTTP se registra, pero NO rompe la petición
-            Log::error('❌ Barcode lookup: external lookup failed with exception', [
-                'barcode' => $barcodeForExternal,
-                'error'   => $e->getMessage(),
-            ]);
-            $external = null;
-        }
-
-        if (! $external) {
-            Log::info('❌ Barcode lookup: no external data found', [
-                'barcode' => $barcodeForExternal,
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No se encontraron datos para este código. Rellena el producto a mano y se quedará guardado para futuros escaneos.',
-            ], 404);
-        }
-
-        [$name, $quantityStr, $brands] = $external;
-
-        if ($name && $brands) {
-            $name = trim($name . ' (' . $brands . ')');
-        }
-
-        [$defaultQuantity, $defaultUnit, $defaultPackSize] = $this->parseQuantity($quantityStr);
-
-        if (! $name && ! $defaultQuantity && ! $defaultUnit && ! $defaultPackSize) {
-            Log::info('❌ Barcode lookup: external data not useful', [
-                'barcode'      => $barcodeForExternal,
-                'quantity_raw' => $quantityStr,
-                'brands'       => $brands,
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No hay datos útiles para este código. Rellena el producto a mano y quedará guardado.',
-            ], 404);
-        }
-
-        Log::info('✅ Barcode lookup external hit', [
-            'barcode'   => $barcodeForExternal,
-            'name'      => $name,
-            'quantity'  => $defaultQuantity,
-            'unit'      => $defaultUnit,
-            'pack_size' => $defaultPackSize,
-        ]);
-
         return response()->json([
-            'success' => true,
-            'source'  => 'external',
-            'data'    => [
-                'barcode'           => $barcodeForExternal,
-                'name'              => $name,
-                'default_quantity'  => $defaultQuantity,
-                'default_unit'      => $defaultUnit,
-                'default_pack_size' => $defaultPackSize,
-            ],
-        ]);
+            'success' => false,
+            'message' => 'No se encontraron datos para este código ni en las APIs externas ni en tu base de datos. Rellena el producto a mano y se quedará guardado para futuros escaneos.',
+        ], 404);
     }
 
     /**
