@@ -14,34 +14,56 @@ class BarcodeLookupController extends Controller
             'barcode' => ['required', 'string', 'min:6'],
         ]);
 
-        $rawBarcode = $validated['barcode'] ?? '';
+        $rawBarcode = trim($validated['barcode'] ?? '');
 
         // Normalizamos: solo dígitos (EAN-8, EAN-13, etc.)
-        $barcode = preg_replace('/\D+/', '', $rawBarcode);
+        $numericBarcode = preg_replace('/\D+/', '', $rawBarcode);
 
-        if ($barcode === '') {
+        if ($rawBarcode === '' && $numericBarcode === '') {
             return response()->json([
                 'success' => false,
                 'message' => 'El código de barras no es válido.',
             ], 422);
         }
 
+        // Lista de posibles barcodes a buscar en BD
+        $candidateBarcodes = array_values(array_unique(array_filter([
+            $rawBarcode,
+            $numericBarcode,
+        ])));
+
         $user = $request->user();
         $ownerId = method_exists($user, 'kitchenOwnerId')
             ? $user->kitchenOwnerId()
             : $user->id;
 
-        // 1) Primero miramos en tu propia base de datos
-        $localProduct = Product::where('user_id', $ownerId)
-            ->where('barcode', $barcode)
+        // 1) Búsqueda LOCAL prioritaria: primero en productos del owner
+        $localProduct = Product::query()
+            ->where('user_id', $ownerId)
+            ->where(function ($q) use ($candidateBarcodes) {
+                foreach ($candidateBarcodes as $code) {
+                    $q->orWhere('barcode', $code);
+                }
+            })
             ->first();
+
+        // 1b) Si no hay nada para ese owner, buscamos en cualquier producto con ese barcode
+        if (! $localProduct) {
+            $localProduct = Product::query()
+                ->where(function ($q) use ($candidateBarcodes) {
+                    foreach ($candidateBarcodes as $code) {
+                        $q->orWhere('barcode', $code);
+                    }
+                })
+                ->first();
+        }
 
         if ($localProduct) {
             return response()->json([
                 'success' => true,
                 'source'  => 'local',
                 'data'    => [
-                    'barcode'           => $localProduct->barcode,
+                    'barcode'           => (string) $localProduct->barcode,
                     'name'              => $localProduct->name,
                     'default_quantity'  => $localProduct->default_quantity,
                     'default_unit'      => $localProduct->default_unit,
@@ -50,15 +72,16 @@ class BarcodeLookupController extends Controller
             ]);
         }
 
+        // Si llegamos aquí, en tu BD no hay nada con ese código.
         // 2) Intentamos en fuentes externas:
-        //    - Open Food Facts -> alimentos
-        //    - Open Beauty Facts -> cosmética / higiene (desodorantes, geles, champús, etc.)
-        $external = $this->lookupExternalProduct($barcode);
+        //    - Open Food Facts  (alimentos)
+        //    - Open Beauty Facts (cosmética / higiene)
+        $external = $this->lookupExternalProduct($numericBarcode !== '' ? $numericBarcode : $rawBarcode);
 
         if (! $external) {
             return response()->json([
                 'success' => false,
-                'message' => 'No se encontraron datos para este código.',
+                'message' => 'No se encontraron datos para este código. Rellena el producto a mano: quedará guardado para futuros escaneos.',
             ], 404);
         }
 
@@ -73,7 +96,7 @@ class BarcodeLookupController extends Controller
         if (! $name && ! $defaultQuantity && ! $defaultUnit && ! $defaultPackSize) {
             return response()->json([
                 'success' => false,
-                'message' => 'No hay datos útiles para este código.',
+                'message' => 'No hay datos útiles para este código. Rellena el producto a mano y quedará guardado.',
             ], 404);
         }
 
@@ -81,7 +104,7 @@ class BarcodeLookupController extends Controller
             'success' => true,
             'source'  => 'external',
             'data'    => [
-                'barcode'           => $barcode,
+                'barcode'           => $numericBarcode !== '' ? $numericBarcode : $rawBarcode,
                 'name'              => $name,
                 'default_quantity'  => $defaultQuantity,
                 'default_unit'      => $defaultUnit,
@@ -99,7 +122,12 @@ class BarcodeLookupController extends Controller
      */
     protected function lookupExternalProduct(string $barcode): ?array
     {
-        // Orden de prioridad: primero comida, luego belleza
+        $barcode = trim($barcode);
+
+        if ($barcode === '') {
+            return null;
+        }
+
         $projects = [
             [
                 'label' => 'food',
@@ -137,14 +165,12 @@ class BarcodeLookupController extends Controller
                 $quantityStr = $product['quantity'] ?? null;
                 $brands      = $product['brands'] ?? null;
 
-                // Si no hay ni nombre ni cantidad ni marca, probamos con el siguiente proyecto
                 if (! $name && ! $quantityStr && ! $brands) {
                     continue;
                 }
 
                 return [$name, $quantityStr, $brands];
             } catch (\Throwable $e) {
-                // Si una API falla, probamos la siguiente
                 report($e);
                 continue;
             }
@@ -181,7 +207,6 @@ class BarcodeLookupController extends Controller
 
             $packSize = sprintf('%d x %s %s', $packCount, $perQtyStr, $unit);
 
-            // Devolvemos la cantidad por unidad y el tamaño de pack como texto
             return [$perQty, $unit, $packSize];
         }
 
