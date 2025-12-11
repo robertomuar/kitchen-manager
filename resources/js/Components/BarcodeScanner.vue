@@ -7,7 +7,10 @@ const html5QrCode = ref(null);
 const isStarting = ref(false);
 
 const errorMessage = ref('');
-const lastDecoded = ref(''); // Para ver en pantalla que ha leído algo
+const lastDecoded = ref('');
+
+// Detección muy simple de iOS (iPhone/iPad)
+const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
 
 const stopScanner = async (emitClose = false) => {
     if (!html5QrCode.value) return;
@@ -34,7 +37,7 @@ const startScanner = async () => {
     lastDecoded.value = '';
 
     try {
-        console.log('[BarcodeScanner] Montando escáner...');
+        console.log('[BarcodeScanner] on iOS:', isIos);
 
         const {
             Html5Qrcode,
@@ -45,25 +48,20 @@ const startScanner = async () => {
         console.log('[BarcodeScanner] html5-qrcode importado.');
 
         html5QrCode.value = new Html5Qrcode('barcode-scanner', {
-            verbose: false, // ⬅️ así dejas de ver NotFoundException en la consola
+            verbose: false,
             supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
         });
 
         const config = {
-            fps: 12,
-
-            // Caja ancha (para códigos de barras) que se adapta al tamaño real
+            fps: isIos ? 8 : 15,
+            // Caja ancha para códigos 1D, adaptada a móvil
             qrbox: (viewWidth, viewHeight) => {
-                const width = Math.min(viewWidth * 0.9, 420);
-                const height = Math.min(viewHeight * 0.4, 220);
+                const shortEdge = Math.min(viewWidth, viewHeight);
+                const width = Math.min(shortEdge * 0.9, 420);
+                const height = Math.max(Math.round(width * 0.35), 120);
                 console.log('[BarcodeScanner] qrbox:', { width, height });
                 return { width, height };
             },
-
-            experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true,
-            },
-
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.EAN_13,
                 Html5QrcodeSupportedFormats.EAN_8,
@@ -73,8 +71,16 @@ const startScanner = async () => {
             ],
         };
 
+        // 🔴 En iOS, NO usar BarcodeDetector nativo (va muy mal con EAN/CODE_128)
+        // 🟢 En Android/PC, sí lo usamos porque mejora mucho el rendimiento.
+        if (!isIos) {
+            config.experimentalFeatures = {
+                useBarCodeDetectorIfSupported: true,
+            };
+        }
+
         const cameraConfig = {
-            facingMode: 'environment', // En PC será la cámara por defecto (Iriun)
+            facingMode: 'environment',
         };
 
         console.log('[BarcodeScanner] Iniciando escáner...');
@@ -89,13 +95,13 @@ const startScanner = async () => {
                 );
                 lastDecoded.value = decodedText;
 
-                // Cerramos el escáner y avisamos al padre
                 await stopScanner();
                 emit('scanned', decodedText);
             },
-            // Errores de escaneo de cada frame -> los ignoramos para no spamear
+            // Errores de cada frame (NotFoundException, etc.) -> ignorarlos
             () => {},
         );
+
         console.log('[BarcodeScanner] Escáner iniciado correctamente.');
     } catch (e) {
         console.error('[BarcodeScanner] ❌ Error al iniciar el escáner', e);
@@ -128,8 +134,8 @@ onBeforeUnmount(() => {
         ></div>
 
         <p class="text-xs text-slate-400">
-            Apunta la cámara al código de barras y colócalo dentro del recuadro horizontal
-            hasta que lo detecte.
+            Apunta la cámara al código de barras y colócalo dentro del recuadro horizontal,
+            a unos 15-25 cm de distancia, con buena luz.
         </p>
 
         <p v-if="lastDecoded" class="text-xs text-emerald-400">
