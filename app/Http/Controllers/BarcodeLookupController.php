@@ -42,16 +42,17 @@ class BarcodeLookupController extends Controller
         /**
          * 1) BÚSQUEDA LOCAL EN TU PROPIA BASE DE DATOS
          *
-         * Ignoramos el user_id a propósito:
-         * si en products hay un producto con ese código, lo usamos SIEMPRE.
+         * IMPORTANTE: usamos withoutGlobalScopes() para IGNORAR filtros por user_id
+         * u otros scopes globales. La idea es que, si en la tabla products existe
+         * CUALQUIER fila con ese código de barras, la reutilizamos como plantilla.
          */
-        $localProduct = Product::query()
+        $localProduct = Product::withoutGlobalScopes()
             ->where(function ($q) use ($candidateBarcodes) {
                 foreach ($candidateBarcodes as $code) {
                     $q->orWhere('barcode', $code);
                 }
             })
-            ->orderByDesc('id') // si hay varios (como id 16 y 17), coge el último creado
+            ->orderByDesc('id') // si hay varios, coge el último creado
             ->first();
 
         if ($localProduct) {
