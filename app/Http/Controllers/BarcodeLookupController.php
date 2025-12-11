@@ -27,12 +27,11 @@ class BarcodeLookupController extends Controller
         }
 
         $user = $request->user();
-
         $ownerId = method_exists($user, 'kitchenOwnerId')
             ? $user->kitchenOwnerId()
             : $user->id;
 
-        // 1) Si ya existe en tu base de datos, usamos ese producto
+        // 1) Primero miramos en tu propia base de datos
         $localProduct = Product::where('user_id', $ownerId)
             ->where('barcode', $barcode)
             ->first();
@@ -51,72 +50,107 @@ class BarcodeLookupController extends Controller
             ]);
         }
 
-        // 2) Intentamos buscarlo en Open Food Facts (ideal para productos envasados)
-        try {
-            $response = Http::timeout(7)
-                ->acceptJson()
-                ->get("https://world.openfoodfacts.org/api/v2/product/{$barcode}.json", [
-                    'fields' => 'code,product_name,product_name_es,brands,quantity,serving_size',
-                ]);
+        // 2) Intentamos en fuentes externas:
+        //    - Open Food Facts -> alimentos
+        //    - Open Beauty Facts -> cosmética / higiene (desodorantes, geles, champús, etc.)
+        $external = $this->lookupExternalProduct($barcode);
 
-            if (! $response->ok()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se pudo consultar la base de datos externa.',
-                ], 502);
-            }
-
-            $json = $response->json();
-
-            if (($json['status'] ?? 0) !== 1) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se encontraron datos para este código.',
-                ], 404);
-            }
-
-            $product = $json['product'] ?? [];
-
-            $nameEs = $product['product_name_es'] ?? null;
-            $name   = $nameEs ?: ($product['product_name'] ?? null);
-
-            $brands = $product['brands'] ?? null;
-
-            if ($name && $brands) {
-                // Ejemplo: "Leche entera (Marca X)"
-                $name = trim($name . ' (' . $brands . ')');
-            }
-
-            $quantityStr = $product['quantity'] ?? null;
-
-            [$defaultQuantity, $defaultUnit, $defaultPackSize] = $this->parseQuantity($quantityStr);
-
-            if (! $name && ! $defaultQuantity && ! $defaultUnit && ! $defaultPackSize) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No hay datos útiles para este código.',
-                ], 404);
-            }
-
-            return response()->json([
-                'success' => true,
-                'source'  => 'openfoodfacts',
-                'data'    => [
-                    'barcode'           => $barcode,
-                    'name'              => $name,
-                    'default_quantity'  => $defaultQuantity,
-                    'default_unit'      => $defaultUnit,
-                    'default_pack_size' => $defaultPackSize,
-                ],
-            ]);
-        } catch (\Throwable $e) {
-            report($e);
-
+        if (! $external) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error consultando la información del producto.',
-            ], 500);
+                'message' => 'No se encontraron datos para este código.',
+            ], 404);
         }
+
+        [$name, $quantityStr, $brands] = $external;
+
+        if ($name && $brands) {
+            $name = trim($name . ' (' . $brands . ')');
+        }
+
+        [$defaultQuantity, $defaultUnit, $defaultPackSize] = $this->parseQuantity($quantityStr);
+
+        if (! $name && ! $defaultQuantity && ! $defaultUnit && ! $defaultPackSize) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay datos útiles para este código.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'source'  => 'external',
+            'data'    => [
+                'barcode'           => $barcode,
+                'name'              => $name,
+                'default_quantity'  => $defaultQuantity,
+                'default_unit'      => $defaultUnit,
+                'default_pack_size' => $defaultPackSize,
+            ],
+        ]);
+    }
+
+    /**
+     * Busca el producto en varias bases externas:
+     *  - Open Food Facts  (alimentos)
+     *  - Open Beauty Facts (cosmética / higiene)
+     *
+     * Devuelve [name, quantityStr, brands] o null.
+     */
+    protected function lookupExternalProduct(string $barcode): ?array
+    {
+        // Orden de prioridad: primero comida, luego belleza
+        $projects = [
+            [
+                'label' => 'food',
+                'base'  => 'https://world.openfoodfacts.org',
+            ],
+            [
+                'label' => 'beauty',
+                'base'  => 'https://world.openbeautyfacts.org',
+            ],
+        ];
+
+        foreach ($projects as $project) {
+            try {
+                $response = Http::timeout(7)
+                    ->acceptJson()
+                    ->get($project['base'] . "/api/v2/product/{$barcode}.json", [
+                        'fields' => 'code,product_name,product_name_es,brands,quantity',
+                    ]);
+
+                if (! $response->ok()) {
+                    continue;
+                }
+
+                $json = $response->json();
+
+                if (($json['status'] ?? 0) !== 1) {
+                    continue;
+                }
+
+                $product = $json['product'] ?? [];
+
+                $nameEs = $product['product_name_es'] ?? null;
+                $name   = $nameEs ?: ($product['product_name'] ?? null);
+
+                $quantityStr = $product['quantity'] ?? null;
+                $brands      = $product['brands'] ?? null;
+
+                // Si no hay ni nombre ni cantidad ni marca, probamos con el siguiente proyecto
+                if (! $name && ! $quantityStr && ! $brands) {
+                    continue;
+                }
+
+                return [$name, $quantityStr, $brands];
+            } catch (\Throwable $e) {
+                // Si una API falla, probamos la siguiente
+                report($e);
+                continue;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -125,6 +159,7 @@ class BarcodeLookupController extends Controller
      *  - "500 g"
      *  - "6 x 33 cl"
      *  - "4 x 125 g"
+     *  - "2 x 250 ml"
      */
     protected function parseQuantity(?string $quantityStr): array
     {
@@ -134,7 +169,7 @@ class BarcodeLookupController extends Controller
             return [null, null, null];
         }
 
-        // Multipack: "6 x 33 cl", "4x125 g", etc.
+        // Multipack: "6 x 33 cl", "4x125 g", "2 x 250 ml", etc.
         if (preg_match('/(\d+)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*(ml|l|cl|g|kg)\b/i', $quantityStr, $m)) {
             $packCount = (int) $m[1];
             $perQty    = (float) str_replace(',', '.', $m[2]);
@@ -150,7 +185,7 @@ class BarcodeLookupController extends Controller
             return [$perQty, $unit, $packSize];
         }
 
-        // Simple: "500 g", "1 l", "330ml"
+        // Simple: "500 g", "1 l", "330ml", "200 ml"
         if (preg_match('/(\d+(?:[.,]\d+)?)\s*(ml|l|cl|g|kg)\b/i', $quantityStr, $m)) {
             $qty     = (float) str_replace(',', '.', $m[1]);
             $unitRaw = strtolower($m[2]);
