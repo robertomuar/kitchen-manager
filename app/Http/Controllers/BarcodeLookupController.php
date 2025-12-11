@@ -27,7 +27,7 @@ class BarcodeLookupController extends Controller
             ], 422);
         }
 
-        // Lista de posibles barcodes a buscar en BD
+        // Candidatos: tal cual lo ha puesto el usuario + solo dígitos
         $candidateBarcodes = array_values(array_unique(array_filter([
             $rawBarcode,
             $numericBarcode,
@@ -43,8 +43,8 @@ class BarcodeLookupController extends Controller
          * 1) BÚSQUEDA LOCAL EN TU PROPIA BASE DE DATOS
          *
          * IMPORTANTE: usamos withoutGlobalScopes() para IGNORAR filtros por user_id
-         * u otros scopes globales. La idea es que, si en la tabla products existe
-         * CUALQUIER fila con ese código de barras, la reutilizamos como plantilla.
+         * u otros scopes globales. Queremos que valga cualquier producto con ese
+         * código de barras, sea de la cocina que sea.
          */
         $localProduct = Product::withoutGlobalScopes()
             ->where(function ($q) use ($candidateBarcodes) {
@@ -52,7 +52,7 @@ class BarcodeLookupController extends Controller
                     $q->orWhere('barcode', $code);
                 }
             })
-            ->orderByDesc('id') // si hay varios, coge el último creado
+            ->orderByDesc('id') // si hay varios, se queda con el último creado
             ->first();
 
         if ($localProduct) {
@@ -75,18 +75,39 @@ class BarcodeLookupController extends Controller
             ]);
         }
 
-        Log::info('ℹ️ Barcode lookup: no local product found, going external', [
-            'barcode_for_external' => $numericBarcode !== '' ? $numericBarcode : $rawBarcode,
-        ]);
-
         /**
-         * 2) SI EN TU BD NO HAY NADA, PROBAMOS EN FUENTES EXTERNAS:
-         *    - Open Food Facts  (alimentos)
-         *    - Open Beauty Facts (cosmética / higiene)
+         * 2) SI EN TU BD NO HAY NADA, PROBAMOS EN FUENTES EXTERNAS
+         *
+         * Puedes controlar si usarlas o no con BARCODE_USE_EXTERNAL en .env:
+         *   BARCODE_USE_EXTERNAL=true   -> usa externas
+         *   BARCODE_USE_EXTERNAL=false  -> solo BD local
          */
+        $useExternal = filter_var(env('BARCODE_USE_EXTERNAL', true), FILTER_VALIDATE_BOOLEAN);
+
+        if (! $useExternal) {
+            Log::info('ℹ️ Barcode lookup: external disabled and no local match', [
+                'raw'     => $rawBarcode,
+                'numeric' => $numericBarcode,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron datos para este código en tu base de datos. Rellena el producto a mano y se quedará guardado para futuros escaneos.',
+            ], 404);
+        }
+
         $barcodeForExternal = $numericBarcode !== '' ? $numericBarcode : $rawBarcode;
 
-        $external = $this->lookupExternalProduct($barcodeForExternal);
+        try {
+            $external = $this->lookupExternalProduct($barcodeForExternal);
+        } catch (\Throwable $e) {
+            // Cualquier error de red / HTTP se registra, pero NO rompe la petición
+            Log::error('❌ Barcode lookup: external lookup failed with exception', [
+                'barcode' => $barcodeForExternal,
+                'error'   => $e->getMessage(),
+            ]);
+            $external = null;
+        }
 
         if (! $external) {
             Log::info('❌ Barcode lookup: no external data found', [
@@ -95,7 +116,7 @@ class BarcodeLookupController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'No se encontraron datos para este código. Rellena el producto a mano: quedará guardado para futuros escaneos.',
+                'message' => 'No se encontraron datos para este código. Rellena el producto a mano y se quedará guardado para futuros escaneos.',
             ], 404);
         }
 
@@ -142,8 +163,8 @@ class BarcodeLookupController extends Controller
     }
 
     /**
-     * Busca el producto en varias bases externas:
-     *  - Open Food Facts  (alimentos)
+     * Busca el producto en:
+     *  - Open Food Facts   (alimentos)
      *  - Open Beauty Facts (cosmética / higiene)
      *
      * Devuelve [name, quantityStr, brands] o null.
@@ -199,7 +220,13 @@ class BarcodeLookupController extends Controller
 
                 return [$name, $quantityStr, $brands];
             } catch (\Throwable $e) {
-                report($e);
+                // Si una de las APIs falla, probamos con la siguiente
+                Log::warning('⚠️ Barcode lookup: external project failed', [
+                    'project' => $project['label'],
+                    'barcode' => $barcode,
+                    'error'   => $e->getMessage(),
+                ]);
+
                 continue;
             }
         }
@@ -248,7 +275,7 @@ class BarcodeLookupController extends Controller
             return [$qty, $unit, null];
         }
 
-        // No pudimos parsear nada "numérico": lo devolvemos como tamaño de pack
+        // No pudimos parsear nada "numérico": lo devolvemos entero como tamaño de pack
         return [null, null, $quantityStr];
     }
 
