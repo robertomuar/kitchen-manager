@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BarcodeLookupController extends Controller
 {
@@ -32,12 +33,17 @@ class BarcodeLookupController extends Controller
             $numericBarcode,
         ])));
 
+        Log::info('🔎 Barcode lookup request', [
+            'raw'        => $rawBarcode,
+            'numeric'    => $numericBarcode,
+            'candidates' => $candidateBarcodes,
+        ]);
+
         /**
          * 1) BÚSQUEDA LOCAL EN TU PROPIA BASE DE DATOS
          *
          * Ignoramos el user_id a propósito:
          * si en products hay un producto con ese código, lo usamos SIEMPRE.
-         * (en tu caso casero es exactamente lo que quieres).
          */
         $localProduct = Product::query()
             ->where(function ($q) use ($candidateBarcodes) {
@@ -49,6 +55,12 @@ class BarcodeLookupController extends Controller
             ->first();
 
         if ($localProduct) {
+            Log::info('✅ Barcode lookup local hit', [
+                'product_id' => $localProduct->id,
+                'name'       => $localProduct->name,
+                'barcode'    => $localProduct->barcode,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'source'  => 'local',
@@ -62,6 +74,10 @@ class BarcodeLookupController extends Controller
             ]);
         }
 
+        Log::info('ℹ️ Barcode lookup: no local product found, going external', [
+            'barcode_for_external' => $numericBarcode !== '' ? $numericBarcode : $rawBarcode,
+        ]);
+
         /**
          * 2) SI EN TU BD NO HAY NADA, PROBAMOS EN FUENTES EXTERNAS:
          *    - Open Food Facts  (alimentos)
@@ -72,6 +88,10 @@ class BarcodeLookupController extends Controller
         $external = $this->lookupExternalProduct($barcodeForExternal);
 
         if (! $external) {
+            Log::info('❌ Barcode lookup: no external data found', [
+                'barcode' => $barcodeForExternal,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'No se encontraron datos para este código. Rellena el producto a mano: quedará guardado para futuros escaneos.',
@@ -87,11 +107,25 @@ class BarcodeLookupController extends Controller
         [$defaultQuantity, $defaultUnit, $defaultPackSize] = $this->parseQuantity($quantityStr);
 
         if (! $name && ! $defaultQuantity && ! $defaultUnit && ! $defaultPackSize) {
+            Log::info('❌ Barcode lookup: external data not useful', [
+                'barcode'      => $barcodeForExternal,
+                'quantity_raw' => $quantityStr,
+                'brands'       => $brands,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'No hay datos útiles para este código. Rellena el producto a mano y quedará guardado.',
             ], 404);
         }
+
+        Log::info('✅ Barcode lookup external hit', [
+            'barcode'   => $barcodeForExternal,
+            'name'      => $name,
+            'quantity'  => $defaultQuantity,
+            'unit'      => $defaultUnit,
+            'pack_size' => $defaultPackSize,
+        ]);
 
         return response()->json([
             'success' => true,
