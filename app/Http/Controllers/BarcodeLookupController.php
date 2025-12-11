@@ -32,31 +32,21 @@ class BarcodeLookupController extends Controller
             $numericBarcode,
         ])));
 
-        $user = $request->user();
-        $ownerId = method_exists($user, 'kitchenOwnerId')
-            ? $user->kitchenOwnerId()
-            : $user->id;
-
-        // 1) Búsqueda LOCAL prioritaria: primero en productos del owner
+        /**
+         * 1) BÚSQUEDA LOCAL EN TU PROPIA BASE DE DATOS
+         *
+         * Ignoramos el user_id a propósito:
+         * si en products hay un producto con ese código, lo usamos SIEMPRE.
+         * (en tu caso casero es exactamente lo que quieres).
+         */
         $localProduct = Product::query()
-            ->where('user_id', $ownerId)
             ->where(function ($q) use ($candidateBarcodes) {
                 foreach ($candidateBarcodes as $code) {
                     $q->orWhere('barcode', $code);
                 }
             })
+            ->orderByDesc('id') // si hay varios (como id 16 y 17), coge el último creado
             ->first();
-
-        // 1b) Si no hay nada para ese owner, buscamos en cualquier producto con ese barcode
-        if (! $localProduct) {
-            $localProduct = Product::query()
-                ->where(function ($q) use ($candidateBarcodes) {
-                    foreach ($candidateBarcodes as $code) {
-                        $q->orWhere('barcode', $code);
-                    }
-                })
-                ->first();
-        }
 
         if ($localProduct) {
             return response()->json([
@@ -72,11 +62,14 @@ class BarcodeLookupController extends Controller
             ]);
         }
 
-        // Si llegamos aquí, en tu BD no hay nada con ese código.
-        // 2) Intentamos en fuentes externas:
-        //    - Open Food Facts  (alimentos)
-        //    - Open Beauty Facts (cosmética / higiene)
-        $external = $this->lookupExternalProduct($numericBarcode !== '' ? $numericBarcode : $rawBarcode);
+        /**
+         * 2) SI EN TU BD NO HAY NADA, PROBAMOS EN FUENTES EXTERNAS:
+         *    - Open Food Facts  (alimentos)
+         *    - Open Beauty Facts (cosmética / higiene)
+         */
+        $barcodeForExternal = $numericBarcode !== '' ? $numericBarcode : $rawBarcode;
+
+        $external = $this->lookupExternalProduct($barcodeForExternal);
 
         if (! $external) {
             return response()->json([
@@ -104,7 +97,7 @@ class BarcodeLookupController extends Controller
             'success' => true,
             'source'  => 'external',
             'data'    => [
-                'barcode'           => $numericBarcode !== '' ? $numericBarcode : $rawBarcode,
+                'barcode'           => $barcodeForExternal,
                 'name'              => $name,
                 'default_quantity'  => $defaultQuantity,
                 'default_unit'      => $defaultUnit,
