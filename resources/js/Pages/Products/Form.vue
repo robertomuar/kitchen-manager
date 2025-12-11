@@ -65,6 +65,7 @@ const isLookingUp = ref(false);
 const lookupError = ref('');
 const scannerError = ref('');
 
+// Normaliza el código: string, sin espacios
 const sanitizeBarcode = (code) =>
     typeof code === 'string' || typeof code === 'number'
         ? String(code).trim()
@@ -81,35 +82,46 @@ const submit = () => {
 
 // Buscar info del código de barras llamando a Laravel
 const lookupBarcode = async () => {
-    if (!form.barcode) {
+    const sanitized = sanitizeBarcode(form.barcode);
+
+    if (!sanitized) {
         alert('Introduce primero un código de barras.');
         return;
     }
+
+    // Dejamos el código limpio en el formulario
+    form.barcode = sanitized;
 
     try {
         isLookingUp.value = true;
         lookupError.value = '';
 
-        // 🚫 Antes: const url = route('barcode.lookup');
-        // ✅ Ahora: URL directa, evitando Ziggy
         const response = await axios.post('/barcode/lookup', {
-            barcode: form.barcode,
+            barcode: sanitized,
         });
 
-        if (!response.data || !response.data.success || !response.data.data) {
+        const payload = response?.data ?? {};
+
+        if (!payload.success || !payload.data) {
             lookupError.value =
-                response.data?.message ??
+                payload?.message ??
                 'No se han encontrado datos para este código.';
             return;
         }
 
-        const data = response.data.data;
+        const data = payload.data;
 
-        // Rellenamos solo si el usuario no ha escrito nada
+        // Si el backend devuelve un barcode normalizado, lo usamos
+        if (data.barcode) {
+            form.barcode = String(data.barcode);
+        }
+
+        // Nombre del producto
         if (data.name && !form.name) {
             form.name = data.name;
         }
 
+        // Cantidad base
         if (
             data.default_quantity !== null &&
             data.default_quantity !== undefined &&
@@ -118,12 +130,24 @@ const lookupBarcode = async () => {
             form.default_quantity = data.default_quantity;
         }
 
+        // Unidad
         if (data.default_unit && !form.default_unit) {
             form.default_unit = data.default_unit;
         }
 
-        if (!data.name && !data.default_quantity && !data.default_unit) {
+        // Tamaño de pack
+        if (data.default_pack_size && !form.default_pack_size) {
+            form.default_pack_size = data.default_pack_size;
+        }
+
+        if (
+            !data.name &&
+            !data.default_quantity &&
+            !data.default_unit &&
+            !data.default_pack_size
+        ) {
             lookupError.value =
+                payload?.message ??
                 'No hay datos útiles para este código, tendrás que rellenarlo a mano.';
         }
     } catch (error) {
@@ -400,7 +424,7 @@ const onScannerError = (error) => {
                                     class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
                                            text-slate-900 placeholder-slate-400 shadow-sm
                                            focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
-                                    placeholder="Ej: 6 (pack de 6)"
+                                    placeholder="Ej: 6 x 33 ml, 4 x 125 g..."
                                 />
                                 <InputError
                                     class="mt-1 text-xs text-rose-600"
