@@ -20,6 +20,7 @@ class StockItem extends Model
         'is_open',
         'notes',
         'location', // si existía la columna de texto, la dejamos por compatibilidad
+        'kitchen_id',
     ];
 
     protected $casts = [
@@ -55,5 +56,10 @@ class StockItem extends Model
         }
 
         return (float) $this->quantity < (float) $this->min_quantity;
+    }
+
+    public function kitchen()
+    {
+        return $this->belongsTo(Kitchen::class);
     }
 }

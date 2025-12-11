@@ -18,6 +18,7 @@ class Location extends Model
         'color',
         'sort_order',
         'is_active',
+        'kitchen_id',
     ];
 
     protected $casts = [
@@ -34,4 +35,9 @@ class Location extends Model
     {
         return $this->hasMany(Product::class);
     }
+        public function kitchen()
+    {
+        return $this->belongsTo(Kitchen::class);
+    }
+
 }

@@ -18,6 +18,7 @@ class Product extends Model
         'default_pack_size',
         'location_id',
         'notes',
+        'kitchen_id',
     ];
 
     protected $casts = [
@@ -38,5 +39,9 @@ class Product extends Model
     public function stockItems()
     {
         return $this->hasMany(StockItem::class);
+    }
+    public function kitchen()
+    {
+        return $this->belongsTo(Kitchen::class);
     }
 }

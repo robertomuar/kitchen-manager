@@ -9,6 +9,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -106,4 +108,34 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(UserShare::class, 'invited_user_id');
     }
+        /**
+     * Cocinas en las que participa este usuario (como owner o invitado).
+     */
+    public function kitchens(): BelongsToMany
+    {
+        return $this->belongsToMany(Kitchen::class, 'kitchen_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * Cocinas que este usuario ha creado (es el owner).
+     */
+    public function ownedKitchens(): HasMany
+    {
+        return $this->hasMany(Kitchen::class, 'owner_id');
+    }
+
+    /**
+     * Cocina actual del usuario.
+     * De momento: la primera cocina a la que pertenece.
+     * Más adelante podremos guardar/seleccionar la activa.
+     */
+    public function currentKitchen(): ?Kitchen
+    {
+        return $this->kitchens()
+            ->orderBy('kitchen_user.created_at')
+            ->first();
+    }
+
 }
