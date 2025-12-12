@@ -6,6 +6,7 @@ const props = defineProps({
         type: [String, Number],
         default: '',
     },
+    // Para poder usarlo en oscuro o claro según la pantalla
     variant: {
         type: String,
         default: 'light',
@@ -61,11 +62,8 @@ const canAutofocus = () => {
 };
 
 onMounted(() => {
-    if (
-        input.value &&
-        input.value.hasAttribute('autofocus') &&
-        canAutofocus()
-    ) {
+    // Respeta autofocus si el input lo tiene, sin robar el foco a otros sitios
+    if (input.value && input.value.hasAttribute('autofocus') && canAutofocus()) {
         requestAnimationFrame(() => {
             if (isReadyToFocus()) {
                 input.value.focus();

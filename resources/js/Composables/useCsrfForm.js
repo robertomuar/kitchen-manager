@@ -1,10 +1,11 @@
+// resources/js/Composables/useCsrfForm.js
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 
 /**
  * Refresca el token CSRF llamando a Sanctum.
- * Si ya tienes configurado Sanctum, esta ruta existe (/sanctum/csrf-cookie).
- * Si en tu proyecto no lo usas, puedes dejar esto como función vacía.
+ * Si usas Sanctum, existe /sanctum/csrf-cookie.
+ * Si no lo usas, puedes dejar la llamada como está (no rompe nada).
  */
 async function refreshCsrf() {
     try {
@@ -15,14 +16,11 @@ async function refreshCsrf() {
 }
 
 /**
- * Envoltorio de useForm que:
- *  - refresca el token CSRF antes de POST / PUT / PATCH / DELETE
- *  - respeta el comportamiento original de Inertia (this, opciones, etc.)
+ * Envoltorio de useForm que refresca CSRF antes de POST / PUT / PATCH / DELETE.
  */
 export function useCsrfForm(initialData) {
     const form = useForm(initialData);
 
-    // Guardamos referencias “ligadas” al form para no perder el this
     const originalPost = form.post.bind(form);
     const originalPut = form.put.bind(form);
     const originalPatch = form.patch.bind(form);
