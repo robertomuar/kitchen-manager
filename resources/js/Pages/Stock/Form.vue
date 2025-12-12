@@ -10,7 +10,6 @@ const props = defineProps({
         type: Object,
         default: null,
     },
-    // por si en el backend lo llamaste "item" en vez de "stockItem"
     item: {
         type: Object,
         default: null,
@@ -29,7 +28,6 @@ const props = defineProps({
     },
 });
 
-// Unidades reutilizadas
 const UNIT_OPTIONS = [
     'unidad',
     'ud',
@@ -43,7 +41,6 @@ const UNIT_OPTIONS = [
     'bote',
 ];
 
-// Objeto actual (por si viene como stockItem o como item)
 const baseItem = props.stockItem ?? props.item ?? null;
 
 const isEdit = computed(
@@ -71,8 +68,7 @@ const submitLabel = computed(() =>
     isEdit.value ? 'Guardar cambios' : 'Guardar stock',
 );
 
-// Cuando el usuario selecciona un producto, si estamos creando,
-// rellenamos por defecto unidad / cantidades si están vacías.
+// Autorellenar desde producto en modo create
 watch(
     () => form.product_id,
     (newValue) => {
@@ -140,14 +136,11 @@ const submit = () => {
                     </Link>
                 </div>
 
-                <!-- Tarjeta del formulario (BLANCA, TEXTO OSCURO) -->
+                <!-- Tarjeta -->
                 <div
                     class="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-900/20 text-slate-900"
                 >
-                    <form
-                        class="space-y-6"
-                        @submit.prevent="submit"
-                    >
+                    <form class="space-y-6" @submit.prevent="submit">
                         <!-- Producto / Cantidad / Unidad -->
                         <div class="grid gap-6 md:grid-cols-3">
                             <!-- Producto -->
@@ -210,7 +203,7 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <!-- Unidad / Ubicación / Mínimo / Caducidad -->
+                        <!-- Unidad / Ubicación / Mínimo -->
                         <div class="grid gap-6 md:grid-cols-3">
                             <!-- Unidad -->
                             <div class="space-y-1">
@@ -330,7 +323,9 @@ const submit = () => {
                             </div>
 
                             <div class="space-y-2 md:col-span-2">
-                                <label class="inline-flex items-center gap-2 mt-6">
+                                <label
+                                    class="inline-flex items-center gap-2 mt-6"
+                                >
                                     <input
                                         id="is_open"
                                         v-model="form.is_open"

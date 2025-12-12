@@ -145,12 +145,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // === STOCK ===
     Route::get('/stock', [StockItemController::class, 'index'])->name('stock.index');
     Route::get('/stock/create', [StockItemController::class, 'create'])->name('stock.create');
+    Route::get('/stock/{stockItem}', [StockItemController::class, 'show'])->name('stock.show');
     Route::get('/stock/{stockItem}/edit', [StockItemController::class, 'edit'])->name('stock.edit');
     Route::post('/stock', [StockItemController::class, 'store'])->name('stock.store');
     Route::put('/stock/{stockItem}', [StockItemController::class, 'update'])->name('stock.update');
     Route::delete('/stock/{stockItem}', [StockItemController::class, 'destroy'])->name('stock.destroy');
     Route::get('/stock/replenishment/export', [StockItemController::class, 'exportReplenishment'])
         ->name('stock.replenishment.export');
+
 
     // === UBICACIONES ===
     Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');

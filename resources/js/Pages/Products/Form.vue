@@ -111,17 +111,14 @@ const lookupBarcode = async () => {
 
         const data = payload.data;
 
-        // Si el backend devuelve un barcode normalizado, lo usamos
         if (data.barcode) {
             form.barcode = String(data.barcode);
         }
 
-        // Nombre del producto
         if (data.name && !form.name) {
             form.name = data.name;
         }
 
-        // Cantidad base
         if (
             data.default_quantity !== null &&
             data.default_quantity !== undefined &&
@@ -130,12 +127,10 @@ const lookupBarcode = async () => {
             form.default_quantity = data.default_quantity;
         }
 
-        // Unidad
         if (data.default_unit && !form.default_unit) {
             form.default_unit = data.default_unit;
         }
 
-        // Tamaño de pack
         if (data.default_pack_size && !form.default_pack_size) {
             form.default_pack_size = data.default_pack_size;
         }
@@ -216,14 +211,11 @@ const onScannerError = (error) => {
                     </Link>
                 </div>
 
-                <!-- Tarjeta del formulario (BLANCA, TEXTO OSCURO) -->
+                <!-- Tarjeta -->
                 <div
                     class="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-900/20 text-slate-900"
                 >
-                    <form
-                        class="space-y-6"
-                        @submit.prevent="submit"
-                    >
+                    <form class="space-y-6" @submit.prevent="submit">
                         <!-- CÓDIGO DE BARRAS -->
                         <div class="space-y-1">
                             <label
@@ -290,7 +282,7 @@ const onScannerError = (error) => {
                             </p>
                         </div>
 
-                        <!-- ESCÁNER DE CÓDIGOS (cámara) -->
+                        <!-- ESCÁNER -->
                         <div
                             v-if="isScannerOpen"
                             class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3"

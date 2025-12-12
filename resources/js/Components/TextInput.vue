@@ -53,12 +53,19 @@ const inputClasses = computed(() => {
 
 const canAutofocus = () => {
     const active = document.activeElement;
-    return !active || active === document.body || active === document.documentElement;
+    return (
+        !active ||
+        active === document.body ||
+        active === document.documentElement
+    );
 };
 
 onMounted(() => {
-    // Respetar el autofocus si el input lo tiene, pero sin interrumpir otro foco activo
-    if (input.value && input.value.hasAttribute('autofocus') && canAutofocus()) {
+    if (
+        input.value &&
+        input.value.hasAttribute('autofocus') &&
+        canAutofocus()
+    ) {
         requestAnimationFrame(() => {
             if (isReadyToFocus()) {
                 input.value.focus();

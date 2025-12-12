@@ -72,7 +72,7 @@ const submit = () => {
                     </Link>
                 </div>
 
-                <!-- Tarjeta del formulario (BLANCA, CON TEXTO OSCURO) -->
+                <!-- Tarjeta -->
                 <div
                     class="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-900/20 text-slate-900"
                 >

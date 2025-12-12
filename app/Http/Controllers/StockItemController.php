@@ -268,4 +268,20 @@ class StockItemController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+        /**
+     * Redirige cualquier petición GET /stock/{stockItem} a la pantalla de edición.
+     */
+    public function show(Request $request, StockItem $stockItem): RedirectResponse
+    {
+        // Validamos que el usuario tenga acceso a esta cocina
+        $ownerId = $request->user()->kitchenOwnerId();
+
+        if ($stockItem->user_id !== $ownerId) {
+            abort(403);
+        }
+
+        // En vez de mostrar un "detalle", lo llevamos directamente al formulario de edición
+        return to_route('stock.edit', $stockItem);
+    }
+
 }
