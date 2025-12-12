@@ -142,16 +142,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
-    // === STOCK ===
-    Route::get('/stock', [StockItemController::class, 'index'])->name('stock.index');
-    Route::get('/stock/create', [StockItemController::class, 'create'])->name('stock.create');
-    Route::get('/stock/{stockItem}', [StockItemController::class, 'show'])->name('stock.show');
-    Route::get('/stock/{stockItem}/edit', [StockItemController::class, 'edit'])->name('stock.edit');
-    Route::post('/stock', [StockItemController::class, 'store'])->name('stock.store');
-    Route::put('/stock/{stockItem}', [StockItemController::class, 'update'])->name('stock.update');
-    Route::delete('/stock/{stockItem}', [StockItemController::class, 'destroy'])->name('stock.destroy');
-    Route::get('/stock/replenishment/export', [StockItemController::class, 'exportReplenishment'])
-        ->name('stock.replenishment.export');
+// === STOCK ===
+Route::get('/stock', [StockItemController::class, 'index'])->name('stock.index');
+Route::get('/stock/create', [StockItemController::class, 'create'])->name('stock.create');
+
+// NUEVA RUTA: GET /stock/{stockItem} → show
+Route::get('/stock/{stockItem}', [StockItemController::class, 'show'])->name('stock.show');
+
+Route::get('/stock/{stockItem}/edit', [StockItemController::class, 'edit'])->name('stock.edit');
+Route::post('/stock', [StockItemController::class, 'store'])->name('stock.store');
+Route::put('/stock/{stockItem}', [StockItemController::class, 'update'])->name('stock.update');
+Route::delete('/stock/{stockItem}', [StockItemController::class, 'destroy'])->name('stock.destroy');
+
+Route::get('/stock/export/missing.csv', [StockItemController::class, 'exportMissingToCsv'])
+    ->name('stock.export.missing');
 
 
     // === UBICACIONES ===

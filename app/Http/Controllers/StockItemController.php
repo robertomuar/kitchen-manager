@@ -200,88 +200,18 @@ class StockItemController extends Controller
     /**
      * Exportar la lista de reposición (bajo mínimo) a CSV.
      */
-    public function exportReplenishment(Request $request)
-    {
-        $user    = $request->user();
-        $ownerId = $user->kitchenOwnerId();
+public function show(Request $request, StockItem $stockItem)
+{
+    $ownerId = $request->user()->kitchenOwnerId();
 
-        $query = StockItem::with(['product', 'location'])
-            ->where('user_id', $ownerId)
-            ->whereNotNull('min_quantity')
-            ->whereColumn('quantity', '<', 'min_quantity');
-
-        // Respetar filtros (producto / ubicación)
-        if ($request->filled('product_id')) {
-            $query->where('product_id', $request->integer('product_id'));
-        }
-
-        if ($request->filled('location_id')) {
-            $query->where('location_id', $request->integer('location_id'));
-        }
-
-        $items = $query
-            ->orderBy('product_id')
-            ->get();
-
-        $fileName = 'lista_reposicion_' . now()->format('Ymd_His') . '.csv';
-
-        $headers = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"$fileName\"",
-        ];
-
-        $callback = static function () use ($items) {
-            $handle = fopen('php://output', 'w');
-
-            // BOM para Excel
-            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            // Cabeceras
-            fputcsv($handle, [
-                'Producto',
-                'Ubicación',
-                'Cantidad actual',
-                'Unidad',
-                'Mínimo',
-                'Falta aprox.',
-                'Caducidad',
-            ], ';');
-
-            foreach ($items as $item) {
-                $quantity = $item->quantity ?? 0;
-                $min      = $item->min_quantity ?? 0;
-                $missing  = max(0, $min - $quantity);
-
-                fputcsv($handle, [
-                    optional($item->product)->name,
-                    optional($item->location)->name,
-                    $quantity,
-                    $item->unit,
-                    $min,
-                    number_format($missing, 2, ',', ''),
-                    optional($item->expires_at)?->format('Y-m-d'),
-                ], ';');
-            }
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
+    // Seguridad: el stock debe pertenecer a la cocina del usuario
+    if ($stockItem->user_id !== $ownerId) {
+        abort(403);
     }
-        /**
-     * Redirige cualquier petición GET /stock/{stockItem} a la pantalla de edición.
-     */
-    public function show(Request $request, StockItem $stockItem): RedirectResponse
-    {
-        // Validamos que el usuario tenga acceso a esta cocina
-        $ownerId = $request->user()->kitchenOwnerId();
 
-        if ($stockItem->user_id !== $ownerId) {
-            abort(403);
-        }
+    // De momento, simplemente redirigimos a la pantalla de edición
+    return redirect()->route('stock.edit', $stockItem->id);
+}
 
-        // En vez de mostrar un "detalle", lo llevamos directamente al formulario de edición
-        return to_route('stock.edit', $stockItem);
-    }
 
 }
