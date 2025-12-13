@@ -54,7 +54,7 @@ const lowStockItems = computed(() =>
     props.stockItems.filter((item) => item.is_below_minimum === true),
 );
 
-// Filtros
+// --- FILTROS ---
 const applyFilters = () => {
     router.get(
         route('stock.index'),
@@ -84,7 +84,7 @@ const clearFilters = () => {
     applyFilters();
 };
 
-// Borrar registro de stock
+// --- BORRAR REGISTRO ---
 const deleteItem = (item) => {
     if (
         !confirm(
@@ -101,7 +101,7 @@ const deleteItem = (item) => {
     });
 };
 
-// ---- LÓGICA DE CADUCIDAD ----
+// --- LÓGICA DE CADUCIDAD ---
 const getExpiryStatus = (item) => {
     if (!item.expires_at) {
         return null;
@@ -126,7 +126,6 @@ const getExpiryStatus = (item) => {
         return { type: 'soon', days: diffDays };
     }
 
-    // Más de 7 días -> sin aviso
     return null;
 };
 
@@ -152,7 +151,7 @@ const getExpiryLabel = (status) => {
     return '';
 };
 
-// ---- EXPORTAR LISTA DE REPOSICIÓN (CSV) ----
+// --- EXPORTAR LISTA DE REPOSICIÓN (CSV) ---
 const exportReplenishment = () => {
     const params = {
         product_id: filterState.value.product_id || undefined,
@@ -398,10 +397,7 @@ const exportReplenishment = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr
-                                    v-for="item in stockItems"
-                                    :key="item.id"
-                                >
+                                <tr v-for="item in stockItems" :key="item.id">
                                     <td
                                         class="whitespace-nowrap text-sm font-medium text-slate-50"
                                     >
@@ -416,11 +412,11 @@ const exportReplenishment = () => {
                                         class="whitespace-nowrap text-sm text-slate-300"
                                     >
                                         {{
-                                            item.location?.name
-                                                ?? 'Sin ubicación'
+                                            item.location?.name ??
+                                            'Sin ubicación'
                                         }}
                                     </td>
-                                    <!-- SOLO fecha en esta columna -->
+                                    <!-- SOLO fecha -->
                                     <td
                                         class="whitespace-nowrap text-sm text-slate-300"
                                     >
@@ -433,7 +429,8 @@ const exportReplenishment = () => {
                                                 : '—'
                                         }}
                                     </td>
-                                    <!-- Estado + badges (bajo mínimo, abierto, caducidad) -->
+
+                                    <!-- Estado -->
                                     <td class="whitespace-nowrap text-sm">
                                         <div class="flex flex-wrap gap-1">
                                             <span
@@ -451,11 +448,12 @@ const exportReplenishment = () => {
                                             </span>
 
                                             <span
-                                                v-if="getExpiryStatus(item) && getExpiryLabel(getExpiryStatus(item))"
+                                                v-if="
+                                                    getExpiryStatus(item) &&
+                                                    getExpiryLabel(getExpiryStatus(item))
+                                                "
                                                 :class="[
-
                                                     'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
-
                                                     (getExpiryStatus(item)?.type === 'expired' ||
                                                         getExpiryStatus(item)?.type === 'urgent' ||
                                                         getExpiryStatus(item)?.type === 'today')
@@ -471,21 +469,22 @@ const exportReplenishment = () => {
                                             </span>
                                         </div>
                                     </td>
+
+                                    <!-- Acciones -->
                                     <td
                                         class="whitespace-nowrap text-sm text-right"
                                     >
                                         <div class="inline-flex gap-2">
+                                            <!-- IMPORTANTE: EDIT SIEMPRE A stock.edit -->
                                             <Link
                                                 :href="
-                                                    route(
-                                                        'stock.edit',
-                                                        item.id,
-                                                    )
+                                                    route('stock.edit', item.id)
                                                 "
                                                 class="text-xs px-3 py-1 rounded-lg border border-slate-600/80 text-slate-100 hover:bg-slate-800/80"
                                             >
                                                 Editar
                                             </Link>
+
                                             <button
                                                 type="button"
                                                 class="text-xs px-3 py-1 rounded-lg border border-rose-500/70 text-rose-300 hover:bg-rose-500/15"
@@ -557,8 +556,8 @@ const exportReplenishment = () => {
                                         class="whitespace-nowrap text-sm text-slate-300"
                                     >
                                         {{
-                                            item.location?.name
-                                                ?? 'Sin ubicación'
+                                            item.location?.name ??
+                                            'Sin ubicación'
                                         }}
                                     </td>
                                     <td
