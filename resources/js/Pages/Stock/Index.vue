@@ -101,6 +101,11 @@ const deleteItem = (item) => {
     });
 };
 
+// --- IR A EDITAR (FORZAMOS /edit) ---
+const goToEdit = (item) => {
+    router.visit(route('stock.edit', item.id));
+};
+
 // --- LÓGICA DE CADUCIDAD ---
 const getExpiryStatus = (item) => {
     if (!item.expires_at) {
@@ -475,15 +480,14 @@ const exportReplenishment = () => {
                                         class="whitespace-nowrap text-sm text-right"
                                     >
                                         <div class="inline-flex gap-2">
-                                            <!-- IMPORTANTE: EDIT SIEMPRE A stock.edit -->
-                                            <Link
-                                                :href="
-                                                    route('stock.edit', item.id)
-                                                "
+                                            <!-- EDITAR: ahora usamos router.visit -->
+                                            <button
+                                                type="button"
                                                 class="text-xs px-3 py-1 rounded-lg border border-slate-600/80 text-slate-100 hover:bg-slate-800/80"
+                                                @click="goToEdit(item)"
                                             >
                                                 Editar
-                                            </Link>
+                                            </button>
 
                                             <button
                                                 type="button"
