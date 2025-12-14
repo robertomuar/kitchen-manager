@@ -6,6 +6,7 @@
 /storage/pail
 /vendor
 .env
+.env.*
 .env.backup
 .env.production
 .phpactor.json
@@ -29,3 +30,6 @@ yarn-error.log
 
 /public/build
 /public/hot
+
+.env.testing
+
