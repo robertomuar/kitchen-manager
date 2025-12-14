@@ -93,6 +93,28 @@ class LocationController extends Controller
     }
 
     /**
+     * ✅ NUEVO: evita 405 en GET/HEAD /locations/{id}
+     */
+    public function show(Request $request, Location $location)
+    {
+        $user = $request->user();
+
+        if ($location->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(route('locations.edit', $location->id));
+        }
+
+        if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
+            return response()->json($location);
+        }
+
+        return redirect()->route('locations.edit', $location->id);
+    }
+
+    /**
      * Actualizar ubicación.
      */
     public function update(LocationRequest $request, Location $location): RedirectResponse

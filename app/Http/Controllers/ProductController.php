@@ -115,6 +115,31 @@ class ProductController extends Controller
         ]);
     }
 
+    /**
+     * ✅ NUEVO: evita 405 en GET/HEAD /products/{id}
+     * - Si es petición Inertia => Inertia::location a edit
+     * - Si es AJAX/JSON real => JSON
+     * - Si es navegación normal => redirect a edit
+     */
+    public function show(Request $request, Product $product)
+    {
+        $user = $request->user();
+
+        if ($product->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(route('products.edit', $product->id));
+        }
+
+        if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
+            return response()->json($product);
+        }
+
+        return redirect()->route('products.edit', $product->id);
+    }
+
     public function update(ProductRequest $request, Product $product): RedirectResponse
     {
         $user = $request->user();
