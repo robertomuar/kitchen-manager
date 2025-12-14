@@ -69,7 +69,7 @@ const routeMap = {
     'products.create': () => '/products/create',
     'products.store': () => '/products',
     'products.edit': (product) =>
-        `/products/${encodeURIComponent(normalizeId(product))}`,
+        `/products/${encodeURIComponent(normalizeId(product))}/edit`,
     'products.update': (product) =>
         `/products/${encodeURIComponent(normalizeId(product))}`,
     'products.destroy': (product) =>
@@ -80,7 +80,7 @@ const routeMap = {
     'stock.create': () => '/stock/create',
     'stock.store': () => '/stock',
     'stock.edit': (item) =>
-        `/stock/${encodeURIComponent(normalizeId(item))}`,
+        `/stock/${encodeURIComponent(normalizeId(item))}/edit`,
     'stock.update': (item) =>
         `/stock/${encodeURIComponent(normalizeId(item))}`,
     'stock.destroy': (item) =>
@@ -92,7 +92,7 @@ const routeMap = {
     'locations.create': () => '/locations/create',
     'locations.store': () => '/locations',
     'locations.edit': (location) =>
-        `/locations/${encodeURIComponent(normalizeId(location))}`,
+        `/locations/${encodeURIComponent(normalizeId(location))}/edit`,
     'locations.update': (location) =>
         `/locations/${encodeURIComponent(normalizeId(location))}`,
     'locations.destroy': (location) =>
