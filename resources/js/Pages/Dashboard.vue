@@ -93,6 +93,19 @@ const goToLowStock = () => {
         },
     );
 };
+
+// ---- Navegación tarjetas (solo interactividad) ----
+const goToProducts = () => {
+    router.visit(route('products.index'));
+};
+
+const goToLocations = () => {
+    router.visit(route('locations.index'));
+};
+
+const goToStock = () => {
+    router.visit(route('stock.index'));
+};
 </script>
 
 <template>
@@ -121,7 +134,12 @@ const goToLowStock = () => {
                 <div class="grid gap-4 md:grid-cols-4">
                     <!-- Productos -->
                     <div
-                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40"
+                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40 cursor-pointer"
+                        role="button"
+                        tabindex="0"
+                        @click="goToProducts"
+                        @keydown.enter.prevent="goToProducts"
+                        @keydown.space.prevent="goToProducts"
                     >
                         <p
                             class="text-xs font-medium uppercase tracking-wide text-slate-400"
@@ -138,7 +156,12 @@ const goToLowStock = () => {
 
                     <!-- Ubicaciones -->
                     <div
-                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40"
+                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40 cursor-pointer"
+                        role="button"
+                        tabindex="0"
+                        @click="goToLocations"
+                        @keydown.enter.prevent="goToLocations"
+                        @keydown.space.prevent="goToLocations"
                     >
                         <p
                             class="text-xs font-medium uppercase tracking-wide text-slate-400"
@@ -155,7 +178,12 @@ const goToLowStock = () => {
 
                     <!-- Registros de stock -->
                     <div
-                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40"
+                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40 cursor-pointer"
+                        role="button"
+                        tabindex="0"
+                        @click="goToStock"
+                        @keydown.enter.prevent="goToStock"
+                        @keydown.space.prevent="goToStock"
                     >
                         <p
                             class="text-xs font-medium uppercase tracking-wide text-slate-400"
@@ -172,7 +200,12 @@ const goToLowStock = () => {
 
                     <!-- Bajo mínimo + caducidades -->
                     <div
-                        class="rounded-2xl border border-rose-800/80 bg-gradient-to-br from-rose-900/70 via-rose-900/40 to-slate-950/80 p-4 shadow-md shadow-rose-900/40"
+                        class="rounded-2xl border border-rose-800/80 bg-gradient-to-br from-rose-900/70 via-rose-900/40 to-slate-950/80 p-4 shadow-md shadow-rose-900/40 cursor-pointer"
+                        role="button"
+                        tabindex="0"
+                        @click="goToLowStock"
+                        @keydown.enter.prevent="goToLowStock"
+                        @keydown.space.prevent="goToLowStock"
                     >
                         <p
                             class="text-xs font-medium uppercase tracking-wide text-rose-100"
@@ -208,7 +241,7 @@ const goToLowStock = () => {
                         <div class="mt-4">
                             <button
                                 type="button"
-                                @click="goToLowStock"
+                                @click.stop="goToLowStock"
                                 class="text-xs font-medium text-rose-100 underline-offset-2 hover:underline"
                             >
                                 Ver lista de reposición →
