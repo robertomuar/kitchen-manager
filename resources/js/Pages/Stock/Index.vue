@@ -163,7 +163,7 @@ const exportReplenishment = () => {
         location_id: filterState.value.location_id || undefined,
     };
 
-    const url = route('stock.replenishment.export', params);
+    const url = route('stock.export.missing', params);
     window.location.href = url;
 };
 </script>

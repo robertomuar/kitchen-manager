@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StockItemController extends Controller
 {
@@ -36,7 +37,6 @@ class StockItemController extends Controller
             $query->where('location_id', $locationId);
         }
 
-        // Filtrar por estado (bajo mínimo / normal)
         if ($status === 'low') {
             $query->whereNotNull('min_quantity')
                 ->whereColumn('quantity', '<', 'min_quantity');
@@ -47,7 +47,6 @@ class StockItemController extends Controller
             });
         }
 
-        // Campos válidos para ordenar
         if (!in_array($sort, ['expires_at', 'quantity'], true)) {
             $sort = 'expires_at';
         }
@@ -87,21 +86,15 @@ class StockItemController extends Controller
     }
 
     /**
-     * Formulario de creación de registro de stock.
+     * Formulario de creación.
      */
     public function create(Request $request): Response
     {
         $user  = $request->user();
         $owner = $user->kitchenOwner();
 
-        $products = $owner->products()
-            ->orderBy('name')
-            ->get();
-
-        $locations = $owner->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $products = $owner->products()->orderBy('name')->get();
+        $locations = $owner->locations()->orderBy('sort_order')->orderBy('name')->get();
 
         return Inertia::render('Stock/Form', [
             'mode'      => 'create',
@@ -112,7 +105,7 @@ class StockItemController extends Controller
     }
 
     /**
-     * Guardar nuevo registro de stock.
+     * Guardar nuevo.
      */
     public function store(StockItemRequest $request): RedirectResponse
     {
@@ -130,7 +123,31 @@ class StockItemController extends Controller
     }
 
     /**
-     * Formulario de edición de registro de stock.
+     * SHOW: evita el 405 en GET /stock/{id}.
+     * - Si es XHR/JSON: devuelve JSON del item.
+     * - Si es navegación normal: redirige a /edit.
+     */
+    public function show(Request $request, StockItem $stockItem)
+    {
+        $ownerId = $request->user()->kitchenOwnerId();
+
+        if ($stockItem->user_id !== $ownerId) {
+            abort(403);
+        }
+
+        // Si viene como XHR (tu caso), devolvemos JSON
+        if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
+            return response()->json(
+                $stockItem->load(['product', 'location'])
+            );
+        }
+
+        // Si alguien navega a /stock/{id}, lo mandamos a /edit
+        return redirect()->route('stock.edit', $stockItem->id);
+    }
+
+    /**
+     * Formulario de edición.
      */
     public function edit(Request $request, StockItem $stockItem): Response
     {
@@ -142,14 +159,8 @@ class StockItemController extends Controller
 
         $owner = $request->user()->kitchenOwner();
 
-        $products = $owner->products()
-            ->orderBy('name')
-            ->get();
-
-        $locations = $owner->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $products = $owner->products()->orderBy('name')->get();
+        $locations = $owner->locations()->orderBy('sort_order')->orderBy('name')->get();
 
         return Inertia::render('Stock/Form', [
             'mode'      => 'edit',
@@ -160,7 +171,7 @@ class StockItemController extends Controller
     }
 
     /**
-     * Actualizar registro de stock.
+     * Actualizar.
      */
     public function update(StockItemRequest $request, StockItem $stockItem): RedirectResponse
     {
@@ -171,7 +182,6 @@ class StockItemController extends Controller
         }
 
         $data = $request->validated();
-
         $stockItem->update($data);
 
         return redirect()
@@ -180,7 +190,7 @@ class StockItemController extends Controller
     }
 
     /**
-     * Borrar registro de stock.
+     * Borrar.
      */
     public function destroy(Request $request, StockItem $stockItem): RedirectResponse
     {
@@ -198,20 +208,68 @@ class StockItemController extends Controller
     }
 
     /**
-     * Exportar la lista de reposición (bajo mínimo) a CSV.
+     * Exportar CSV de reposición (bajo mínimo).
+     * Acepta filtros opcionales: product_id, location_id
      */
-public function show(Request $request, StockItem $stockItem)
-{
-    $ownerId = $request->user()->kitchenOwnerId();
+    public function exportMissingToCsv(Request $request): StreamedResponse
+    {
+        $ownerId = $request->user()->kitchenOwnerId();
 
-    // Seguridad: el stock debe pertenecer a la cocina del usuario
-    if ($stockItem->user_id !== $ownerId) {
-        abort(403);
+        $productId  = $request->query('product_id');
+        $locationId = $request->query('location_id');
+
+        $query = StockItem::with(['product', 'location'])
+            ->where('user_id', $ownerId)
+            ->whereNotNull('min_quantity')
+            ->whereColumn('quantity', '<', 'min_quantity');
+
+        if (!empty($productId)) {
+            $query->where('product_id', $productId);
+        }
+
+        if (!empty($locationId)) {
+            $query->where('location_id', $locationId);
+        }
+
+        $items = $query->orderBy('id')->get();
+
+        $filename = 'reposicion_bajo_minimo.csv';
+
+        return response()->streamDownload(function () use ($items) {
+            $out = fopen('php://output', 'w');
+
+            // Cabecera CSV (Excel-friendly con ;)
+            fputcsv($out, [
+                'Producto',
+                'Ubicación',
+                'Cantidad',
+                'Unidad',
+                'Mínimo',
+                'Falta aprox.',
+                'Caducidad',
+                'Abierto',
+                'Notas',
+            ], ';');
+
+            foreach ($items as $item) {
+                $missing = max(0, (float)($item->min_quantity ?? 0) - (float)($item->quantity ?? 0));
+
+                fputcsv($out, [
+                    $item->product?->name ?? '',
+                    $item->location?->name ?? '',
+                    $item->quantity,
+                    $item->unit,
+                    $item->min_quantity,
+                    number_format($missing, 2, ',', ''),
+                    $item->expires_at ? substr((string)$item->expires_at, 0, 10) : '',
+                    $item->is_open ? 'sí' : 'no',
+                    $item->notes ?? '',
+                ], ';');
+            }
+
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
-
-    // De momento, simplemente redirigimos a la pantalla de edición
-    return redirect()->route('stock.edit', $stockItem->id);
-}
-
-
 }

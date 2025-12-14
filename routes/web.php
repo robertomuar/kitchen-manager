@@ -3,12 +3,14 @@
 use App\Models\Product;
 use App\Models\StockItem;
 use App\Models\Location;
+
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\KitchenShareController;
 use App\Http\Controllers\BarcodeLookupController;
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,15 +27,9 @@ Route::get('/', function () {
 
 /**
  * DEBUG: ver qué productos devuelve la búsqueda por código de barras
- * Ignora scopes globales y user_id, para comprobar que la BD del server
- * contiene lo que esperamos.
- *
- * Ejemplo:
- *   /debug/barcode?barcode=8720181214004
  */
 Route::get('/debug/barcode', function (Request $request) {
     $raw = trim($request->query('barcode', ''));
-
     $numeric = preg_replace('/\D+/', '', $raw);
 
     $candidates = array_values(array_unique(array_filter([
@@ -70,14 +66,13 @@ Route::get('/debug/barcode', function (Request $request) {
 
 /**
  * Lookup de código de barras (AJAX)
- * La dejamos FUERA del grupo auth para evitar redirecciones raras.
- * Sigue protegida por CSRF, así que sólo se usará bien desde tu front.
  */
 Route::post('/barcode/lookup', [BarcodeLookupController::class, 'lookup'])
     ->name('barcode.lookup');
 
-// Todo lo privado va con auth + verified para garantizar correos validados
+// Todo lo privado va con auth + verified
 Route::middleware(['auth', 'verified'])->group(function () {
+
     // === DASHBOARD ===
     Route::get('/dashboard', function () {
         $user    = auth()->user();
@@ -142,21 +137,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
-// === STOCK ===
-Route::get('/stock', [StockItemController::class, 'index'])->name('stock.index');
-Route::get('/stock/create', [StockItemController::class, 'create'])->name('stock.create');
+    // === STOCK ===
+    Route::get('/stock', [StockItemController::class, 'index'])->name('stock.index');
+    Route::get('/stock/create', [StockItemController::class, 'create'])->name('stock.create');
 
-// NUEVA RUTA: GET /stock/{stockItem} → show
-Route::get('/stock/{stockItem}', [StockItemController::class, 'show'])->name('stock.show');
+    // OJO: rutas fijas ANTES del {stockItem}
+    Route::get('/stock/export/missing.csv', [StockItemController::class, 'exportMissingToCsv'])
+        ->name('stock.export.missing');
 
-Route::get('/stock/{stockItem}/edit', [StockItemController::class, 'edit'])->name('stock.edit');
-Route::post('/stock', [StockItemController::class, 'store'])->name('stock.store');
-Route::put('/stock/{stockItem}', [StockItemController::class, 'update'])->name('stock.update');
-Route::delete('/stock/{stockItem}', [StockItemController::class, 'destroy'])->name('stock.destroy');
+    Route::get('/stock/{stockItem}/edit', [StockItemController::class, 'edit'])->name('stock.edit');
 
-Route::get('/stock/export/missing.csv', [StockItemController::class, 'exportMissingToCsv'])
-    ->name('stock.export.missing');
+    // GET /stock/{id} -> para XHR o para compatibilidad (evita 405)
+    Route::get('/stock/{stockItem}', [StockItemController::class, 'show'])->name('stock.show');
 
+    Route::post('/stock', [StockItemController::class, 'store'])->name('stock.store');
+    Route::put('/stock/{stockItem}', [StockItemController::class, 'update'])->name('stock.update');
+    Route::delete('/stock/{stockItem}', [StockItemController::class, 'destroy'])->name('stock.destroy');
 
     // === UBICACIONES ===
     Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
