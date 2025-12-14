@@ -105,7 +105,7 @@ class StockItemController extends Controller
     }
 
     /**
-     * Guardar nuevo.
+     * Guardar nuevo registro.
      */
     public function store(StockItemRequest $request): RedirectResponse
     {
@@ -123,9 +123,10 @@ class StockItemController extends Controller
     }
 
     /**
-     * SHOW: evita el 405 en GET /stock/{id}.
-     * - Si es XHR/JSON: devuelve JSON del item.
-     * - Si es navegación normal: redirige a /edit.
+     * SHOW: evita 405 en GET/HEAD /stock/{id}
+     * - Si es petición Inertia (X-Inertia) => debe devolver respuesta válida Inertia
+     * - Si es AJAX/JSON (sin Inertia) => puede devolver JSON
+     * - Si es navegación normal => redirige a /edit
      */
     public function show(Request $request, StockItem $stockItem)
     {
@@ -135,14 +136,19 @@ class StockItemController extends Controller
             abort(403);
         }
 
-        // Si viene como XHR (tu caso), devolvemos JSON
+        // ✅ Si viene desde Inertia, NUNCA devolver JSON:
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(route('stock.edit', $stockItem->id));
+        }
+
+        // ✅ Si es una llamada AJAX/JSON “real” (sin Inertia), devolvemos JSON
         if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
             return response()->json(
                 $stockItem->load(['product', 'location'])
             );
         }
 
-        // Si alguien navega a /stock/{id}, lo mandamos a /edit
+        // Navegación normal
         return redirect()->route('stock.edit', $stockItem->id);
     }
 
@@ -171,7 +177,7 @@ class StockItemController extends Controller
     }
 
     /**
-     * Actualizar.
+     * Actualizar registro.
      */
     public function update(StockItemRequest $request, StockItem $stockItem): RedirectResponse
     {
@@ -190,7 +196,7 @@ class StockItemController extends Controller
     }
 
     /**
-     * Borrar.
+     * Borrar registro.
      */
     public function destroy(Request $request, StockItem $stockItem): RedirectResponse
     {
@@ -209,7 +215,6 @@ class StockItemController extends Controller
 
     /**
      * Exportar CSV de reposición (bajo mínimo).
-     * Acepta filtros opcionales: product_id, location_id
      */
     public function exportMissingToCsv(Request $request): StreamedResponse
     {
@@ -238,7 +243,6 @@ class StockItemController extends Controller
         return response()->streamDownload(function () use ($items) {
             $out = fopen('php://output', 'w');
 
-            // Cabecera CSV (Excel-friendly con ;)
             fputcsv($out, [
                 'Producto',
                 'Ubicación',
