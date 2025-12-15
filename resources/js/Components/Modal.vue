@@ -1,5 +1,12 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import {
+    computed,
+    nextTick,
+    onMounted,
+    onUnmounted,
+    ref,
+    watch,
+} from 'vue';
 
 const props = defineProps({
     show: {
@@ -19,21 +26,54 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 const dialog = ref();
 const showSlot = ref(props.show);
+let closeTimer = null;
+
+const openDialog = async () => {
+    if (!dialog.value) return;
+
+    await nextTick();
+
+    if (typeof dialog.value.showModal === 'function') {
+        // Evitamos DOMException si el diálogo ya está abierto
+        if (!dialog.value.open) {
+            dialog.value.showModal();
+        }
+    } else {
+        // Fallback para navegadores sin <dialog>
+        dialog.value.setAttribute('open', 'true');
+    }
+};
+
+const closeDialog = () => {
+    if (!dialog.value) return;
+
+    if (typeof dialog.value.close === 'function') {
+        dialog.value.close();
+    } else {
+        dialog.value.removeAttribute('open');
+    }
+};
 
 watch(
     () => props.show,
-    () => {
+    async () => {
         if (props.show) {
+            if (closeTimer) {
+                clearTimeout(closeTimer);
+                closeTimer = null;
+            }
+
             document.body.style.overflow = 'hidden';
             showSlot.value = true;
 
-            dialog.value?.showModal();
+            await openDialog();
         } else {
             document.body.style.overflow = '';
 
-            setTimeout(() => {
-                dialog.value?.close();
+            closeTimer = window.setTimeout(() => {
+                closeDialog();
                 showSlot.value = false;
+                closeTimer = null;
             }, 200);
         }
     },
@@ -55,10 +95,23 @@ const closeOnEscape = (e) => {
     }
 };
 
-onMounted(() => document.addEventListener('keydown', closeOnEscape));
+onMounted(async () => {
+    document.addEventListener('keydown', closeOnEscape);
+
+    if (props.show) {
+        document.body.style.overflow = 'hidden';
+        showSlot.value = true;
+        await openDialog();
+    }
+});
 
 onUnmounted(() => {
     document.removeEventListener('keydown', closeOnEscape);
+
+    if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+    }
 
     document.body.style.overflow = '';
 });
