@@ -156,15 +156,34 @@ const getExpiryLabel = (status) => {
     return '';
 };
 
-// --- EXPORTAR LISTA DE REPOSICIÓN (CSV) ---
-const exportReplenishment = () => {
-    const params = {
-        product_id: filterState.value.product_id || undefined,
-        location_id: filterState.value.location_id || undefined,
-    };
+// --- EXPORTAR LISTA DE REPOSICIÓN (CSV / PDF) ---
+// ✅ NO usamos Ziggy aquí (evita /stock.export.missing y problemas de rutas no incluidas)
+const exportReplenishmentCsv = () => {
+    const url = new URL('/stock/export/missing.csv', window.location.origin);
 
-    const url = route('stock.export.missing', params);
-    window.location.href = url;
+    if (filterState.value.product_id) {
+        url.searchParams.set('product_id', String(filterState.value.product_id));
+    }
+
+    if (filterState.value.location_id) {
+        url.searchParams.set('location_id', String(filterState.value.location_id));
+    }
+
+    window.location.href = url.toString();
+};
+
+const exportReplenishmentPdf = () => {
+    const url = new URL('/stock/export/missing.pdf', window.location.origin);
+
+    if (filterState.value.product_id) {
+        url.searchParams.set('product_id', String(filterState.value.product_id));
+    }
+
+    if (filterState.value.location_id) {
+        url.searchParams.set('location_id', String(filterState.value.location_id));
+    }
+
+    window.open(url.toString(), '_blank', 'noopener');
 };
 </script>
 
@@ -222,10 +241,7 @@ const exportReplenishment = () => {
                                 v-model="filterState.product_id"
                                 class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             >
-                                <option
-                                    value=""
-                                    class="bg-slate-900 text-slate-100"
-                                >
+                                <option value="" class="bg-slate-900 text-slate-100">
                                     Todos los productos
                                 </option>
                                 <option
@@ -251,10 +267,7 @@ const exportReplenishment = () => {
                                 v-model="filterState.location_id"
                                 class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             >
-                                <option
-                                    value=""
-                                    class="bg-slate-900 text-slate-100"
-                                >
+                                <option value="" class="bg-slate-900 text-slate-100">
                                     Todas las ubicaciones
                                 </option>
                                 <option
@@ -280,22 +293,13 @@ const exportReplenishment = () => {
                                 v-model="filterState.status"
                                 class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             >
-                                <option
-                                    value=""
-                                    class="bg-slate-900 text-slate-100"
-                                >
+                                <option value="" class="bg-slate-900 text-slate-100">
                                     Todos
                                 </option>
-                                <option
-                                    value="low"
-                                    class="bg-slate-900 text-slate-100"
-                                >
+                                <option value="low" class="bg-slate-900 text-slate-100">
                                     Solo bajo mínimo
                                 </option>
-                                <option
-                                    value="normal"
-                                    class="bg-slate-900 text-slate-100"
-                                >
+                                <option value="normal" class="bg-slate-900 text-slate-100">
                                     Solo normales
                                 </option>
                             </select>
@@ -318,16 +322,10 @@ const exportReplenishment = () => {
                                     v-model="filterState.sort"
                                     class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                 >
-                                    <option
-                                        value="expires_at"
-                                        class="bg-slate-900 text-slate-100"
-                                    >
+                                    <option value="expires_at" class="bg-slate-900 text-slate-100">
                                         Fecha de caducidad
                                     </option>
-                                    <option
-                                        value="quantity"
-                                        class="bg-slate-900 text-slate-100"
-                                    >
+                                    <option value="quantity" class="bg-slate-900 text-slate-100">
                                         Cantidad
                                     </option>
                                 </select>
@@ -344,16 +342,10 @@ const exportReplenishment = () => {
                                     v-model="filterState.direction"
                                     class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                 >
-                                    <option
-                                        value="asc"
-                                        class="bg-slate-900 text-slate-100"
-                                    >
+                                    <option value="asc" class="bg-slate-900 text-slate-100">
                                         Ascendente
                                     </option>
-                                    <option
-                                        value="desc"
-                                        class="bg-slate-900 text-slate-100"
-                                    >
+                                    <option value="desc" class="bg-slate-900 text-slate-100">
                                         Descendente
                                     </option>
                                 </select>
@@ -369,10 +361,7 @@ const exportReplenishment = () => {
                             >
                                 Limpiar
                             </button>
-                            <PrimaryButton
-                                type="button"
-                                @click="applyFilters"
-                            >
+                            <PrimaryButton type="button" @click="applyFilters">
                                 Aplicar filtros
                             </PrimaryButton>
                         </div>
@@ -385,8 +374,7 @@ const exportReplenishment = () => {
                         v-if="!stockItems.length"
                         class="p-6 text-center text-slate-400 text-sm"
                     >
-                        Todavía no tienes stock registrado (o los filtros no
-                        devuelven resultados).
+                        Todavía no tienes stock registrado (o los filtros no devuelven resultados).
                     </div>
 
                     <div v-else class="overflow-x-auto">
@@ -403,34 +391,23 @@ const exportReplenishment = () => {
                             </thead>
                             <tbody>
                                 <tr v-for="item in stockItems" :key="item.id">
-                                    <td
-                                        class="whitespace-nowrap text-sm font-medium text-slate-50"
-                                    >
+                                    <td class="whitespace-nowrap text-sm font-medium text-slate-50">
                                         {{ item.product?.name ?? '—' }}
                                     </td>
-                                    <td
-                                        class="whitespace-nowrap text-sm text-slate-200"
-                                    >
+
+                                    <td class="whitespace-nowrap text-sm text-slate-200">
                                         {{ item.quantity }} {{ item.unit }}
                                     </td>
-                                    <td
-                                        class="whitespace-nowrap text-sm text-slate-300"
-                                    >
-                                        {{
-                                            item.location?.name ??
-                                            'Sin ubicación'
-                                        }}
+
+                                    <td class="whitespace-nowrap text-sm text-slate-300">
+                                        {{ item.location?.name ?? 'Sin ubicación' }}
                                     </td>
+
                                     <!-- SOLO fecha -->
-                                    <td
-                                        class="whitespace-nowrap text-sm text-slate-300"
-                                    >
+                                    <td class="whitespace-nowrap text-sm text-slate-300">
                                         {{
                                             item.expires_at
-                                                ? item.expires_at.substring(
-                                                      0,
-                                                      10,
-                                                  )
+                                                ? item.expires_at.substring(0, 10)
                                                 : '—'
                                         }}
                                     </td>
@@ -445,10 +422,7 @@ const exportReplenishment = () => {
                                                 Bajo mínimo
                                             </span>
 
-                                            <span
-                                                v-if="item.is_open"
-                                                class="km-badge-amber"
-                                            >
+                                            <span v-if="item.is_open" class="km-badge-amber">
                                                 Abierto
                                             </span>
 
@@ -466,21 +440,14 @@ const exportReplenishment = () => {
                                                         : 'bg-amber-500/10 text-amber-100 border-amber-500/60',
                                                 ]"
                                             >
-                                                {{
-                                                    getExpiryLabel(
-                                                        getExpiryStatus(item),
-                                                    )
-                                                }}
+                                                {{ getExpiryLabel(getExpiryStatus(item)) }}
                                             </span>
                                         </div>
                                     </td>
 
                                     <!-- Acciones -->
-                                    <td
-                                        class="whitespace-nowrap text-sm text-right"
-                                    >
+                                    <td class="whitespace-nowrap text-sm text-right">
                                         <div class="inline-flex gap-2">
-                                            <!-- EDITAR: ahora usamos router.visit -->
                                             <button
                                                 type="button"
                                                 class="text-xs px-3 py-1 rounded-lg border border-slate-600/80 text-slate-100 hover:bg-slate-800/80"
@@ -517,12 +484,21 @@ const exportReplenishment = () => {
                             <span class="text-xs text-slate-400">
                                 Total: {{ lowStockItems.length }}
                             </span>
+
                             <button
                                 type="button"
-                                @click="exportReplenishment"
+                                @click="exportReplenishmentPdf"
+                                class="inline-flex items-center rounded-xl border border-indigo-500/70 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-100 shadow-sm shadow-indigo-500/30 hover:bg-indigo-500/20"
+                            >
+                                Exportar PDF
+                            </button>
+
+                            <button
+                                type="button"
+                                @click="exportReplenishmentCsv"
                                 class="inline-flex items-center rounded-xl border border-emerald-500/70 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 shadow-sm shadow-emerald-500/30 hover:bg-emerald-500/20"
                             >
-                                Exportar lista (CSV)
+                                Exportar CSV
                             </button>
                         </div>
                     </div>
@@ -531,8 +507,7 @@ const exportReplenishment = () => {
                         v-if="!lowStockItems.length"
                         class="p-6 text-sm text-slate-400"
                     >
-                        De momento no hay ningún producto por debajo del mínimo.
-                        ✅
+                        De momento no hay ningún producto por debajo del mínimo. ✅
                     </div>
 
                     <div v-else class="overflow-x-auto">
@@ -547,41 +522,28 @@ const exportReplenishment = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr
-                                    v-for="item in lowStockItems"
-                                    :key="item.id"
-                                >
-                                    <td
-                                        class="whitespace-nowrap text-sm font-medium text-slate-50"
-                                    >
+                                <tr v-for="item in lowStockItems" :key="item.id">
+                                    <td class="whitespace-nowrap text-sm font-medium text-slate-50">
                                         {{ item.product?.name ?? '—' }}
                                     </td>
-                                    <td
-                                        class="whitespace-nowrap text-sm text-slate-300"
-                                    >
-                                        {{
-                                            item.location?.name ??
-                                            'Sin ubicación'
-                                        }}
+
+                                    <td class="whitespace-nowrap text-sm text-slate-300">
+                                        {{ item.location?.name ?? 'Sin ubicación' }}
                                     </td>
-                                    <td
-                                        class="whitespace-nowrap text-sm text-slate-200"
-                                    >
+
+                                    <td class="whitespace-nowrap text-sm text-slate-200">
                                         {{ item.quantity }} {{ item.unit }}
                                     </td>
-                                    <td
-                                        class="whitespace-nowrap text-sm text-slate-200"
-                                    >
+
+                                    <td class="whitespace-nowrap text-sm text-slate-200">
                                         {{ item.min_quantity }}
                                     </td>
-                                    <td
-                                        class="whitespace-nowrap text-sm text-slate-200"
-                                    >
+
+                                    <td class="whitespace-nowrap text-sm text-slate-200">
                                         {{
                                             Math.max(
                                                 0,
-                                                (item.min_quantity ?? 0) -
-                                                    (item.quantity ?? 0),
+                                                (item.min_quantity ?? 0) - (item.quantity ?? 0),
                                             ).toFixed(2)
                                         }}
                                     </td>

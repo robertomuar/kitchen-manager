@@ -149,6 +149,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/stock/export/missing.csv', [StockItemController::class, 'exportMissingToCsv'])
         ->name('stock.export.missing');
 
+    // ✅ NUEVO: PDF de reposición bajo mínimo
+    Route::get('/stock/export/missing.pdf', [StockItemController::class, 'exportMissingToPdf'])
+        ->name('stock.export.missing.pdf');
+
     Route::get('/stock/{stockItem}/edit', [StockItemController::class, 'edit'])->name('stock.edit');
 
     // GET /stock/{id} -> para XHR o para compatibilidad (evita 405)

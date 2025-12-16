@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StockItemController extends Controller
 {
@@ -124,9 +125,6 @@ class StockItemController extends Controller
 
     /**
      * SHOW: evita 405 en GET/HEAD /stock/{id}
-     * - Si es petición Inertia (X-Inertia) => debe devolver respuesta válida Inertia
-     * - Si es AJAX/JSON (sin Inertia) => puede devolver JSON
-     * - Si es navegación normal => redirige a /edit
      */
     public function show(Request $request, StockItem $stockItem)
     {
@@ -136,19 +134,16 @@ class StockItemController extends Controller
             abort(403);
         }
 
-        // ✅ Si viene desde Inertia, NUNCA devolver JSON:
         if ($request->header('X-Inertia')) {
             return Inertia::location(route('stock.edit', $stockItem->id));
         }
 
-        // ✅ Si es una llamada AJAX/JSON “real” (sin Inertia), devolvemos JSON
         if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
             return response()->json(
                 $stockItem->load(['product', 'location'])
             );
         }
 
-        // Navegación normal
         return redirect()->route('stock.edit', $stockItem->id);
     }
 
@@ -275,5 +270,39 @@ class StockItemController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * ✅ Exportar PDF de reposición (bajo mínimo).
+     */
+    public function exportMissingToPdf(Request $request)
+    {
+        $ownerId = $request->user()->kitchenOwnerId();
+
+        $productId  = $request->query('product_id');
+        $locationId = $request->query('location_id');
+
+        $query = StockItem::with(['product', 'location'])
+            ->where('user_id', $ownerId)
+            ->whereNotNull('min_quantity')
+            ->whereColumn('quantity', '<', 'min_quantity');
+
+        if (!empty($productId)) {
+            $query->where('product_id', $productId);
+        }
+
+        if (!empty($locationId)) {
+            $query->where('location_id', $locationId);
+        }
+
+        $items = $query->orderBy('id')->get();
+
+        $pdf = Pdf::loadView('pdf.replenishment', [
+            'items'       => $items,
+            'user'        => $request->user(),
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('reposicion_bajo_minimo.pdf');
     }
 }
