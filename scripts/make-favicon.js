@@ -12,7 +12,6 @@ if (!fs.existsSync(input)) {
 }
 
 async function main() {
-  // PNGs pequeños
   const sizes = [
     { name: "favicon-16x16.png", size: 16 },
     { name: "favicon-32x32.png", size: 32 },
@@ -26,7 +25,6 @@ async function main() {
       .toFile(path.join(outDir, s.name));
   }
 
-  // ICO (16/32/48)
   const icoPngs = await Promise.all([16, 32, 48].map((size) =>
     sharp(input)
       .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
@@ -37,7 +35,7 @@ async function main() {
   const ico = await pngToIco(icoPngs);
   fs.writeFileSync(path.join(outDir, "favicon.ico"), ico);
 
-  console.log("Favicons generados en /public");
+  console.log("OK: favicons creados en public/");
 }
 
 main().catch((e) => {
