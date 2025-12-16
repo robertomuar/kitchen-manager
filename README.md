@@ -82,3 +82,9 @@ Si quieres reutilizar este código en otro repositorio de Laravel, estas son dos
    - Revisa el middleware y las rutas (`app/Http/Middleware/HandleInertiaRequests.php` y `routes/web.php`) para que coincidan con tus reglas de verificación de email.
 
 Con cualquiera de las dos opciones, recuerda ejecutar tus pruebas y validar que la verificación de correo y el escáner funcionan en tu entorno.
+# Local
+composer install
+php artisan test
+
+# CI
+# (se ejecuta automáticamente con GitHub Actions)
