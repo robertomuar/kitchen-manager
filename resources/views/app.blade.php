@@ -9,6 +9,10 @@
 
         <title inertia>{{ config('app.name', 'KitchenManager') }}</title>
 
+        {{-- ✅ FAVICON (icono pestaña navegador) --}}
+        <link rel="icon" type="image/png" href="{{ asset('sombrero.png') }}?v=1">
+        <link rel="apple-touch-icon" href="{{ asset('sombrero.png') }}?v=1">
+
         {{-- Carga de Vite: SOLO el JS (el CSS va importado desde app.js) --}}
         @vite('resources/js/app.js')
 
