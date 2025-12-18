@@ -1,14 +1,22 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { getCsrfToken } from '@/bootstrap';
 
 const showingNavigationDropdown = ref(false);
+
+const page = usePage();
+const isAdmin = computed(() => !!page.props?.auth?.user?.is_admin);
+
+// ✅ detectar si estamos en /admin para marcar “active” sin depender de Ziggy
+const currentUrl = computed(() => page.url ?? '');
+const inAdmin = computed(() => currentUrl.value.startsWith('/admin'));
+const inAdminDb = computed(() => currentUrl.value.startsWith('/admin/db'));
 
 // Leer el token CSRF cada vez que el componente se vuelve a renderizar para
 // evitar usar valores antiguos cuando la sesión se renueva o el token rota.
@@ -90,6 +98,23 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                         >
                             Ubicaciones
                         </NavLink>
+
+                        <!-- ✅ Admin FUERA (URLs directas) -->
+                        <NavLink
+                            v-if="isAdmin"
+                            href="/admin"
+                            :active="inAdmin && !inAdminDb"
+                        >
+                            Admin
+                        </NavLink>
+
+                        <NavLink
+                            v-if="isAdmin"
+                            href="/admin/db"
+                            :active="inAdminDb"
+                        >
+                            DB
+                        </NavLink>
                     </div>
                 </div>
 
@@ -129,6 +154,7 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                                 <DropdownLink :href="route('profile.edit')">
                                     Perfil
                                 </DropdownLink>
+
                                 <form :action="route('logout')" method="post">
                                     <input
                                         type="hidden"
@@ -223,6 +249,23 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                         :active="route().current('locations.index')"
                     >
                         Ubicaciones
+                    </ResponsiveNavLink>
+
+                    <!-- ✅ Admin en móvil (URLs directas) -->
+                    <ResponsiveNavLink
+                        v-if="isAdmin"
+                        href="/admin"
+                        :active="inAdmin && !inAdminDb"
+                    >
+                        Admin
+                    </ResponsiveNavLink>
+
+                    <ResponsiveNavLink
+                        v-if="isAdmin"
+                        href="/admin/db"
+                        :active="inAdminDb"
+                    >
+                        DB
                     </ResponsiveNavLink>
                 </div>
 

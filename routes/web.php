@@ -11,6 +11,10 @@ use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\KitchenShareController;
 use App\Http\Controllers\BarcodeLookupController;
 
+// ✅ Admin
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminDatabaseController;
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +30,21 @@ Route::get('/', function () {
 });
 
 /**
+ * ✅ ADMIN: Dashboard + DB Browser (solo admin)
+ */
+Route::middleware(['auth', 'verified', 'admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/db', [AdminDatabaseController::class, 'index'])->name('db');
+        Route::get('/db/row', [AdminDatabaseController::class, 'showRow'])->name('db.row');
+    });
+
+/**
  * DEBUG: ver qué productos devuelve la búsqueda por código de barras
+ * ✅ Protegido: SOLO admin (evita que quede público)
  */
 Route::get('/debug/barcode', function (Request $request) {
     $raw = trim($request->query('barcode', ''));
@@ -62,7 +80,7 @@ Route::get('/debug/barcode', function (Request $request) {
         'count' => $products->count(),
         'items' => $products,
     ]);
-})->name('debug.barcode');
+})->middleware(['auth', 'verified', 'admin'])->name('debug.barcode');
 
 /**
  * Lookup de código de barras (AJAX)

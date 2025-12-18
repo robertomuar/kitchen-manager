@@ -6,6 +6,26 @@ import '../css/app.css';
 
 import { createApp, h } from 'vue';
 import { createInertiaApp, Link, router } from '@inertiajs/vue3';
+// ✅ 1) Limpia _token/_method de la URL actual (por si venías con ?_token=...)
+try {
+  const u = new URL(window.location.href);
+  if (u.searchParams.has('_token') || u.searchParams.has('_method')) {
+    u.searchParams.delete('_token');
+    u.searchParams.delete('_method');
+    const qs = u.searchParams.toString();
+    window.history.replaceState({}, document.title, u.pathname + (qs ? `?${qs}` : '') + u.hash);
+  }
+} catch (e) {}
+
+// ✅ 2) Limpia defaults de Ziggy para que route() NO vuelva a añadir _token nunca
+try {
+  const ziggy = window.Ziggy; // Ziggy suele estar aquí si tienes @routes o similar
+  if (ziggy && ziggy.defaults) {
+    delete ziggy.defaults._token;
+    delete ziggy.defaults._method;
+  }
+} catch (e) {}
+
 
 const originalRoute = typeof route !== 'undefined' ? route : null;
 
@@ -156,29 +176,25 @@ const forceFullReloadOnNavigation = (event) => {
 // Además de la cabecera, añadimos `_token` al payload cuando Inertia envía
 // formularios JSON/FormData para evitar errores 419.
 const applyCsrfToVisit = (visit) => {
-    const csrfToken = getCsrfToken();
-    const headers = { ...(visit.headers || {}) };
+  const csrfToken = getCsrfToken();
+  const method = (visit.method ?? 'get').toLowerCase();
+  const headers = { ...(visit.headers || {}) };
 
-    if (csrfToken && !headers['X-CSRF-TOKEN']) {
-        headers['X-CSRF-TOKEN'] = csrfToken;
-        headers['X-XSRF-TOKEN'] = csrfToken;
+  // ✅ Header CSRF (para POST/PUT/PATCH/DELETE)
+  if (csrfToken && !headers['X-CSRF-TOKEN']) {
+    headers['X-CSRF-TOKEN'] = csrfToken;
+  }
+
+  // ✅ Nunca añadir _token a GET (si no, acaba en la URL)
+  if (csrfToken && method !== 'get' && visit.data !== undefined) {
+    if (visit.data instanceof FormData) {
+      if (!visit.data.has('_token')) visit.data.set('_token', csrfToken);
+    } else if (typeof visit.data === 'object' && visit.data !== null) {
+      if (!('_token' in visit.data)) visit.data._token = csrfToken;
     }
+  }
 
-    if (csrfToken && visit.data !== undefined) {
-        if (visit.data instanceof FormData) {
-            if (!visit.data.has('_token')) {
-                visit.data.set('_token', csrfToken);
-            }
-        } else if (
-            visit.data !== null &&
-            typeof visit.data === 'object' &&
-            !visit.data._token
-        ) {
-            visit.data = { _token: csrfToken, ...visit.data };
-        }
-    }
-
-    visit.headers = headers;
+  return { ...visit, headers };
 };
 
 if (getCsrfToken()) {
