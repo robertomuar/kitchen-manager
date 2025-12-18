@@ -28,7 +28,8 @@ const props = defineProps({
     <Head title="Perfil" />
 
     <AuthenticatedLayout>
-        <div class="py-8">
+        <!-- Clase para aplicar estilos a inputs dentro de los parciales -->
+        <div class="py-8 km-profile">
             <div class="mx-auto max-w-4xl sm:px-6 lg:px-8 space-y-6">
                 <!-- Información de perfil -->
                 <section class="km-card p-6 sm:p-8 space-y-6">
@@ -88,3 +89,28 @@ const props = defineProps({
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+/* ✅ SOLO letra (sin tocar el fondo) */
+.km-profile :deep(input),
+.km-profile :deep(textarea),
+.km-profile :deep(select) {
+    color: rgb(0, 0, 0) !important;      /* slate-50 */
+    caret-color: rgb(248 250 252) !important; /* cursor */
+}
+
+/* ✅ Placeholder visible (también es “letra”) */
+.km-profile :deep(input::placeholder),
+.km-profile :deep(textarea::placeholder) {
+    color: rgb(148 163 184) !important; /* slate-400 */
+    opacity: 1 !important;
+}
+
+/* ✅ Autofill (Chrome/Edge): a veces pone el texto oscuro */
+.km-profile :deep(input:-webkit-autofill),
+.km-profile :deep(textarea:-webkit-autofill),
+.km-profile :deep(select:-webkit-autofill) {
+    -webkit-text-fill-color: rgb(248 250 252) !important;
+    caret-color: rgb(248 250 252) !important;
+}
+</style>
