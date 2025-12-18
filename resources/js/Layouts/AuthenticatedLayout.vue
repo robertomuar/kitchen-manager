@@ -73,7 +73,7 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                             :href="route('products.index')"
                             :active="route().current('products.index')"
                         >
-                            Productoses
+                            Productos
                         </NavLink>
 
                         <NavLink
