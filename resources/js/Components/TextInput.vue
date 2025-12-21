@@ -1,12 +1,12 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const props = defineProps({
     modelValue: {
         type: [String, Number],
         default: '',
     },
-    // Para poder usarlo en oscuro o claro según la pantalla
+    // Para compatibilidad con usos anteriores
     variant: {
         type: String,
         default: 'light',
@@ -32,25 +32,6 @@ const focus = () => {
         input.value.focus();
     }
 };
-
-const inputClasses = computed(() => {
-    const base =
-        'w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none transition-colors duration-150 caret-slate-100';
-
-    if (props.variant === 'dark') {
-        return [
-            base,
-            'border-slate-700 bg-slate-950/80 text-slate-50 placeholder:text-slate-400',
-            'focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50',
-        ];
-    }
-
-    return [
-        base,
-        'border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 caret-gray-700',
-        'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50',
-    ];
-});
 
 const canAutofocus = () => {
     const active = document.activeElement;
@@ -78,7 +59,7 @@ defineExpose({ focus });
 <template>
     <input
         ref="input"
-        :class="inputClasses"
+        class="km-input"
         :value="modelValue"
         @input="emit('update:modelValue', $event.target.value)"
     />

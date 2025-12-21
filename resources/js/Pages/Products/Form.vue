@@ -199,10 +199,10 @@ const onScannerError = (error) => {
                     class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div>
-                        <h1 class="text-2xl font-semibold text-slate-50">
+                        <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">
                             {{ title }}
                         </h1>
-                        <p class="mt-1 text-sm text-slate-400">
+                        <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                             Gestiona la información base del producto: código de
                             barras, nombre, unidad de medida y ubicación habitual.
                         </p>
@@ -210,22 +210,20 @@ const onScannerError = (error) => {
 
                     <Link
                         :href="route('products.index')"
-                        class="text-sm text-slate-300 hover:text-slate-100"
+                        class="km-link text-sm"
                     >
                         Volver al listado
                     </Link>
                 </div>
 
                 <!-- Tarjeta principal -->
-                <div
-                    class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-900/20 text-slate-900"
-                >
+                <div class="km-card p-6">
                     <form class="space-y-6" @submit.prevent="submit">
                         <!-- Código de barras y acciones -->
                         <div class="space-y-2">
                             <label
                                 for="barcode"
-                                class="block text-sm font-medium text-slate-800"
+                                class="block text-sm font-medium text-[color:var(--km-text)]"
                             >
                                 Código de barras
                             </label>
@@ -236,9 +234,7 @@ const onScannerError = (error) => {
                                     v-model="form.barcode"
                                     type="text"
                                     inputmode="numeric"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                     placeholder="Escanéalo o introdúcelo manualmente"
                                 />
 
@@ -246,7 +242,7 @@ const onScannerError = (error) => {
                                     <button
                                         type="button"
                                         :disabled="isLookingUp || form.processing"
-                                        class="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-indigo-500/40 hover:bg-indigo-600 disabled:cursor-wait disabled:opacity-60"
+                                        class="km-btn w-full px-4 py-2 text-sm disabled:cursor-wait"
                                         @click="lookupBarcode"
                                     >
                                         <span v-if="isLookingUp" class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
@@ -255,7 +251,7 @@ const onScannerError = (error) => {
 
                                     <button
                                         type="button"
-                                        class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                                        class="inline-flex items-center justify-center rounded-xl border border-[color:var(--km-border)] bg-[color:var(--km-bg-2)] px-4 py-2 text-sm font-semibold text-[color:var(--km-text)] shadow-sm hover:bg-white/80"
                                         @click="openScanner"
                                     >
                                         Escanear con cámara
@@ -263,7 +259,7 @@ const onScannerError = (error) => {
                                 </div>
                             </div>
 
-                            <p class="text-xs text-slate-500">
+                            <p class="text-xs text-[color:var(--km-muted)]">
                                 Si lo dejas vacío, podrás seguir creando el producto
                                 pero no se completarán datos automáticamente.
                             </p>
@@ -275,7 +271,7 @@ const onScannerError = (error) => {
 
                             <p
                                 v-if="lookupError"
-                                class="text-xs text-amber-600 bg-amber-100/80 border border-amber-200 rounded-lg px-3 py-2"
+                                class="text-xs text-amber-700 bg-amber-100/80 border border-amber-200 rounded-lg px-3 py-2"
                             >
                                 {{ lookupError }}
                             </p>
@@ -285,7 +281,7 @@ const onScannerError = (error) => {
                         <div class="space-y-1">
                             <label
                                 for="name"
-                                class="block text-sm font-medium text-slate-800"
+                                class="block text-sm font-medium text-[color:var(--km-text)]"
                             >
                                 Nombre *
                             </label>
@@ -294,9 +290,7 @@ const onScannerError = (error) => {
                                 v-model="form.name"
                                 type="text"
                                 required
-                                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                       text-slate-900 placeholder-slate-400 shadow-sm
-                                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                class="km-input"
                                 placeholder="Ej: Garbanzos cocidos, Leche entera…"
                             />
                             <InputError
@@ -310,7 +304,7 @@ const onScannerError = (error) => {
                             <div class="space-y-1">
                                 <label
                                     for="default_quantity"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Cantidad por defecto
                                 </label>
@@ -320,9 +314,7 @@ const onScannerError = (error) => {
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                     placeholder="Ej: 1, 0.5, 200…"
                                 />
                                 <InputError
@@ -334,14 +326,14 @@ const onScannerError = (error) => {
                             <div class="space-y-1">
                                 <label
                                     for="default_unit"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Unidad de medida
                                 </label>
                                 <select
                                     id="default_unit"
                                     v-model="form.default_unit"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                 >
                                     <option value="">Sin unidad</option>
                                     <option
@@ -361,7 +353,7 @@ const onScannerError = (error) => {
                             <div class="space-y-1">
                                 <label
                                     for="default_pack_size"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Tamaño del pack
                                 </label>
@@ -370,9 +362,7 @@ const onScannerError = (error) => {
                                     v-model="form.default_pack_size"
                                     type="number"
                                     min="1"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                     placeholder="Ej: 6 botellas, 12 unidades…"
                                 />
                                 <InputError
@@ -386,14 +376,14 @@ const onScannerError = (error) => {
                         <div class="space-y-1">
                             <label
                                 for="location_id"
-                                class="block text-sm font-medium text-slate-800"
+                                class="block text-sm font-medium text-[color:var(--km-text)]"
                             >
                                 Ubicación habitual
                             </label>
                             <select
                                 id="location_id"
                                 v-model="form.location_id"
-                                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                class="km-input"
                             >
                                 <option value="">Sin ubicación</option>
                                 <option
@@ -414,7 +404,7 @@ const onScannerError = (error) => {
                         <div class="space-y-1">
                             <label
                                 for="notes"
-                                class="block text-sm font-medium text-slate-800"
+                                class="block text-sm font-medium text-[color:var(--km-text)]"
                             >
                                 Notas (opcional)
                             </label>
@@ -422,9 +412,7 @@ const onScannerError = (error) => {
                                 id="notes"
                                 v-model="form.notes"
                                 rows="3"
-                                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                       text-slate-900 placeholder-slate-400 shadow-sm
-                                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                class="km-input"
                                 placeholder="Apuntes adicionales: marca preferida, formato, etc."
                             ></textarea>
                             <InputError
@@ -438,7 +426,7 @@ const onScannerError = (error) => {
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-500/40 hover:bg-indigo-600 disabled:cursor-wait disabled:opacity-60"
+                                class="km-btn w-auto px-5 py-2.5 text-sm disabled:cursor-wait"
                             >
                                 {{ submitLabel }}
                             </button>
@@ -451,19 +439,19 @@ const onScannerError = (error) => {
         <!-- Modal del escáner -->
         <div
             v-if="isScannerOpen"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur"
         >
-            <div class="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-5 text-slate-100 shadow-2xl">
+            <div class="w-full max-w-xl p-5 km-card">
                 <div class="mb-3 flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-white">Escanear código</h3>
-                        <p class="text-xs text-slate-400">
+                        <h3 class="text-lg font-semibold text-[color:var(--km-text)]">Escanear código</h3>
+                        <p class="text-xs text-[color:var(--km-muted)]">
                             Activa la cámara para leer el código de barras del envase.
                         </p>
                     </div>
                     <button
                         type="button"
-                        class="rounded-full bg-slate-800 px-2 py-1 text-sm text-slate-200 hover:bg-slate-700"
+                        class="km-link text-sm"
                         @click="isScannerOpen = false"
                     >
                         Cerrar
@@ -476,7 +464,7 @@ const onScannerError = (error) => {
                     @closed="() => (isScannerOpen = false)"
                 />
 
-                <p v-if="scannerError" class="mt-2 text-xs text-red-400">
+                <p v-if="scannerError" class="mt-2 text-xs text-rose-600">
                     {{ scannerError }}
                 </p>
             </div>

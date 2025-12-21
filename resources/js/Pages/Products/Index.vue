@@ -99,10 +99,10 @@ const deleteProduct = (product) => {
                     class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div>
-                        <h1 class="text-2xl font-semibold text-slate-50">
+                        <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">
                             Productos
                         </h1>
-                        <p class="mt-1 text-sm text-slate-400">
+                        <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                             Listado de productos que usas en tu cocina:
                             nombre, unidad, cantidad base y ubicación habitual.
                         </p>
@@ -111,7 +111,7 @@ const deleteProduct = (product) => {
                     <!-- Botón a pantalla de creación -->
                     <Link
                         :href="route('products.create')"
-                        class="inline-flex items-center rounded-xl border border-indigo-500/70 bg-indigo-500/15 px-4 py-2 text-sm font-medium text-indigo-100 shadow-sm shadow-indigo-500/30 hover:bg-indigo-500/25"
+                        class="km-btn w-auto px-4 py-2 text-sm"
                     >
                         Nuevo producto
                     </Link>
@@ -120,7 +120,7 @@ const deleteProduct = (product) => {
                 <!-- Mensaje de éxito -->
                 <div
                     v-if="hasSuccessMessage"
-                    class="rounded-2xl border border-emerald-500/60 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 shadow-sm shadow-emerald-500/30"
+                    class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
                 >
                     {{ successMessage }}
                 </div>
@@ -134,7 +134,6 @@ const deleteProduct = (product) => {
                             <InputLabel
                                 for="search"
                                 value="Buscar por nombre"
-                                class="text-slate-200"
                             />
                             <TextInput
                                 id="search"
@@ -150,24 +149,19 @@ const deleteProduct = (product) => {
                             <InputLabel
                                 for="filter_location"
                                 value="Filtrar por ubicación"
-                                class="text-slate-200"
                             />
                             <select
                                 id="filter_location"
                                 v-model="filterState.location_id"
-                                class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                class="km-input mt-1"
                             >
-                                <option
-                                    value=""
-                                    class="bg-slate-900 text-slate-100"
-                                >
+                                <option value="">
                                     Todas las ubicaciones
                                 </option>
                                 <option
                                     v-for="location in locations"
                                     :key="location.id"
                                     :value="location.id"
-                                    class="bg-slate-900 text-slate-100"
                                 >
                                     {{ location.name }}
                                 </option>
@@ -179,23 +173,16 @@ const deleteProduct = (product) => {
                                 <InputLabel
                                     for="sort"
                                     value="Ordenar por"
-                                    class="text-slate-200"
                                 />
                                 <select
                                     id="sort"
                                     v-model="filterState.sort"
-                                    class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    class="km-input mt-1"
                                 >
-                                    <option
-                                        value="name"
-                                        class="bg-slate-900 text-slate-100"
-                                    >
+                                    <option value="name">
                                         Nombre
                                     </option>
-                                    <option
-                                        value="default_unit"
-                                        class="bg-slate-900 text-slate-100"
-                                    >
+                                    <option value="default_unit">
                                         Unidad
                                     </option>
                                 </select>
@@ -205,23 +192,16 @@ const deleteProduct = (product) => {
                                 <InputLabel
                                     for="direction"
                                     value="Dirección"
-                                    class="text-slate-200"
                                 />
                                 <select
                                     id="direction"
                                     v-model="filterState.direction"
-                                    class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    class="km-input mt-1"
                                 >
-                                    <option
-                                        value="asc"
-                                        class="bg-slate-900 text-slate-100"
-                                    >
+                                    <option value="asc">
                                         Ascendente
                                     </option>
-                                    <option
-                                        value="desc"
-                                        class="bg-slate-900 text-slate-100"
-                                    >
+                                    <option value="desc">
                                         Descendente
                                     </option>
                                 </select>
@@ -231,7 +211,7 @@ const deleteProduct = (product) => {
                         <div class="flex gap-2 justify-end">
                             <button
                                 type="button"
-                                class="text-sm text-slate-400 hover:text-slate-100"
+                                class="km-link text-sm"
                                 @click="clearFilters"
                             >
                                 Limpiar
@@ -250,7 +230,7 @@ const deleteProduct = (product) => {
                 <div class="km-card overflow-hidden">
                     <div
                         v-if="!products.length"
-                        class="p-6 text-center text-slate-400 text-sm"
+                        class="p-6 text-center text-[color:var(--km-muted)] text-sm"
                     >
                         No hay productos que coincidan con los filtros
                         actuales.
@@ -283,23 +263,23 @@ const deleteProduct = (product) => {
                                     :key="product.id"
                                 >
                                     <td
-                                        class="whitespace-nowrap text-sm font-medium text-slate-50"
+                                        class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]"
                                     >
                                         {{ product.name }}
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-200"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-text)]"
                                     >
                                         <span v-if="product.default_quantity">
                                             {{ product.default_quantity }}
                                             {{ product.default_unit }}
                                         </span>
-                                        <span v-else class="text-slate-500">
+                                        <span v-else class="text-[color:var(--km-muted)]">
                                             —
                                         </span>
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-300"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-muted)]"
                                     >
                                         {{
                                             product.location?.name
@@ -307,7 +287,7 @@ const deleteProduct = (product) => {
                                         }}
                                     </td>
                                     <td
-                                        class="text-sm text-slate-300"
+                                        class="text-sm text-[color:var(--km-muted)]"
                                     >
                                         {{ product.notes || '—' }}
                                     </td>
@@ -322,13 +302,13 @@ const deleteProduct = (product) => {
                                                         product.id,
                                                     )
                                                 "
-                                                class="text-xs px-3 py-1 rounded-lg border border-slate-600/80 text-slate-100 hover:bg-slate-800/80"
+                                                class="km-link text-xs"
                                             >
                                                 Editar
                                             </Link>
                                             <button
                                                 type="button"
-                                                class="text-xs px-3 py-1 rounded-lg border border-rose-500/70 text-rose-300 hover:bg-rose-500/15"
+                                                class="text-xs px-3 py-1 rounded-lg border border-rose-500/50 text-rose-600 hover:bg-rose-500/10"
                                                 @click="deleteProduct(product)"
                                             >
                                                 Borrar

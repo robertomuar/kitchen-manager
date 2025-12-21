@@ -46,10 +46,10 @@ const deleteLocation = (location) => {
                     class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div>
-                        <h1 class="text-2xl font-semibold text-slate-50">
+                        <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">
                             Ubicaciones de mi cocina
                         </h1>
-                        <p class="mt-1 text-sm text-slate-400">
+                        <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                             Define las zonas donde tienes productos: despensa,
                             nevera, congelador, estanterías, etc.
                         </p>
@@ -57,7 +57,7 @@ const deleteLocation = (location) => {
 
                     <Link
                         :href="route('locations.create')"
-                        class="inline-flex items-center rounded-xl border border-indigo-500/70 bg-indigo-500/15 px-4 py-2 text-sm font-medium text-indigo-100 shadow-sm shadow-indigo-500/30 hover:bg-indigo-500/25"
+                        class="km-btn w-auto px-4 py-2 text-sm"
                     >
                         Nueva ubicación
                     </Link>
@@ -66,7 +66,7 @@ const deleteLocation = (location) => {
                 <!-- Mensaje de éxito -->
                 <div
                     v-if="hasSuccessMessage"
-                    class="rounded-2xl border border-emerald-500/60 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 shadow-sm shadow-emerald-500/30"
+                    class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
                 >
                     {{ successMessage }}
                 </div>
@@ -75,7 +75,7 @@ const deleteLocation = (location) => {
                 <div class="km-card overflow-hidden">
                     <div
                         v-if="!locations.length"
-                        class="p-6 text-center text-sm text-slate-400"
+                        class="p-6 text-center text-sm text-[color:var(--km-muted)]"
                     >
                         Todavía no tienes ubicaciones creadas. Crea al menos
                         una para empezar a organizar tu stock.
@@ -112,21 +112,21 @@ const deleteLocation = (location) => {
                                 >
                                     <!-- Orden -->
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-400"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-muted)]"
                                     >
                                         {{ location.sort_order ?? '—' }}
                                     </td>
 
                                     <!-- Nombre -->
                                     <td
-                                        class="whitespace-nowrap text-sm font-medium text-slate-50"
+                                        class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]"
                                     >
                                         {{ location.name }}
                                     </td>
 
                                     <!-- Descripción -->
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-400 max-w-xs truncate"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-muted)] max-w-xs truncate"
                                         :title="location.description || ''"
                                     >
                                         {{ location.description || '—' }}
@@ -137,7 +137,7 @@ const deleteLocation = (location) => {
                                         <div class="flex items-center gap-2">
                                             <span
                                                 v-if="location.color"
-                                                class="inline-flex h-4 w-4 rounded-full border border-slate-700"
+                                                class="inline-flex h-4 w-4 rounded-full border border-[color:var(--km-border)]"
                                                 :style="{
                                                     backgroundColor:
                                                         location.color,
@@ -145,7 +145,7 @@ const deleteLocation = (location) => {
                                             ></span>
                                             <span
                                                 v-else
-                                                class="text-xs text-slate-500"
+                                                class="text-xs text-[color:var(--km-muted)]"
                                             >
                                                 —
                                             </span>
@@ -180,13 +180,13 @@ const deleteLocation = (location) => {
                                                         location.id,
                                                     )
                                                 "
-                                                class="text-xs px-3 py-1 rounded-lg border border-slate-600/80 text-slate-100 hover:bg-slate-800/80"
+                                                class="km-link text-xs"
                                             >
                                                 Editar
                                             </Link>
                                             <button
                                                 type="button"
-                                                class="text-xs px-3 py-1 rounded-lg border border-rose-500/70 text-rose-300 hover:bg-rose-500/15"
+                                                class="text-xs px-3 py-1 rounded-lg border border-rose-500/50 text-rose-600 hover:bg-rose-500/10"
                                                 @click="
                                                     deleteLocation(location)
                                                 "

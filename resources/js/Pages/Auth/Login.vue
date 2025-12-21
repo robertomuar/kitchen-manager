@@ -73,7 +73,7 @@ const submit = () => {
             <label class="inline-flex items-center gap-2">
               <input
                 type="checkbox"
-                class="h-4 w-4 rounded border-slate-300"
+                class="h-4 w-4 rounded border-[color:var(--km-border)] text-[color:var(--km-accent)] focus:ring-[color:var(--km-ring)]"
                 v-model="form.remember"
               />
               <span class="text-sm" style="color: var(--km-muted)">Recuérdame</span>

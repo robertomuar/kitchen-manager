@@ -44,7 +44,6 @@ const updatePassword = () => {
             <InputLabel
                 for="current_password"
                 value="Contraseña actual"
-                class="text-slate-200"
             />
 
             <TextInput
@@ -52,7 +51,7 @@ const updatePassword = () => {
                 v-model="form.current_password"
                 type="password"
                 autocomplete="current-password"
-                class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                class="mt-1 block w-full"
             />
 
             <InputError
@@ -66,7 +65,6 @@ const updatePassword = () => {
             <InputLabel
                 for="password"
                 value="Nueva contraseña"
-                class="text-slate-200"
             />
 
             <TextInput
@@ -74,7 +72,7 @@ const updatePassword = () => {
                 v-model="form.password"
                 type="password"
                 autocomplete="new-password"
-                class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                class="mt-1 block w-full"
             />
 
             <InputError :message="form.errors.password" class="mt-2" />
@@ -85,7 +83,6 @@ const updatePassword = () => {
             <InputLabel
                 for="password_confirmation"
                 value="Confirmar contraseña"
-                class="text-slate-200"
             />
 
             <TextInput
@@ -93,7 +90,7 @@ const updatePassword = () => {
                 v-model="form.password_confirmation"
                 type="password"
                 autocomplete="new-password"
-                class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                class="mt-1 block w-full"
             />
 
             <InputError
@@ -110,7 +107,7 @@ const updatePassword = () => {
 
             <p
                 v-if="form.recentlySuccessful"
-                class="text-xs text-emerald-300"
+                class="text-xs text-emerald-600"
             >
                 Guardado.
             </p>

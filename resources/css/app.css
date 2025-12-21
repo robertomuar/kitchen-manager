@@ -6,19 +6,16 @@
 
 
 @layer components {
-    /* Tarjeta base oscura (para envolver tablas, formularios, etc.) */
-    .km-card {
-        @apply rounded-2xl border border-slate-800/80 bg-slate-950/80
-            shadow-sm backdrop-blur-sm;
-    }
-
-    /* Tabla base oscura */
+    /* Tabla base */
     .km-table {
-        @apply min-w-full text-sm text-slate-100;
+        @apply min-w-full text-sm;
+        color: var(--km-text);
     }
 
     .km-table thead {
-        @apply bg-slate-900/90 text-[11px] uppercase tracking-wide text-slate-400;
+        @apply text-[11px] uppercase tracking-wide;
+        background: var(--km-bg-2);
+        color: var(--km-muted);
     }
 
     .km-table th {
@@ -26,19 +23,19 @@
     }
 
     .km-table tbody tr {
-        @apply border-t border-slate-800/80;
+        border-top: 1px solid var(--km-border);
     }
 
     .km-table tbody tr:nth-child(even) {
-        @apply bg-slate-900/40;
+        background: rgba(11, 16, 36, 0.04);
     }
 
     .km-table tbody tr:hover {
-        @apply bg-slate-800/70;
+        background: rgba(11, 16, 36, 0.07);
     }
 
     .km-table td {
-        @apply px-4 py-2 align-middle text-sm text-slate-100;
+        @apply px-4 py-2 align-middle text-sm;
     }
 
     /* Para pequeñas etiquetas tipo estado */

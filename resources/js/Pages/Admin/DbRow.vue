@@ -19,23 +19,23 @@ const backToTable = () => `/admin/db?table=${encodeURIComponent(props.table)}`
         <!-- Cabecera -->
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 class="text-2xl font-semibold text-slate-50">Registro</h1>
-            <p class="mt-1 text-sm text-slate-400">
-              Tabla: <span class="font-semibold text-slate-100">{{ table }}</span>
+            <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">Registro</h1>
+            <p class="mt-1 text-sm text-[color:var(--km-muted)]">
+              Tabla: <span class="font-semibold text-[color:var(--km-text)]">{{ table }}</span>
             </p>
           </div>
 
           <div class="flex gap-2">
             <Link
               :href="backToTable()"
-              class="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 hover:border-slate-500 hover:bg-slate-900/90"
+              class="km-btn w-auto px-4 py-2 text-sm"
             >
               ← Volver
             </Link>
 
             <Link
               href="/admin"
-              class="rounded-xl border border-slate-800 bg-transparent px-4 py-2 text-sm font-semibold text-slate-300 hover:border-slate-600 hover:text-slate-100"
+              class="km-link text-sm font-semibold"
             >
               Admin
             </Link>
@@ -43,10 +43,11 @@ const backToTable = () => `/admin/db?table=${encodeURIComponent(props.table)}`
         </div>
 
         <div class="km-card overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-slate-100">Detalle</h2>
-            <span class="text-xs text-slate-400">ID: {{ row.id ?? '—' }}</span>
+          <div class="px-6 py-4 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-[color:var(--km-text)]">Detalle</h2>
+            <span class="text-xs text-[color:var(--km-muted)]">ID: {{ row.id ?? '—' }}</span>
           </div>
+          <div class="km-divider" />
 
           <div class="overflow-x-auto">
             <table class="km-table">
@@ -59,14 +60,14 @@ const backToTable = () => `/admin/db?table=${encodeURIComponent(props.table)}`
 
               <tbody>
                 <tr v-for="(v, k) in row" :key="k">
-                  <td class="whitespace-nowrap text-sm font-medium text-slate-50">
+                  <td class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]">
                     {{ k }}
                   </td>
 
-                  <td class="text-sm text-slate-200">
+                  <td class="text-sm text-[color:var(--km-text)]">
                     <pre
                       v-if="typeof v === 'string' && v.length > 140"
-                      class="whitespace-pre-wrap break-words rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-xs text-slate-100"
+                      class="whitespace-pre-wrap break-words rounded-xl border border-[color:var(--km-border)] bg-[color:var(--km-bg-2)] p-3 text-xs text-[color:var(--km-text)]"
                     >{{ v }}</pre>
                     <span v-else>{{ v }}</span>
                   </td>

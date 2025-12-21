@@ -119,10 +119,10 @@ const submit = () => {
                     class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div>
-                        <h1 class="text-2xl font-semibold text-slate-50">
+                        <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">
                             {{ title }}
                         </h1>
-                        <p class="mt-1 text-sm text-slate-400">
+                        <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                             Registra cuántas unidades tienes de cada producto,
                             dónde está y su fecha de caducidad.
                         </p>
@@ -130,16 +130,14 @@ const submit = () => {
 
                     <Link
                         :href="route('stock.index')"
-                        class="text-sm text-slate-300 hover:text-slate-100"
+                        class="km-link text-sm"
                     >
                         Volver al listado
                     </Link>
                 </div>
 
                 <!-- Tarjeta -->
-                <div
-                    class="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-900/20 text-slate-900"
-                >
+                <div class="mx-auto max-w-4xl p-6 km-card">
                     <form class="space-y-6" @submit.prevent="submit">
                         <!-- Producto / Cantidad / Unidad -->
                         <div class="grid gap-6 md:grid-cols-3">
@@ -147,7 +145,7 @@ const submit = () => {
                             <div class="md:col-span-2 space-y-1">
                                 <label
                                     for="product_id"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Producto *
                                 </label>
@@ -155,9 +153,7 @@ const submit = () => {
                                     id="product_id"
                                     v-model="form.product_id"
                                     required
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                 >
                                     <option value="">
                                         Selecciona un producto
@@ -180,7 +176,7 @@ const submit = () => {
                             <div class="space-y-1">
                                 <label
                                     for="quantity"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Cantidad *
                                 </label>
@@ -191,9 +187,7 @@ const submit = () => {
                                     step="0.01"
                                     min="0"
                                     required
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                     placeholder="1"
                                 />
                                 <InputError
@@ -209,16 +203,14 @@ const submit = () => {
                             <div class="space-y-1">
                                 <label
                                     for="unit"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Unidad
                                 </label>
                                 <select
                                     id="unit"
                                     v-model="form.unit"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                 >
                                     <option value="">
                                         Misma unidad que el producto
@@ -241,16 +233,14 @@ const submit = () => {
                             <div class="space-y-1">
                                 <label
                                     for="location_id"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Ubicación
                                 </label>
                                 <select
                                     id="location_id"
                                     v-model="form.location_id"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                 >
                                     <option value="">
                                         Sin ubicación asignada
@@ -273,7 +263,7 @@ const submit = () => {
                             <div class="space-y-1">
                                 <label
                                     for="min_quantity"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Cantidad mínima (para aviso)
                                 </label>
@@ -283,12 +273,10 @@ const submit = () => {
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 placeholder-slate-400 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                     placeholder="Ej: 2"
                                 />
-                                <p class="mt-1 text-xs text-slate-500">
+                                <p class="mt-1 text-xs text-[color:var(--km-muted)]">
                                     Si la cantidad baja de este número, el
                                     sistema marcará “Bajo mínimo”.
                                 </p>
@@ -304,7 +292,7 @@ const submit = () => {
                             <div class="space-y-1 md:col-span-1">
                                 <label
                                     for="expires_at"
-                                    class="block text-sm font-medium text-slate-800"
+                                    class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
                                     Caducidad (opcional)
                                 </label>
@@ -312,9 +300,7 @@ const submit = () => {
                                     id="expires_at"
                                     v-model="form.expires_at"
                                     type="date"
-                                    class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                           text-slate-900 shadow-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                    class="km-input"
                                 />
                                 <InputError
                                     class="mt-1 text-xs text-rose-600"
@@ -330,15 +316,15 @@ const submit = () => {
                                         id="is_open"
                                         v-model="form.is_open"
                                         type="checkbox"
-                                        class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        class="h-4 w-4 rounded border-[color:var(--km-border)] text-[color:var(--km-accent)] focus:ring-[color:var(--km-ring)]"
                                     />
                                     <span
-                                        class="text-sm font-medium text-slate-800"
+                                        class="text-sm font-medium text-[color:var(--km-text)]"
                                     >
                                         Envase abierto
                                     </span>
                                 </label>
-                                <p class="text-xs text-slate-500">
+                                <p class="text-xs text-[color:var(--km-muted)]">
                                     Marca esta opción si el paquete ya está
                                     empezado, para saber qué productos usar
                                     primero.
@@ -354,7 +340,7 @@ const submit = () => {
                         <div class="space-y-1">
                             <label
                                 for="notes"
-                                class="block text-sm font-medium text-slate-800"
+                                class="block text-sm font-medium text-[color:var(--km-text)]"
                             >
                                 Notas (opcional)
                             </label>
@@ -362,9 +348,7 @@ const submit = () => {
                                 id="notes"
                                 v-model="form.notes"
                                 rows="3"
-                                class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm
-                                       text-slate-900 placeholder-slate-400 shadow-sm
-                                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:outline-none"
+                                class="km-input"
                                 placeholder="Ej: paquete empezado, usar primero..."
                             ></textarea>
                             <InputError
@@ -378,7 +362,7 @@ const submit = () => {
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-500/40 hover:bg-indigo-600 disabled:opacity-60 disabled:cursor-wait"
+                                class="km-btn w-auto px-5 py-2.5 text-sm disabled:cursor-wait"
                             >
                                 {{ submitLabel }}
                             </button>

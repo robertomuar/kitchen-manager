@@ -10,13 +10,13 @@ const props = defineProps({
 const classes = computed(() =>
     props.active
         ? // ACTIVO
-          'relative inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ' +
-          'text-indigo-100 bg-slate-900/90 border border-indigo-400/70 ' +
-          'shadow-sm shadow-indigo-500/30 transition-colors duration-150'
+          'relative inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ' +
+          'text-[color:var(--km-text)] bg-[color:var(--km-card)] border border-[color:var(--km-border)] ' +
+          'shadow-sm transition-colors duration-150'
         : // INACTIVO
           'inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ' +
-          'text-slate-300/90 border border-transparent ' +
-          'hover:text-white hover:bg-slate-900/60 hover:border-slate-700 ' +
+          'text-[color:var(--km-muted)] border border-transparent ' +
+          'hover:text-[color:var(--km-text)] hover:bg-[color:var(--km-bg-2)] hover:border-[color:var(--km-border)] ' +
           'transition-colors duration-150'
 );
 </script>

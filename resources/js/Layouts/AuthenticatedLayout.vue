@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import AppMark from '@/Components/AppMark.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
@@ -24,26 +24,21 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
 </script>
 
 <template>
-    <div
-        class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50"
-    >
+    <div class="km-page relative">
         <!-- Fondos decorativos -->
         <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
             <div
-                class="absolute -left-1/4 top-[-10%] h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl"
+                class="km-halo-amber absolute -top-24 left-1/3 h-96 w-96 -translate-x-1/2 rounded-full blur-3xl"
             ></div>
             <div
-                class="absolute right-[-10%] top-1/3 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl"
-            ></div>
-            <div
-                class="absolute bottom-[-20%] left-1/4 h-72 w-72 rounded-full bg-sky-500/20 blur-3xl"
+                class="km-halo-neutral absolute -bottom-24 right-1/4 h-96 w-96 rounded-full blur-3xl"
             ></div>
         </div>
 
-        <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-4">
+        <div class="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-4">
             <!-- Navbar -->
             <nav
-                class="relative z-20 mt-4 mb-4 flex h-14 items-center justify-between rounded-2xl border border-slate-800/80 bg-slate-950/80 px-3 py-2 shadow-lg shadow-slate-950/60 backdrop-blur-sm"
+                class="relative z-20 mt-4 mb-4 flex h-14 items-center justify-between rounded-2xl px-3 py-2 km-card"
             >
                 <div class="flex items-center gap-4">
                     <!-- Logo + nombre app -->
@@ -51,18 +46,18 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                         <Link :href="route('dashboard')">
                             <div class="flex items-center gap-2">
                                 <span
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900/80 ring-1 ring-slate-700/80"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-2xl"
+                                    style="background: rgba(209,139,0,0.14); border: 1px solid rgba(209,139,0,0.20);"
                                 >
-                                    <ApplicationLogo
-                                        class="h-6 w-6 fill-current text-indigo-400"
+                                    <AppMark
+                                        class="h-6 w-6"
+                                        style="color: var(--km-accent)"
                                     />
                                 </span>
                                 <span
-                                    class="hidden text-base font-semibold tracking-tight text-slate-50 sm:inline"
+                                    class="hidden text-base font-semibold tracking-tight text-[color:var(--km-text)] sm:inline"
                                 >
-                                    Kitchen<span class="text-indigo-400"
-                                        >Manager</span
-                                    >
+                                    Kitchen<span class="text-[color:var(--km-accent)]">Manager</span>
                                 </span>
                             </div>
                         </Link>
@@ -120,7 +115,7 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
 
                 <!-- Zona derecha (usuario / logout) -->
                 <div class="hidden items-center gap-4 sm:flex">
-                    <div class="text-xs text-slate-400">
+                    <div class="text-xs text-[color:var(--km-muted)]">
                         {{ $page.props.auth.user.email }}
                     </div>
 
@@ -130,7 +125,7 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                                 <span class="inline-flex rounded-md">
                                     <button
                                         type="button"
-                                        class="inline-flex items-center rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-200 shadow-sm hover:border-slate-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-950"
+                                        class="inline-flex items-center rounded-xl border border-[color:var(--km-border)] bg-[color:var(--km-bg-2)] px-3 py-1.5 text-xs font-medium text-[color:var(--km-text)] shadow-sm hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-[color:var(--km-ring)] focus:ring-offset-2"
                                     >
                                         {{ $page.props.auth.user.name }}
 
@@ -180,7 +175,7 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                             showingNavigationDropdown =
                                 !showingNavigationDropdown
                         "
-                        class="inline-flex items-center justify-center rounded-md p-2 text-slate-300 hover:bg-slate-800 hover:text-white focus:bg-slate-800 focus:text-white focus:outline-none"
+                        class="inline-flex items-center justify-center rounded-md p-2 text-[color:var(--km-muted)] hover:bg-[color:var(--km-bg-2)] hover:text-[color:var(--km-text)] focus:outline-none focus:ring-2 focus:ring-[color:var(--km-ring)]"
                     >
                         <svg
                             class="h-6 w-6"
@@ -219,7 +214,7 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                     block: showingNavigationDropdown,
                     hidden: !showingNavigationDropdown,
                 }"
-                class="mb-4 rounded-2xl border border-slate-800/80 bg-slate-950/90 p-3 sm:hidden"
+                class="mb-4 rounded-2xl p-3 sm:hidden km-card"
             >
                 <div class="space-y-1 pb-3">
                     <ResponsiveNavLink
@@ -270,12 +265,13 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                 </div>
 
                 <!-- Opciones de usuario móviles -->
-                <div class="border-t border-slate-800/80 pt-3">
+                <div class="pt-3">
+                    <div class="km-divider" />
                     <div class="px-2">
-                        <div class="text-sm font-medium text-slate-50">
+                        <div class="text-sm font-medium text-[color:var(--km-text)]">
                             {{ $page.props.auth.user.name }}
                         </div>
-                        <div class="text-xs text-slate-400">
+                        <div class="text-xs text-[color:var(--km-muted)]">
                             {{ $page.props.auth.user.email }}
                         </div>
                     </div>
@@ -292,7 +288,7 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
                             />
                             <button
                                 type="submit"
-                                class="block w-full rounded-lg border border-transparent ps-4 pe-4 py-2 text-start text-sm font-medium text-slate-300 hover:border-slate-700 hover:bg-slate-900/60 hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 focus:ring-offset-slate-950"
+                                class="block w-full rounded-lg border border-transparent ps-4 pe-4 py-2 text-start text-sm font-medium text-[color:var(--km-text)] hover:bg-[color:var(--km-bg-2)] focus:outline-none focus:ring-2 focus:ring-[color:var(--km-ring)] focus:ring-offset-2"
                             >
                                 Cerrar sesión
                             </button>
@@ -304,7 +300,7 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
             <!-- Cabecera de página (slot) -->
             <header
                 v-if="$slots.header"
-                class="mb-4 rounded-2xl border border-slate-800/80 bg-slate-950/80 px-4 py-4 shadow-sm backdrop-blur-sm"
+                class="mb-4 rounded-2xl px-4 py-4 km-card"
             >
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
@@ -320,10 +316,13 @@ const resolveCsrfToken = () => getCsrfToken() ?? '';
 
             <!-- Footer pequeño (opcional) -->
             <footer
-                class="mb-4 mt-auto flex h-10 items-center justify-between border-t border-slate-800/80 text-[11px] text-slate-500"
+                class="mb-4 mt-auto text-[11px] text-[color:var(--km-muted)]"
             >
-                <span>KitchenManager · Área privada</span>
-                <span>Laravel 11 · Vue 3 · Tailwind CSS</span>
+                <div class="km-divider" />
+                <div class="flex h-10 items-center justify-between">
+                    <span>KitchenManager · Área privada</span>
+                    <span>Laravel 11 · Vue 3 · Tailwind CSS</span>
+                </div>
             </footer>
         </div>
     </div>

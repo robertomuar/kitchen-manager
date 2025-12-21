@@ -18,15 +18,14 @@ const props = defineProps({
 const classes = computed(() =>
     props.active
         ? // ACTIVO
-          'block w-full rounded-lg ps-4 pe-4 py-2 text-sm font-medium ' +
-          'bg-slate-900/90 text-indigo-100 border border-indigo-500/60 ' +
-          'shadow-sm shadow-indigo-500/30 ' +
-          'focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-950'
+          'block w-full rounded-xl ps-4 pe-4 py-2 text-sm font-semibold ' +
+          'bg-[color:var(--km-card)] text-[color:var(--km-text)] border border-[color:var(--km-border)] ' +
+          'shadow-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--km-ring)] focus:ring-offset-2'
         : // INACTIVO
-          'block w-full rounded-lg ps-4 pe-4 py-2 text-sm font-medium ' +
-          'text-slate-300 border border-transparent ' +
-          'hover:bg-slate-900/60 hover:text-white hover:border-slate-700 ' +
-          'focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 focus:ring-offset-slate-950'
+          'block w-full rounded-xl ps-4 pe-4 py-2 text-sm font-medium ' +
+          'text-[color:var(--km-muted)] border border-transparent ' +
+          'hover:bg-[color:var(--km-bg-2)] hover:text-[color:var(--km-text)] hover:border-[color:var(--km-border)] ' +
+          'focus:outline-none focus:ring-2 focus:ring-[color:var(--km-ring)] focus:ring-offset-2'
 );
 </script>
 

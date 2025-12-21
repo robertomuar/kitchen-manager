@@ -198,10 +198,10 @@ const exportReplenishmentPdf = () => {
                     class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div>
-                        <h1 class="text-2xl font-semibold text-slate-50">
+                        <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">
                             Stock de mi cocina
                         </h1>
-                        <p class="mt-1 text-sm text-slate-400">
+                        <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                             Vista general del stock: cantidades, ubicaciones y
                             caducidades de tus productos.
                         </p>
@@ -210,7 +210,7 @@ const exportReplenishmentPdf = () => {
                     <!-- Botón a pantalla de creación -->
                     <Link
                         :href="route('stock.create')"
-                        class="inline-flex items-center rounded-xl border border-indigo-500/70 bg-indigo-500/15 px-4 py-2 text-sm font-medium text-indigo-100 shadow-sm shadow-indigo-500/30 hover:bg-indigo-500/25"
+                        class="km-btn w-auto px-4 py-2 text-sm"
                     >
                         Nuevo registro de stock
                     </Link>
@@ -219,7 +219,7 @@ const exportReplenishmentPdf = () => {
                 <!-- Mensaje de éxito -->
                 <div
                     v-if="hasSuccessMessage"
-                    class="rounded-2xl border border-emerald-500/60 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 shadow-sm shadow-emerald-500/30"
+                    class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
                 >
                     {{ successMessage }}
                 </div>
@@ -234,21 +234,19 @@ const exportReplenishmentPdf = () => {
                             <InputLabel
                                 for="filter_product"
                                 value="Filtrar por producto"
-                                class="text-slate-200"
                             />
                             <select
                                 id="filter_product"
                                 v-model="filterState.product_id"
-                                class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                class="km-input mt-1"
                             >
-                                <option value="" class="bg-slate-900 text-slate-100">
+                                <option value="">
                                     Todos los productos
                                 </option>
                                 <option
                                     v-for="product in products"
                                     :key="product.id"
                                     :value="product.id"
-                                    class="bg-slate-900 text-slate-100"
                                 >
                                     {{ product.name }}
                                 </option>
@@ -260,21 +258,19 @@ const exportReplenishmentPdf = () => {
                             <InputLabel
                                 for="filter_location"
                                 value="Filtrar por ubicación"
-                                class="text-slate-200"
                             />
                             <select
                                 id="filter_location"
                                 v-model="filterState.location_id"
-                                class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                class="km-input mt-1"
                             >
-                                <option value="" class="bg-slate-900 text-slate-100">
+                                <option value="">
                                     Todas las ubicaciones
                                 </option>
                                 <option
                                     v-for="location in locations"
                                     :key="location.id"
                                     :value="location.id"
-                                    class="bg-slate-900 text-slate-100"
                                 >
                                     {{ location.name }}
                                 </option>
@@ -286,20 +282,19 @@ const exportReplenishmentPdf = () => {
                             <InputLabel
                                 for="filter_status"
                                 value="Estado"
-                                class="text-slate-200"
                             />
                             <select
                                 id="filter_status"
                                 v-model="filterState.status"
-                                class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                class="km-input mt-1"
                             >
-                                <option value="" class="bg-slate-900 text-slate-100">
+                                <option value="">
                                     Todos
                                 </option>
-                                <option value="low" class="bg-slate-900 text-slate-100">
+                                <option value="low">
                                     Solo bajo mínimo
                                 </option>
-                                <option value="normal" class="bg-slate-900 text-slate-100">
+                                <option value="normal">
                                     Solo normales
                                 </option>
                             </select>
@@ -315,17 +310,16 @@ const exportReplenishmentPdf = () => {
                                 <InputLabel
                                     for="sort"
                                     value="Ordenar por"
-                                    class="text-slate-200"
                                 />
                                 <select
                                     id="sort"
                                     v-model="filterState.sort"
-                                    class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    class="km-input mt-1"
                                 >
-                                    <option value="expires_at" class="bg-slate-900 text-slate-100">
+                                    <option value="expires_at">
                                         Fecha de caducidad
                                     </option>
-                                    <option value="quantity" class="bg-slate-900 text-slate-100">
+                                    <option value="quantity">
                                         Cantidad
                                     </option>
                                 </select>
@@ -335,17 +329,16 @@ const exportReplenishmentPdf = () => {
                                 <InputLabel
                                     for="direction"
                                     value="Dirección"
-                                    class="text-slate-200"
                                 />
                                 <select
                                     id="direction"
                                     v-model="filterState.direction"
-                                    class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    class="km-input mt-1"
                                 >
-                                    <option value="asc" class="bg-slate-900 text-slate-100">
+                                    <option value="asc">
                                         Ascendente
                                     </option>
-                                    <option value="desc" class="bg-slate-900 text-slate-100">
+                                    <option value="desc">
                                         Descendente
                                     </option>
                                 </select>
@@ -356,7 +349,7 @@ const exportReplenishmentPdf = () => {
                         <div class="flex gap-2 justify-end w-full md:w-1/2">
                             <button
                                 type="button"
-                                class="text-sm text-slate-400 hover:text-slate-100"
+                                class="km-link text-sm"
                                 @click="clearFilters"
                             >
                                 Limpiar
@@ -372,7 +365,7 @@ const exportReplenishmentPdf = () => {
                 <div class="km-card overflow-hidden">
                     <div
                         v-if="!stockItems.length"
-                        class="p-6 text-center text-slate-400 text-sm"
+                        class="p-6 text-center text-[color:var(--km-muted)] text-sm"
                     >
                         Todavía no tienes stock registrado (o los filtros no devuelven resultados).
                     </div>
@@ -391,20 +384,20 @@ const exportReplenishmentPdf = () => {
                             </thead>
                             <tbody>
                                 <tr v-for="item in stockItems" :key="item.id">
-                                    <td class="whitespace-nowrap text-sm font-medium text-slate-50">
+                                    <td class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]">
                                         {{ item.product?.name ?? '—' }}
                                     </td>
 
-                                    <td class="whitespace-nowrap text-sm text-slate-200">
+                                    <td class="whitespace-nowrap text-sm text-[color:var(--km-text)]">
                                         {{ item.quantity }} {{ item.unit }}
                                     </td>
 
-                                    <td class="whitespace-nowrap text-sm text-slate-300">
+                                    <td class="whitespace-nowrap text-sm text-[color:var(--km-muted)]">
                                         {{ item.location?.name ?? 'Sin ubicación' }}
                                     </td>
 
                                     <!-- SOLO fecha -->
-                                    <td class="whitespace-nowrap text-sm text-slate-300">
+                                    <td class="whitespace-nowrap text-sm text-[color:var(--km-muted)]">
                                         {{
                                             item.expires_at
                                                 ? item.expires_at.substring(0, 10)
@@ -436,8 +429,8 @@ const exportReplenishmentPdf = () => {
                                                     (getExpiryStatus(item)?.type === 'expired' ||
                                                         getExpiryStatus(item)?.type === 'urgent' ||
                                                         getExpiryStatus(item)?.type === 'today')
-                                                        ? 'bg-rose-500/10 text-rose-200 border-rose-500/60'
-                                                        : 'bg-amber-500/10 text-amber-100 border-amber-500/60',
+                                                        ? 'bg-rose-500/10 text-rose-600 border-rose-500/40'
+                                                        : 'bg-amber-500/10 text-amber-700 border-amber-500/40',
                                                 ]"
                                             >
                                                 {{ getExpiryLabel(getExpiryStatus(item)) }}
@@ -450,7 +443,7 @@ const exportReplenishmentPdf = () => {
                                         <div class="inline-flex gap-2">
                                             <button
                                                 type="button"
-                                                class="text-xs px-3 py-1 rounded-lg border border-slate-600/80 text-slate-100 hover:bg-slate-800/80"
+                                                class="km-link text-xs"
                                                 @click="goToEdit(item)"
                                             >
                                                 Editar
@@ -458,7 +451,7 @@ const exportReplenishmentPdf = () => {
 
                                             <button
                                                 type="button"
-                                                class="text-xs px-3 py-1 rounded-lg border border-rose-500/70 text-rose-300 hover:bg-rose-500/15"
+                                                class="text-xs px-3 py-1 rounded-lg border border-rose-500/50 text-rose-600 hover:bg-rose-500/10"
                                                 @click="deleteItem(item)"
                                             >
                                                 Borrar
@@ -473,22 +466,20 @@ const exportReplenishmentPdf = () => {
 
                 <!-- Lista de reposición -->
                 <div class="km-card overflow-hidden">
-                    <div
-                        class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between"
-                    >
-                        <h2 class="text-sm font-semibold text-slate-100">
+                    <div class="px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-sm font-semibold text-[color:var(--km-text)]">
                             Lista de reposición (bajo mínimo)
                         </h2>
 
                         <div class="flex items-center gap-3">
-                            <span class="text-xs text-slate-400">
+                            <span class="text-xs text-[color:var(--km-muted)]">
                                 Total: {{ lowStockItems.length }}
                             </span>
 
                             <button
                                 type="button"
                                 @click="exportReplenishmentPdf"
-                                class="inline-flex items-center rounded-xl border border-indigo-500/70 bg-indigo-500/10 px-3 py-1.5 text-xs font-medium text-indigo-100 shadow-sm shadow-indigo-500/30 hover:bg-indigo-500/20"
+                                class="km-btn w-auto px-3 py-1.5 text-xs"
                             >
                                 Exportar PDF
                             </button>
@@ -496,16 +487,17 @@ const exportReplenishmentPdf = () => {
                             <button
                                 type="button"
                                 @click="exportReplenishmentCsv"
-                                class="inline-flex items-center rounded-xl border border-emerald-500/70 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 shadow-sm shadow-emerald-500/30 hover:bg-emerald-500/20"
+                                class="inline-flex items-center rounded-xl border border-[color:var(--km-border)] bg-[color:var(--km-bg-2)] px-3 py-1.5 text-xs font-medium text-[color:var(--km-text)] shadow-sm hover:bg-white/80"
                             >
                                 Exportar CSV
                             </button>
                         </div>
                     </div>
+                    <div class="km-divider" />
 
                     <div
                         v-if="!lowStockItems.length"
-                        class="p-6 text-sm text-slate-400"
+                        class="p-6 text-sm text-[color:var(--km-muted)]"
                     >
                         De momento no hay ningún producto por debajo del mínimo. ✅
                     </div>
@@ -523,23 +515,23 @@ const exportReplenishmentPdf = () => {
                             </thead>
                             <tbody>
                                 <tr v-for="item in lowStockItems" :key="item.id">
-                                    <td class="whitespace-nowrap text-sm font-medium text-slate-50">
+                                    <td class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]">
                                         {{ item.product?.name ?? '—' }}
                                     </td>
 
-                                    <td class="whitespace-nowrap text-sm text-slate-300">
+                                    <td class="whitespace-nowrap text-sm text-[color:var(--km-muted)]">
                                         {{ item.location?.name ?? 'Sin ubicación' }}
                                     </td>
 
-                                    <td class="whitespace-nowrap text-sm text-slate-200">
+                                    <td class="whitespace-nowrap text-sm text-[color:var(--km-text)]">
                                         {{ item.quantity }} {{ item.unit }}
                                     </td>
 
-                                    <td class="whitespace-nowrap text-sm text-slate-200">
+                                    <td class="whitespace-nowrap text-sm text-[color:var(--km-text)]">
                                         {{ item.min_quantity }}
                                     </td>
 
-                                    <td class="whitespace-nowrap text-sm text-slate-200">
+                                    <td class="whitespace-nowrap text-sm text-[color:var(--km-text)]">
                                         {{
                                             Math.max(
                                                 0,
