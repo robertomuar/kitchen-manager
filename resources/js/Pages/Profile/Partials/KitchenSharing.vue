@@ -37,10 +37,10 @@ const removeAccess = (shareId) => {
 <template>
     <section class="km-card p-6 sm:p-8 space-y-6">
         <header>
-            <h2 class="text-xl font-semibold text-slate-50">
+            <h2 class="text-xl font-semibold text-[color:var(--km-text)]">
                 Compartir tu cocina
             </h2>
-            <p class="mt-1 text-sm text-slate-400">
+            <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                 Invita a otra persona para que pueda ver y modificar tu stock
                 desde su propia cuenta. Puedes revocar el acceso cuando quieras.
             </p>
@@ -52,7 +52,6 @@ const removeAccess = (shareId) => {
                 <InputLabel
                     for="share_email"
                     value="Correo electrónico del usuario"
-                    class="text-slate-200"
                 />
 
                 <TextInput
@@ -60,7 +59,7 @@ const removeAccess = (shareId) => {
                     v-model="form.email"
                     type="email"
                     placeholder="ej: usuario@example.com"
-                    class="mt-1 block w-full rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    class="mt-1 block w-full"
                 />
 
                 <InputError :message="form.errors.email" class="mt-2" />
@@ -73,7 +72,7 @@ const removeAccess = (shareId) => {
 
                 <p
                     v-if="form.recentlySuccessful"
-                    class="text-xs text-emerald-300"
+                    class="text-xs text-emerald-600"
                 >
                     Invitación guardada.
                 </p>
@@ -81,14 +80,15 @@ const removeAccess = (shareId) => {
         </form>
 
         <!-- Lista de personas con acceso -->
-        <div class="border-t border-slate-800/80 pt-5">
-            <h3 class="text-sm font-semibold text-slate-200">
+        <div class="pt-5">
+            <div class="km-divider" />
+            <h3 class="text-sm font-semibold text-[color:var(--km-text)]">
                 Personas con acceso
             </h3>
 
             <p
                 v-if="!sharedUsers.length"
-                class="mt-2 text-sm text-slate-400"
+                class="mt-2 text-sm text-[color:var(--km-muted)]"
             >
                 De momento nadie más tiene acceso a tu cocina.
             </p>
@@ -97,20 +97,20 @@ const removeAccess = (shareId) => {
                 <li
                     v-for="share in sharedUsers"
                     :key="share.id"
-                    class="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm"
+                    class="flex items-center justify-between rounded-xl border border-[color:var(--km-border)] bg-[color:var(--km-bg-2)] px-3 py-2 text-sm"
                 >
                     <div>
-                        <p class="text-slate-100">
+                        <p class="text-[color:var(--km-text)]">
                             {{ share.user.name }}
                         </p>
-                        <p class="text-xs text-slate-400">
+                        <p class="text-xs text-[color:var(--km-muted)]">
                             {{ share.user.email }}
                         </p>
                     </div>
 
                     <button
                         type="button"
-                        class="text-xs rounded-lg border border-rose-500/70 px-3 py-1 text-rose-200 hover:bg-rose-500/15"
+                        class="text-xs rounded-lg border border-rose-500/50 px-3 py-1 text-rose-600 hover:bg-rose-500/10"
                         @click="removeAccess(share.id)"
                     >
                         Quitar acceso

@@ -119,10 +119,10 @@ const goToStock = () => {
                     class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div>
-                        <h1 class="text-2xl font-semibold text-slate-50">
+                        <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">
                             Panel
                         </h1>
-                        <p class="mt-1 text-sm text-slate-400">
+                        <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                             Resumen rápido de tu despensa: productos,
                             ubicaciones, stock bajo mínimo y próximas
                             caducidades.
@@ -134,7 +134,7 @@ const goToStock = () => {
                 <div class="grid gap-4 md:grid-cols-4">
                     <!-- Productos -->
                     <div
-                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40 cursor-pointer"
+                        class="km-card p-4 cursor-pointer"
                         role="button"
                         tabindex="0"
                         @click="goToProducts"
@@ -142,21 +142,21 @@ const goToStock = () => {
                         @keydown.space.prevent="goToProducts"
                     >
                         <p
-                            class="text-xs font-medium uppercase tracking-wide text-slate-400"
+                            class="text-xs font-medium uppercase tracking-wide text-[color:var(--km-muted)]"
                         >
                             Productos
                         </p>
-                        <p class="mt-3 text-3xl font-semibold text-slate-50">
+                        <p class="mt-3 text-3xl font-semibold text-[color:var(--km-text)]">
                             {{ productsCount }}
                         </p>
-                        <p class="mt-1 text-xs text-slate-400">
+                        <p class="mt-1 text-xs text-[color:var(--km-muted)]">
                             Elementos configurados en tu catálogo.
                         </p>
                     </div>
 
                     <!-- Ubicaciones -->
                     <div
-                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40 cursor-pointer"
+                        class="km-card p-4 cursor-pointer"
                         role="button"
                         tabindex="0"
                         @click="goToLocations"
@@ -164,21 +164,21 @@ const goToStock = () => {
                         @keydown.space.prevent="goToLocations"
                     >
                         <p
-                            class="text-xs font-medium uppercase tracking-wide text-slate-400"
+                            class="text-xs font-medium uppercase tracking-wide text-[color:var(--km-muted)]"
                         >
                             Ubicaciones
                         </p>
-                        <p class="mt-3 text-3xl font-semibold text-slate-50">
+                        <p class="mt-3 text-3xl font-semibold text-[color:var(--km-text)]">
                             {{ locationsCount }}
                         </p>
-                        <p class="mt-1 text-xs text-slate-400">
+                        <p class="mt-1 text-xs text-[color:var(--km-muted)]">
                             Neveras, congeladores, armarios, estanterías...
                         </p>
                     </div>
 
                     <!-- Registros de stock -->
                     <div
-                        class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40 cursor-pointer"
+                        class="km-card p-4 cursor-pointer"
                         role="button"
                         tabindex="0"
                         @click="goToStock"
@@ -186,21 +186,21 @@ const goToStock = () => {
                         @keydown.space.prevent="goToStock"
                     >
                         <p
-                            class="text-xs font-medium uppercase tracking-wide text-slate-400"
+                            class="text-xs font-medium uppercase tracking-wide text-[color:var(--km-muted)]"
                         >
                             Registros de stock
                         </p>
-                        <p class="mt-3 text-3xl font-semibold text-slate-50">
+                        <p class="mt-3 text-3xl font-semibold text-[color:var(--km-text)]">
                             {{ stockItemsCount }}
                         </p>
-                        <p class="mt-1 text-xs text-slate-400">
+                        <p class="mt-1 text-xs text-[color:var(--km-muted)]">
                             Entradas de stock registradas.
                         </p>
                     </div>
 
                     <!-- Bajo mínimo + caducidades -->
                     <div
-                        class="rounded-2xl border border-rose-800/80 bg-gradient-to-br from-rose-900/70 via-rose-900/40 to-slate-950/80 p-4 shadow-md shadow-rose-900/40 cursor-pointer"
+                        class="km-card border-rose-200/70 p-4 shadow-md shadow-rose-200/30 cursor-pointer"
                         role="button"
                         tabindex="0"
                         @click="goToLowStock"
@@ -208,20 +208,20 @@ const goToStock = () => {
                         @keydown.space.prevent="goToLowStock"
                     >
                         <p
-                            class="text-xs font-medium uppercase tracking-wide text-rose-100"
+                            class="text-xs font-medium uppercase tracking-wide text-rose-600"
                         >
                             Bajo mínimo
                         </p>
-                        <p class="mt-3 text-3xl font-semibold text-rose-50">
+                        <p class="mt-3 text-3xl font-semibold text-rose-700">
                             {{ lowStockCount }}
                         </p>
-                        <p class="mt-1 text-xs text-rose-100/80">
+                        <p class="mt-1 text-xs text-rose-600/80">
                             Productos que necesitan reponerse.
                         </p>
 
                         <div class="mt-3 flex flex-wrap gap-2 text-[11px]">
                             <span
-                                class="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-100 border border-amber-500/50"
+                                class="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-amber-700 border border-amber-500/40"
                             >
                                 Caducan ≤ 7 días:
                                 <span class="ml-1 font-semibold">
@@ -229,7 +229,7 @@ const goToStock = () => {
                                 </span>
                             </span>
                             <span
-                                class="inline-flex items-center rounded-full bg-rose-500/20 px-2 py-0.5 font-medium text-rose-50 border border-rose-500/70"
+                                class="inline-flex items-center rounded-full bg-rose-500/10 px-2 py-0.5 font-medium text-rose-700 border border-rose-500/40"
                             >
                                 De ellos, ≤ 2 días:
                                 <span class="ml-1 font-semibold">
@@ -242,7 +242,7 @@ const goToStock = () => {
                             <button
                                 type="button"
                                 @click.stop="goToLowStock"
-                                class="text-xs font-medium text-rose-100 underline-offset-2 hover:underline"
+                                class="km-link text-xs"
                             >
                                 Ver lista de reposición →
                             </button>
@@ -252,20 +252,19 @@ const goToStock = () => {
 
                 <!-- Productos bajo mínimo recientes -->
                 <div class="km-card overflow-hidden">
-                    <div
-                        class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between"
-                    >
-                        <h2 class="text-sm font-semibold text-slate-100">
+                    <div class="px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-sm font-semibold text-[color:var(--km-text)]">
                             Productos bajo mínimo recientes
                         </h2>
-                        <span class="text-xs text-slate-400">
+                        <span class="text-xs text-[color:var(--km-muted)]">
                             Total: {{ lowStockCount }}
                         </span>
                     </div>
+                    <div class="km-divider" />
 
                     <div
                         v-if="!hasLowStock"
-                        class="p-6 text-sm text-slate-400"
+                        class="p-6 text-sm text-[color:var(--km-muted)]"
                     >
                         De momento no hay productos por debajo del mínimo. ✅
                     </div>
@@ -287,12 +286,12 @@ const goToStock = () => {
                                     :key="item.id"
                                 >
                                     <td
-                                        class="whitespace-nowrap text-sm font-medium text-slate-50"
+                                        class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]"
                                     >
                                         {{ item.product?.name ?? '—' }}
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-300"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-muted)]"
                                     >
                                         {{
                                             item.location?.name
@@ -300,17 +299,17 @@ const goToStock = () => {
                                         }}
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-200"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-text)]"
                                     >
                                         {{ item.quantity }} {{ item.unit }}
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-200"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-text)]"
                                     >
                                         {{ item.min_quantity }}
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-300"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-muted)]"
                                     >
                                         {{
                                             item.updated_at
@@ -329,20 +328,19 @@ const goToStock = () => {
 
                 <!-- Próximas caducidades -->
                 <div class="km-card overflow-hidden">
-                    <div
-                        class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between"
-                    >
-                        <h2 class="text-sm font-semibold text-slate-100">
+                    <div class="px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-sm font-semibold text-[color:var(--km-text)]">
                             Próximas caducidades (≤ 7 días)
                         </h2>
-                        <span class="text-xs text-slate-400">
+                        <span class="text-xs text-[color:var(--km-muted)]">
                             Total: {{ soonExpiringCount }}
                         </span>
                     </div>
+                    <div class="km-divider" />
 
                     <div
                         v-if="!hasSoonExpiries"
-                        class="p-6 text-sm text-slate-400"
+                        class="p-6 text-sm text-[color:var(--km-muted)]"
                     >
                         No hay productos que caduquen en los próximos 7 días. 🙂
                     </div>
@@ -364,12 +362,12 @@ const goToStock = () => {
                                     :key="item.id"
                                 >
                                     <td
-                                        class="whitespace-nowrap text-sm font-medium text-slate-50"
+                                        class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]"
                                     >
                                         {{ item.product?.name ?? '—' }}
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-300"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-muted)]"
                                     >
                                         {{
                                             item.location?.name
@@ -377,12 +375,12 @@ const goToStock = () => {
                                         }}
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-200"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-text)]"
                                     >
                                         {{ item.quantity }} {{ item.unit }}
                                     </td>
                                     <td
-                                        class="whitespace-nowrap text-sm text-slate-300"
+                                        class="whitespace-nowrap text-sm text-[color:var(--km-muted)]"
                                     >
                                         {{
                                             item.expires_at
@@ -404,8 +402,8 @@ const goToStock = () => {
                                                         ?.type === 'urgent' ||
                                                     getExpiryStatus(item)
                                                         ?.type === 'today')
-                                                    ? 'bg-rose-500/10 text-rose-200 border-rose-500/60'
-                                                    : 'bg-amber-500/10 text-amber-100 border-amber-500/60',
+                                                    ? 'bg-rose-500/10 text-rose-600 border-rose-500/40'
+                                                    : 'bg-amber-500/10 text-amber-700 border-amber-500/40',
                                             ]"
                                         >
                                             {{

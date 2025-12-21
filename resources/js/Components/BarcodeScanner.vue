@@ -130,20 +130,20 @@ onBeforeUnmount(() => {
     <div class="space-y-3">
         <div
             id="barcode-scanner"
-            class="w-full aspect-[3/4] overflow-hidden rounded-xl border border-slate-700 bg-black/80"
+            class="w-full aspect-[3/4] overflow-hidden rounded-xl border border-[color:var(--km-border)] bg-black/80"
         ></div>
 
-        <p class="text-xs text-slate-400">
+        <p class="text-xs text-[color:var(--km-muted)]">
             Apunta la cámara al código de barras y colócalo dentro del recuadro horizontal,
             a unos 15-25 cm de distancia, con buena luz.
         </p>
 
-        <p v-if="lastDecoded" class="text-xs text-emerald-400">
+        <p v-if="lastDecoded" class="text-xs text-emerald-600">
             Último código leído:
             <span class="font-mono">{{ lastDecoded }}</span>
         </p>
 
-        <p v-if="errorMessage" class="text-xs text-red-400">
+        <p v-if="errorMessage" class="text-xs text-rose-600">
             {{ errorMessage }}
         </p>
     </div>

@@ -38,8 +38,8 @@ function clear() {
         <!-- Cabecera -->
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 class="text-2xl font-semibold text-slate-50">DB Browser</h1>
-            <p class="mt-1 text-sm text-slate-400">
+            <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">DB Browser</h1>
+            <p class="mt-1 text-sm text-[color:var(--km-muted)]">
               Navega tablas y registros (solo admin).
             </p>
           </div>
@@ -47,14 +47,14 @@ function clear() {
           <div class="flex gap-2">
             <Link
               href="/admin"
-              class="rounded-xl border border-slate-800 bg-transparent px-4 py-2 text-sm font-semibold text-slate-300 hover:border-slate-600 hover:text-slate-100"
+              class="km-link text-sm font-semibold"
             >
               ← Admin
             </Link>
             <button
               type="button"
               @click="clear"
-              class="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 hover:border-slate-500 hover:bg-slate-900/90"
+              class="km-btn w-auto px-4 py-2 text-sm"
             >
               Limpiar
             </button>
@@ -64,17 +64,18 @@ function clear() {
         <div class="grid gap-4 lg:grid-cols-4">
           <!-- Sidebar tablas -->
           <div class="km-card overflow-hidden lg:col-span-1">
-            <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
-              <h2 class="text-sm font-semibold text-slate-100">Tablas</h2>
-              <span class="text-xs text-slate-400">Total: {{ tables.length }}</span>
+            <div class="px-6 py-4 flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-[color:var(--km-text)]">Tablas</h2>
+              <span class="text-xs text-[color:var(--km-muted)]">Total: {{ tables.length }}</span>
             </div>
+            <div class="km-divider" />
 
             <div class="p-4">
               <input
                 v-model="q"
                 type="text"
                 placeholder="Buscar tabla..."
-                class="w-full rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 shadow-sm shadow-slate-900/40 focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-400/30"
+                class="km-input"
               />
 
               <div class="mt-3 max-h-[60vh] space-y-2 overflow-auto pr-1">
@@ -85,13 +86,13 @@ function clear() {
                   @click="openTable(t)"
                   class="w-full rounded-xl border px-3 py-2 text-left text-sm shadow-sm shadow-slate-900/30"
                   :class="activeTable === t
-                    ? 'border-indigo-400/50 bg-indigo-500/10 text-slate-50'
-                    : 'border-slate-800 bg-slate-950/40 text-slate-300 hover:border-slate-600 hover:bg-slate-900/40 hover:text-slate-100'"
+                    ? 'border-[color:var(--km-border)] bg-white/80 text-[color:var(--km-text)]'
+                    : 'border-[color:var(--km-border)] bg-[color:var(--km-bg-2)] text-[color:var(--km-muted)] hover:bg-white/80 hover:text-[color:var(--km-text)]'"
                 >
                   {{ t }}
                 </button>
 
-                <div v-if="filteredTables.length === 0" class="text-xs text-slate-500">
+                <div v-if="filteredTables.length === 0" class="text-xs text-[color:var(--km-muted)]">
                   No hay coincidencias.
                 </div>
               </div>
@@ -100,21 +101,22 @@ function clear() {
 
           <!-- Tabla -->
           <div class="km-card overflow-hidden lg:col-span-3">
-            <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
-              <h2 class="text-sm font-semibold text-slate-100">
+            <div class="px-6 py-4 flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-[color:var(--km-text)]">
                 {{ activeTable ? `Tabla: ${activeTable}` : 'Selecciona una tabla' }}
               </h2>
 
-              <span v-if="rows" class="text-xs text-slate-400">
+              <span v-if="rows" class="text-xs text-[color:var(--km-muted)]">
                 Página {{ rows.current_page }} / {{ rows.last_page }} · Total: {{ rows.total }}
               </span>
             </div>
+            <div class="km-divider" />
 
-            <div v-if="!activeTable" class="p-6 text-sm text-slate-400">
+            <div v-if="!activeTable" class="p-6 text-sm text-[color:var(--km-muted)]">
               Elige una tabla a la izquierda.
             </div>
 
-            <div v-else-if="!rows" class="p-6 text-sm text-slate-400">
+            <div v-else-if="!rows" class="p-6 text-sm text-[color:var(--km-muted)]">
               Cargando...
             </div>
 
@@ -129,7 +131,7 @@ function clear() {
 
                 <tbody>
                   <tr v-for="(r, idx) in rows.data" :key="idx">
-                    <td v-for="c in columns" :key="c" class="whitespace-nowrap text-sm text-slate-200">
+                    <td v-for="c in columns" :key="c" class="whitespace-nowrap text-sm text-[color:var(--km-text)]">
                       {{ r?.[c] ?? '' }}
                     </td>
 
@@ -137,25 +139,25 @@ function clear() {
                       <Link
                         v-if="columns.includes('id')"
                         :href="`/admin/db/row?table=${encodeURIComponent(activeTable)}&id=${encodeURIComponent(r.id)}`"
-                        class="inline-flex items-center rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold text-slate-100 hover:border-slate-500 hover:bg-slate-900/90"
+                        class="km-link text-xs"
                       >
                         Ver
                       </Link>
-                      <span v-else class="text-slate-500">—</span>
+                      <span v-else class="text-[color:var(--km-muted)]">—</span>
                     </td>
                   </tr>
                 </tbody>
               </table>
 
               <!-- Paginación -->
-              <div class="flex items-center justify-between px-6 py-4 border-t border-slate-800/80">
-                <span class="text-xs text-slate-500">Mostrando 50 por página</span>
+              <div class="flex items-center justify-between px-6 py-4">
+                <span class="text-xs text-[color:var(--km-muted)]">Mostrando 50 por página</span>
 
                 <div class="flex gap-2">
                   <Link
                     v-if="rows.prev_page_url"
                     :href="rows.prev_page_url"
-                    class="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 hover:border-slate-500 hover:bg-slate-900/90"
+                    class="km-btn w-auto px-4 py-2 text-sm"
                     preserve-scroll
                   >
                     ← Anterior
@@ -164,7 +166,7 @@ function clear() {
                   <Link
                     v-if="rows.next_page_url"
                     :href="rows.next_page_url"
-                    class="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 hover:border-slate-500 hover:bg-slate-900/90"
+                    class="km-btn w-auto px-4 py-2 text-sm"
                     preserve-scroll
                   >
                     Siguiente →

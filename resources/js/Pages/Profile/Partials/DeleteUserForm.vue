@@ -89,12 +89,12 @@ const closeModal = () => {
                     />
 
                     <div class="space-y-1">
-                        <p class="text-sm text-slate-200">
+                        <p class="text-sm text-[color:var(--km-text)]">
                             Esta acción es definitiva. Si eliminas tu cuenta se
                             borrarán todas tus ubicaciones, productos y stock
                             asociados.
                         </p>
-                        <p class="text-sm text-amber-200/90">
+                        <p class="text-sm text-amber-700/90">
                             Escribe tu contraseña para confirmar que eres la
                             persona titular.
                         </p>
@@ -104,7 +104,6 @@ const closeModal = () => {
                         <InputLabel
                             for="password"
                             value="Contraseña"
-                            class="text-slate-100"
                         />
 
                         <TextInput
@@ -114,7 +113,6 @@ const closeModal = () => {
                             type="password"
                             autocomplete="current-password"
                             class="mt-1"
-                            variant="dark"
                             placeholder="Introduce tu contraseña para confirmar"
                         />
 

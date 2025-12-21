@@ -24,10 +24,10 @@ defineProps({
                 <!-- Datos de perfil -->
                 <section class="km-card p-6 sm:p-8 lg:p-10 space-y-6">
                     <header>
-                        <h2 class="text-lg font-semibold text-slate-50">
+                        <h2 class="text-lg font-semibold text-[color:var(--km-text)]">
                             Información de perfil
                         </h2>
-                        <p class="mt-1 text-sm text-slate-400">
+                        <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                             Actualiza tu nombre y correo electrónico. Estos datos
                             se usarán en toda la aplicación.
                         </p>
@@ -45,10 +45,10 @@ defineProps({
                 <!-- Cambiar contraseña -->
                 <section class="km-card p-6 sm:p-8 lg:p-10 space-y-6">
                     <header>
-                        <h2 class="text-lg font-semibold text-slate-50">
+                        <h2 class="text-lg font-semibold text-[color:var(--km-text)]">
                             Cambiar contraseña
                         </h2>
-                        <p class="mt-1 text-sm text-slate-400">
+                        <p class="mt-1 text-sm text-[color:var(--km-muted)]">
                             Asegúrate de usar una contraseña larga y con
                             caracteres aleatorios.
                         </p>
@@ -61,13 +61,13 @@ defineProps({
 
                 <!-- Eliminar cuenta -->
                 <section
-                    class="rounded-2xl border border-rose-900/80 bg-gradient-to-br from-rose-950/80 via-rose-900/70 to-slate-950/90 p-6 sm:p-8 lg:p-10 space-y-6 shadow-md shadow-rose-900/40"
+                    class="km-card border-rose-200/70 p-6 sm:p-8 lg:p-10 space-y-6 shadow-md shadow-rose-200/30"
                 >
                     <header>
-                        <h2 class="text-lg font-semibold text-rose-50">
+                        <h2 class="text-lg font-semibold text-rose-700">
                             Eliminar cuenta
                         </h2>
-                        <p class="mt-1 text-sm text-rose-100/80">
+                        <p class="mt-1 text-sm text-rose-600/80">
                             Una vez que elimines tu cuenta, no podrás recuperar
                             ningún dato. Descarga cualquier información que
                             quieras conservar antes de continuar.

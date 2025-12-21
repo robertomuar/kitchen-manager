@@ -19,8 +19,8 @@ const items = computed(() => Object.entries(props.counts ?? {}))
         <!-- Cabecera -->
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 class="text-2xl font-semibold text-slate-50">Admin</h1>
-            <p class="mt-1 text-sm text-slate-400">
+            <h1 class="text-2xl font-semibold text-[color:var(--km-text)]">Admin</h1>
+            <p class="mt-1 text-sm text-[color:var(--km-muted)]">
               Panel de administración: métricas y acceso al visor de base de datos.
             </p>
           </div>
@@ -28,7 +28,7 @@ const items = computed(() => Object.entries(props.counts ?? {}))
           <div class="flex gap-2">
             <Link
               href="/admin/db"
-              class="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 shadow-sm shadow-slate-900/40 hover:border-slate-500 hover:bg-slate-900/90"
+              class="km-btn w-auto px-4 py-2 text-sm"
             >
               DB Browser →
             </Link>
@@ -40,22 +40,22 @@ const items = computed(() => Object.entries(props.counts ?? {}))
           <div
             v-for="([k, v], i) in items"
             :key="k"
-            class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-sm shadow-slate-900/40"
+            class="km-card p-4"
           >
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">
+            <p class="text-xs font-medium uppercase tracking-wide text-[color:var(--km-muted)]">
               {{ String(k).replaceAll('_', ' ') }}
             </p>
-            <p class="mt-3 text-3xl font-semibold text-slate-50">
+            <p class="mt-3 text-3xl font-semibold text-[color:var(--km-text)]">
               {{ v }}
             </p>
-            <p class="mt-1 text-xs text-slate-400">
+            <p class="mt-1 text-xs text-[color:var(--km-muted)]">
               Total de registros.
             </p>
           </div>
 
           <div
             v-if="items.length === 0"
-            class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400"
+            class="km-card p-4 text-sm text-[color:var(--km-muted)]"
           >
             No hay métricas configuradas.
           </div>
@@ -63,22 +63,23 @@ const items = computed(() => Object.entries(props.counts ?? {}))
 
         <!-- Accesos -->
         <div class="km-card overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-slate-100">Accesos</h2>
-            <span class="text-xs text-slate-400">Admin tools</span>
+          <div class="px-6 py-4 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-[color:var(--km-text)]">Accesos</h2>
+            <span class="text-xs text-[color:var(--km-muted)]">Admin tools</span>
           </div>
+          <div class="km-divider" />
 
           <div class="p-6 flex flex-wrap gap-3">
             <Link
               href="/admin/db"
-              class="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 hover:border-slate-500 hover:bg-slate-900/90"
+              class="km-btn w-auto px-4 py-2 text-sm"
             >
               Abrir DB Browser →
             </Link>
 
             <Link
               href="/dashboard"
-              class="rounded-xl border border-slate-800 bg-transparent px-4 py-2 text-sm font-semibold text-slate-300 hover:border-slate-600 hover:text-slate-100"
+              class="km-link text-sm font-semibold"
             >
               Volver al Panel
             </Link>
