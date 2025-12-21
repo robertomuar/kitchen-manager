@@ -1,0 +1,229 @@
+@layer base {
+  :root {
+    /* ===== LIGHT (por defecto) ===== */
+    --km-bg: #ffffff;
+    --km-bg-2: #f7f7fb;
+
+    --km-text: #0b1024;
+    --km-muted: rgba(11, 16, 36, 0.62);
+
+    --km-card: rgba(255, 255, 255, 0.96);
+    --km-border: rgba(11, 16, 36, 0.16);
+
+    --km-accent: #d18b00;
+    --km-accent-hover: #e3a10a;
+    --km-ring: rgba(209, 139, 0, 0.22);
+
+    --km-input-bg: rgba(255, 255, 255, 0.92);
+    --km-input-border: rgba(11, 16, 36, 0.20);
+
+    /* Ilustración */
+    --km-ill-hat: #d18b00;
+    --km-ill-face: #323846;
+    --km-ill-body: #d8dce3;
+    --km-ill-body2: #c7cdd7;
+    --km-ill-pot: #d2d6dd;
+    --km-ill-pot2: #b8bfca;
+    --km-ill-bg: rgba(11, 16, 36, 0.12);
+  }
+
+  /* ===== DARK global (si tu app lo usa) ===== */
+  html.dark {
+    --km-bg: #070b17;
+    --km-bg-2: #0a1024;
+
+    --km-text: #eaf0ff;
+    --km-muted: rgba(234, 240, 255, 0.72);
+
+    --km-card: rgba(10, 16, 36, 0.58);
+    --km-border: rgba(255, 255, 255, 0.12);
+
+    --km-input-bg: rgba(255, 255, 255, 0.07);
+    --km-input-border: rgba(255, 255, 255, 0.14);
+
+    --km-ill-bg: rgba(255, 255, 255, 0.10);
+  }
+
+  html, body { height: 100%; }
+  body { background: var(--km-bg); color: var(--km-text); }
+}
+
+@layer components {
+  /* ✅ Auth SIEMPRE claro (gana incluso si <html class="dark">) */
+  .km-scope-light {
+    color-scheme: light;
+
+    --km-bg: #ffffff;
+    --km-bg-2: #f7f7fb;
+
+    --km-text: #0b1024;
+    --km-muted: rgba(11, 16, 36, 0.62);
+
+    --km-card: rgba(255, 255, 255, 0.96);
+    --km-border: rgba(11, 16, 36, 0.16);
+
+    --km-input-bg: rgba(255, 255, 255, 0.92);
+    --km-input-border: rgba(11, 16, 36, 0.20);
+
+    --km-ill-bg: rgba(11, 16, 36, 0.12);
+  }
+
+  .km-page {
+    min-height: 100vh;
+    background: var(--km-bg);
+    color: var(--km-text);
+  }
+
+  /* ===== Card con volumen (como pides) ===== */
+  .km-card {
+    background: var(--km-card);
+    border: 1px solid var(--km-border);
+    border-radius: 24px;
+    color: var(--km-text);
+
+    /* ✅ Volumen / relieve */
+    box-shadow:
+      0 2px 0 rgba(255, 255, 255, 0.60) inset,
+      0 -1px 0 rgba(11, 16, 36, 0.05) inset,
+      0 18px 38px rgba(11, 16, 36, 0.12),
+      0 40px 90px rgba(11, 16, 36, 0.14);
+
+    backdrop-filter: blur(10px);
+  }
+
+  /* ✅ BOMBA: en Auth la card SIEMPRE blanca y con borde claro */
+  .km-scope-light .km-card {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-color: rgba(11, 16, 36, 0.16) !important;
+    color: #0b1024 !important;
+  }
+
+  /* ===== Inputs con caja (no planos) ===== */
+  .km-input {
+    width: 100%;
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: 14px;
+
+    background: var(--km-input-bg);
+    border: 1px solid var(--km-input-border);
+    color: var(--km-text);
+
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.75) inset,
+      0 -1px 0 rgba(11, 16, 36, 0.05) inset,
+      0 10px 18px rgba(11, 16, 36, 0.06);
+
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+  }
+
+  .km-input:focus {
+    border-color: var(--km-accent);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.75) inset,
+      0 -1px 0 rgba(11, 16, 36, 0.05) inset,
+      0 0 0 4px var(--km-ring),
+      0 14px 26px rgba(11, 16, 36, 0.10);
+  }
+
+  /* ✅ Inputs en Auth: forzados a claros */
+  .km-scope-light .km-input {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-color: rgba(11, 16, 36, 0.20) !important;
+    color: #0b1024 !important;
+  }
+
+  /* ===== Botón con volumen ===== */
+  .km-btn {
+    width: 100%;
+    border-radius: 18px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 900;
+
+    background: linear-gradient(180deg, rgba(227,161,10,1) 0%, rgba(209,139,0,1) 100%);
+    color: #0b1024;
+
+    border: 1px solid rgba(11, 16, 36, 0.12);
+
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55) inset,
+      0 -2px 0 rgba(0, 0, 0, 0.08) inset,
+      0 14px 28px rgba(209, 139, 0, 0.22),
+      0 22px 50px rgba(11, 16, 36, 0.10);
+
+    transition: transform 0.10s ease, filter 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  }
+
+  .km-btn:hover { filter: brightness(1.03); }
+  .km-btn:active {
+    transform: translateY(1px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.40) inset,
+      0 -2px 0 rgba(0, 0, 0, 0.10) inset,
+      0 10px 18px rgba(209, 139, 0, 0.18),
+      0 16px 30px rgba(11, 16, 36, 0.10);
+  }
+  .km-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+  .km-link { color: var(--km-accent); font-weight: 800; }
+  .km-link:hover { color: var(--km-accent-hover); }
+
+  /* Divider “embossed” */
+  .km-divider {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      rgba(11,16,36,0.00),
+      rgba(11,16,36,0.18),
+      rgba(11,16,36,0.00)
+    );
+    margin: 18px 0;
+  }
+
+  /* Halos del fondo */
+  .km-halo-amber {
+    background: radial-gradient(circle at center, rgba(209, 139, 0, 0.35), transparent 60%);
+    opacity: 0.22;
+  }
+
+  .km-halo-neutral {
+    background: radial-gradient(circle at center, rgba(11, 16, 36, 0.10), transparent 60%);
+    opacity: 0.14;
+  }
+}
+/* ===== Extra volumen: “super-card” Auth ===== */
+.km-scope-light .km-card {
+  /* más contraste de sombras en claro */
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.70) inset,
+    0 -1px 0 rgba(11, 16, 36, 0.06) inset,
+    0 22px 46px rgba(11, 16, 36, 0.14),
+    0 55px 120px rgba(11, 16, 36, 0.16) !important;
+}
+
+/* ===== Sub-card para el FORM (volumen extra) ===== */
+.km-surface {
+  border-radius: 18px;
+  border: 1px solid rgba(11, 16, 36, 0.12);
+  background: rgba(255, 255, 255, 0.88);
+
+  /* relieve interior + sombra de contacto */
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 -1px 0 rgba(11, 16, 36, 0.04) inset,
+    0 10px 22px rgba(11, 16, 36, 0.08),
+    0 22px 44px rgba(11, 16, 36, 0.06);
+}
+
+/* micro textura (opcional) */
+.km-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  pointer-events: none;
+  background: radial-gradient(circle at 25% 15%, rgba(209,139,0,0.10), transparent 45%);
+  opacity: 0.85;
+}

@@ -1,6 +1,9 @@
+@import "./km-theme.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 @layer components {
     /* Tarjeta base oscura (para envolver tablas, formularios, etc.) */

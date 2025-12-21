@@ -1,112 +1,106 @@
 <script setup>
-import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import AuthCard from '@/Components/AuthCard.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
-defineProps({
-    canResetPassword: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-    },
+const props = defineProps({
+  canResetPassword: { type: Boolean, default: true },
+  status: { type: String, default: null },
 });
+
+const page = usePage();
+const csrfToken = computed(() => page.props.csrf_token ?? page.props.csrfToken ?? '');
 
 const form = useForm({
-    email: '',
-    password: '',
-    remember: false,
-});
-
-const emailInput = ref(null);
-
-onMounted(() => {
-    const active = document.activeElement;
-
-    if (!active || active === document.body || active === document.documentElement) {
-        emailInput.value?.focus?.();
-    }
+  email: '',
+  password: '',
+  remember: false,
 });
 
 const submit = () => {
-    form.post(route('login'), {
-        onFinish: () => form.reset('password'),
-    });
+  form.post(route('login'), {
+    onFinish: () => form.reset('password'),
+  });
 };
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Log in" />
+  <GuestLayout :busy="form.processing">
+    <Head title="Iniciar sesión" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
-            {{ status }}
-        </div>
+    <AuthCard
+      title="Bienvenido"
+      subtitle="Accede a tu cuenta para gestionar tu cocina"
+    >
+      <div v-if="props.status" class="mb-4 text-sm font-semibold" style="color: rgba(34,197,94,.90)">
+        {{ props.status }}
+      </div>
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
+      <!-- ✅ Sub-card con volumen (el “form” no se ve plano) -->
+      <div class="relative km-surface p-5 sm:p-6">
+        <form @submit.prevent="submit" class="space-y-4">
+          <div>
+            <InputLabel for="email" value="Email" />
+            <input
+              id="email"
+              type="email"
+              class="km-input mt-2"
+              v-model="form.email"
+              autocomplete="username"
+              required
+              autofocus
+            />
+            <InputError class="mt-2" :message="form.errors.email" />
+          </div>
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                    ref="emailInput"
-                />
+          <div>
+            <InputLabel for="password" value="Contraseña" />
+            <input
+              id="password"
+              type="password"
+              class="km-input mt-2"
+              v-model="form.password"
+              autocomplete="current-password"
+              required
+            />
+            <InputError class="mt-2" :message="form.errors.password" />
+          </div>
 
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
+          <div class="flex items-center justify-between gap-3">
+            <label class="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-300"
+                v-model="form.remember"
+              />
+              <span class="text-sm" style="color: var(--km-muted)">Recuérdame</span>
+            </label>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+            <Link
+              v-if="props.canResetPassword"
+              :href="route('password.request')"
+              class="text-sm font-semibold"
+              style="color: var(--km-accent)"
+            >
+              ¿Olvidaste la contraseña?
+            </Link>
+          </div>
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600">
-                        Remember me
-                    </span>
-                </label>
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Forgot your password?
-                </Link>
-
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                    type="submit"
-                >
-                    Log in
-                </PrimaryButton>
-            </div>
+          <button type="submit" class="km-btn" :disabled="form.processing">
+            Entrar
+          </button>
         </form>
-    </GuestLayout>
+      </div>
+
+      <template #footer>
+        <div class="flex items-center justify-between">
+          <span>¿No tienes cuenta?</span>
+          <Link :href="route('register')" class="km-link">Crear cuenta</Link>
+        </div>
+      </template>
+    </AuthCard>
+  </GuestLayout>
 </template>

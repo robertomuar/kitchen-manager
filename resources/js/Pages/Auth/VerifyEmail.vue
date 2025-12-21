@@ -1,20 +1,15 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import AuthCard from '@/Components/AuthCard.vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { useCsrfForm } from '@/Composables/useCsrfForm';
-import { getCsrfToken } from '@/bootstrap';
 
 const props = defineProps({
-    status: {
-        type: String,
-    },
+  status: { type: String, default: null },
 });
 
 const form = useCsrfForm({});
-const csrfToken = computed(() => getCsrfToken() ?? '');
-
 const page = usePage();
 
 const userEmail = computed(() => page.props.auth?.user?.email ?? '');
@@ -22,115 +17,98 @@ const userEmail = computed(() => page.props.auth?.user?.email ?? '');
 const resendCooldown = ref(0);
 let cooldownTimer = null;
 
+const verificationLinkSent = computed(() => props.status === 'verification-link-sent');
+
 const startCooldown = () => {
-    resendCooldown.value = 60;
+  resendCooldown.value = 60;
 
-    if (cooldownTimer) clearInterval(cooldownTimer);
+  if (cooldownTimer) clearInterval(cooldownTimer);
 
-    cooldownTimer = setInterval(() => {
-        if (resendCooldown.value <= 0) {
-            clearInterval(cooldownTimer);
-            cooldownTimer = null;
-            return;
-        }
-
-        resendCooldown.value -= 1;
-    }, 1000);
+  cooldownTimer = setInterval(() => {
+    if (resendCooldown.value <= 0) {
+      clearInterval(cooldownTimer);
+      cooldownTimer = null;
+      return;
+    }
+    resendCooldown.value -= 1;
+  }, 1000);
 };
+
+const resendDisabled = computed(() => form.processing || resendCooldown.value > 0);
 
 const submit = () => {
-    form.post(route('verification.send'), {
-        onSuccess: () => startCooldown(),
-    });
+  form.post(route('verification.send'), {
+    onSuccess: () => startCooldown(),
+  });
 };
 
-const verificationLinkSent = computed(
-    () => props.status === 'verification-link-sent',
-);
-
-const resendDisabled = computed(
-    () => form.processing || resendCooldown.value > 0,
-);
-
 onMounted(() => {
-    if (verificationLinkSent.value) {
-        startCooldown();
-    }
+  if (verificationLinkSent.value) startCooldown();
 });
 
 onUnmounted(() => {
-    if (cooldownTimer) clearInterval(cooldownTimer);
+  if (cooldownTimer) clearInterval(cooldownTimer);
 });
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Verifica tu correo" />
+  <GuestLayout :busy="form.processing">
+    <Head title="Verifica tu correo" />
 
-        <div class="mb-4 text-sm text-gray-700">
-            Necesitamos confirmar la dirección
-            <span class="font-semibold">{{ userEmail }}</span> antes de darte
-            acceso completo. Hemos enviado un enlace de verificación a tu buzón;
-            solo tienes que abrirlo y pulsar el botón para validar tu cuenta.
+    <AuthCard
+      title="Verifica tu correo"
+      subtitle="Confirma tu dirección para activar la cuenta"
+    >
+      <p class="text-sm" style="color: var(--km-muted)">
+        Necesitamos confirmar la dirección
+        <span class="font-semibold" style="color: var(--km-text)">{{ userEmail }}</span>
+        antes de darte acceso completo. Te hemos enviado un enlace de verificación:
+        abre el correo y pulsa el botón para validar tu cuenta.
+      </p>
+
+      <div
+        v-if="verificationLinkSent"
+        class="mt-4 rounded-2xl border px-4 py-3 text-sm font-semibold"
+        style="border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.10); color: rgba(11,16,36,.85)"
+      >
+        ¡Listo! Te hemos reenviado un correo con el enlace de verificación.
+        Revisa también la carpeta de spam o promociones.
+      </div>
+
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <!-- ✅ Botón reenviar (sin <form>) -->
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            class="km-btn sm:w-auto sm:px-6"
+            :disabled="resendDisabled"
+            @click="submit"
+          >
+            <span v-if="resendCooldown === 0">Reenviar enlace seguro</span>
+            <span v-else>Espera {{ resendCooldown }}s</span>
+          </button>
+
+          <p v-if="resendCooldown > 0" class="text-xs" style="color: var(--km-muted)">
+            Para evitar abusos, puedes reenviar el correo cuando termine la cuenta regresiva.
+          </p>
         </div>
 
-        <div
-            class="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-700"
-            v-if="verificationLinkSent"
+        <!-- ✅ Logout con Inertia (NO form anidado) -->
+        <Link
+          :href="route('logout')"
+          method="post"
+          as="button"
+          class="text-sm font-semibold underline sm:text-right"
+          style="color: var(--km-text)"
         >
-            ¡Listo! Te hemos reenviado un correo con el enlace de verificación.
-            Revisa también la carpeta de spam o promociones.
-        </div>
+          Cambiar de cuenta
+        </Link>
+      </div>
 
-        <form @submit.prevent="submit">
-            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex items-center gap-3">
-                    <PrimaryButton
-                        :class="{ 'opacity-50': resendDisabled }"
-                        :disabled="resendDisabled"
-                        type="submit"
-                    >
-                        <span v-if="resendCooldown === 0">
-                            Reenviar enlace seguro
-                        </span>
-                        <span v-else>
-                            Espera {{ resendCooldown }}s
-                        </span>
-                    </PrimaryButton>
-
-                    <p
-                        v-if="resendCooldown > 0"
-                        class="text-xs text-gray-500"
-                    >
-                        Para evitar abusos, puedes reenviar el correo cuando termine
-                        la cuenta regresiva.
-                    </p>
-                </div>
-
-                <form
-                    class="flex justify-end"
-                    method="post"
-                    :action="route('logout')"
-                >
-                    <input
-                        type="hidden"
-                        name="_token"
-                        :value="csrfToken"
-                    />
-                    <button
-                        type="submit"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Cambiar de cuenta
-                    </button>
-                </form>
-            </div>
-        </form>
-
-        <p class="mt-6 text-xs text-gray-500">
-            Este paso protege tu cocina compartida y evita accesos no deseados.
-            Si el enlace tarda, espera unos segundos o solicita uno nuevo para
-            mantener la sesión protegida.
-        </p>
-    </GuestLayout>
+      <p class="mt-6 text-xs" style="color: var(--km-muted)">
+        Este paso protege tu cocina compartida y evita accesos no deseados. Si el enlace tarda, espera
+        unos segundos o solicita uno nuevo para mantener la sesión protegida.
+      </p>
+    </AuthCard>
+  </GuestLayout>
 </template>
