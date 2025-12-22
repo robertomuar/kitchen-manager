@@ -15,10 +15,35 @@
             $path = '/' . ltrim(request()->path(), '/');
             $canonical = $baseUrl . ($path === '/' ? '' : $path);
             $defaultDescription = 'Gestiona productos, ubicaciones y stock de cocina con alertas y reportes.';
+            $privatePatterns = [
+                'login',
+                'register',
+                'forgot-password',
+                'reset-password*',
+                'confirm-password',
+                'email/verification-notification',
+                'verify-email',
+                'password*',
+                'logout',
+                'dashboard',
+                'profile*',
+                'products*',
+                'stock*',
+                'locations*',
+                'admin*',
+                'kitchen*',
+                'barcode*',
+                'debug*',
+            ];
+            $shouldNoindex = request()->user() || request()->is($privatePatterns);
         @endphp
 
         <meta name="description" content="{{ $defaultDescription }}">
         <link rel="canonical" href="{{ $canonical }}">
+
+        @if ($shouldNoindex)
+            <meta name="robots" content="noindex, nofollow">
+        @endif
 
         <meta property="og:site_name" content="{{ $appName }}">
         <meta property="og:title" content="{{ $appName }}">
@@ -49,6 +74,20 @@
                 '@type' => 'Organization',
                 'name' => $appName,
                 'url' => $baseUrl,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+        </script>
+        <script type="application/ld+json">
+            {!! json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'SoftwareApplication',
+                'name' => $appName,
+                'applicationCategory' => 'BusinessApplication',
+                'operatingSystem' => 'Web',
+                'offers' => [
+                    '@type' => 'Offer',
+                    'price' => '0',
+                    'priceCurrency' => 'EUR',
+                ],
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
         </script>
 
