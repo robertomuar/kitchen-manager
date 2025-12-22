@@ -4,7 +4,9 @@ import { computed } from 'vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import Breadcrumbs from '@/Components/Breadcrumbs.vue';
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const baseUrl = computed(() =>
+  usePage().props.app?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
+);
 const canonical = computed(() => `${baseUrl.value}/legal/cookies`);
 
 const breadcrumbs = [
@@ -19,7 +21,7 @@ const breadcrumbs = [
       <title>Política de cookies | KitchenManager</title>
       <meta
         name="description"
-        content="Política de cookies de KitchenManager: tipos de cookies, finalidad, consentimiento y configuración." 
+        content="Política de cookies de KitchenManager: tipos de cookies, finalidad, consentimiento y configuración."
       >
       <link rel="canonical" :href="canonical">
       <meta property="og:title" content="Política de cookies | KitchenManager">
@@ -75,8 +77,18 @@ const breadcrumbs = [
         <h2 class="text-lg font-semibold text-slate-900">Gestión del consentimiento</h2>
         <p>
           Puedes aceptar todas, rechazar las no esenciales o configurar tus preferencias desde el banner
-          inicial. También puedes cambiar o retirar tu consentimiento en cualquier momento usando el
-          enlace “Configurar cookies” del pie de página.
+          inicial. Rechazar es tan sencillo como aceptar, y puedes cambiar o retirar tu consentimiento en
+          cualquier momento usando el enlace “Configurar cookies” del pie de página.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-semibold text-slate-900">Baja y eliminación de cuenta</h2>
+        <p>
+          Puedes solicitar el borrado de tu cuenta. En ese caso eliminaremos los datos personales
+          identificativos y conservaremos únicamente información anonimizada e irreversible para
+          estadísticas y mejora del servicio. Si existiera una obligación legal o necesidad de defensa
+          ante reclamaciones, podremos bloquear datos mínimos durante el plazo exigido.
         </p>
       </section>
 

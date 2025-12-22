@@ -8,7 +8,7 @@ defineProps({
     type: [Object, Function],
     required: true,
   },
-  pageProps: {
+  props: {
     type: Object,
     required: true,
   },
@@ -18,7 +18,7 @@ defineProps({
 <template>
   <TermsGate />
   <CookieConsentProvider>
-    <component :is="App" v-bind="pageProps" />
+    <component :is="App" v-bind="props" />
     <AppFooter />
   </CookieConsentProvider>
 </template>

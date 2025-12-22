@@ -4,7 +4,7 @@ import './bootstrap';
 import { getCsrfToken, syncCsrf } from './bootstrap';
 import '../css/app.css';
 
-import { createApp, h } from 'vue';
+import { createApp } from 'vue';
 import { createInertiaApp, Link, router } from '@inertiajs/vue3';
 import Root from './Root.vue';
 // ✅ 1) Limpia _token/_method de la URL actual (por si venías con ?_token=...)
@@ -318,9 +318,7 @@ createInertiaApp({
 
         refreshPageIfAuthChanged(initialPage);
 
-        const vueApp = createApp({
-            render: () => h(Root, { App, pageProps: props }),
-        });
+        const vueApp = createApp(Root, { App, props });
 
         vueApp.use(plugin);
         vueApp.component('Link', Link);

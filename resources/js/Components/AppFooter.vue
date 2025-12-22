@@ -6,6 +6,11 @@ import { cookieConsentKey } from '@/utils/consent';
 const cookieConsent = inject(cookieConsentKey, null);
 
 const openSettings = () => {
+  if (typeof window !== 'undefined' && typeof window.openCookieSettings === 'function') {
+    window.openCookieSettings();
+    return;
+  }
+
   cookieConsent?.openSettings?.();
 };
 </script>

@@ -4,7 +4,9 @@ import { computed } from 'vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import Breadcrumbs from '@/Components/Breadcrumbs.vue';
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const baseUrl = computed(() =>
+  usePage().props.app?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
+);
 const canonical = computed(() => `${baseUrl.value}/legal/privacidad`);
 
 const breadcrumbs = [
@@ -19,7 +21,7 @@ const breadcrumbs = [
       <title>Política de privacidad | KitchenManager</title>
       <meta
         name="description"
-        content="Política de privacidad de KitchenManager: finalidades, base legal, conservación y derechos RGPD." 
+        content="Política de privacidad de KitchenManager: finalidades, base legal, conservación y derechos RGPD."
       >
       <link rel="canonical" :href="canonical">
       <meta property="og:title" content="Política de privacidad | KitchenManager">
@@ -48,8 +50,8 @@ const breadcrumbs = [
       <section>
         <h2 class="text-lg font-semibold text-slate-900">Responsable del tratamiento</h2>
         <p>
-          Responsable: <strong>[Titular]</strong>. NIF/CIF: <strong>[NIF]</strong>. Dirección: <strong>[Dirección]</strong>.
-          Email de contacto: <strong>[Email]</strong>.
+          Responsable: <strong>KitchenManager</strong>. Domicilio social en España. Email de contacto:
+          <strong>soporte@kitchenmanager.app</strong>.
         </p>
       </section>
 
@@ -93,6 +95,16 @@ const breadcrumbs = [
       </section>
 
       <section>
+        <h2 class="text-lg font-semibold text-slate-900">Baja y eliminación de cuenta</h2>
+        <p>
+          Puedes solicitar el borrado de tu cuenta. En ese caso eliminaremos los datos personales
+          identificativos y conservaremos únicamente información anonimizada e irreversible para
+          estadísticas y mejora del servicio. Si existiera una obligación legal o necesidad de defensa
+          ante reclamaciones, podremos bloquear datos mínimos durante el plazo exigido.
+        </p>
+      </section>
+
+      <section>
         <h2 class="text-lg font-semibold text-slate-900">Cesiones y encargados</h2>
         <p>
           No vendemos datos personales. Podemos compartir información con proveedores tecnológicos que
@@ -106,8 +118,9 @@ const breadcrumbs = [
         <h2 class="text-lg font-semibold text-slate-900">Derechos</h2>
         <p>
           Puedes ejercer los derechos de acceso, rectificación, supresión, oposición, limitación y
-          portabilidad escribiendo a <strong>[Email]</strong>. Si consideras que tus derechos no han sido
-          atendidos, puedes reclamar ante la Agencia Española de Protección de Datos (AEPD) en
+          portabilidad escribiendo a <strong>soporte@kitchenmanager.app</strong>. Si consideras que tus
+          derechos no han sido atendidos, puedes reclamar ante la Agencia Española de Protección de Datos
+          (AEPD) en
           <a
             href="https://www.aepd.es"
             class="font-semibold text-amber-600 hover:text-amber-700"
