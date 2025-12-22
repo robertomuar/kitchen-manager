@@ -153,20 +153,26 @@ const refreshPageIfAuthChanged = (page) => {
     }
 };
 
+const fullReloadPaths = new Set([
+    '/stock/export/missing.csv',
+    '/stock/export/missing.pdf',
+]);
+
 /**
- * Fuerza un refresco completo del navegador en cada navegación GET para
- * evitar estados raros.
+ * Solo forzar reload completo para rutas de exportación.
  */
-const forceFullReloadOnNavigation = (event) => {
+const forceFullReloadForExports = (event) => {
     const visit = event?.detail?.visit ?? event;
     if (!visit) return;
 
     if ((visit.method ?? 'get').toLowerCase() !== 'get') return;
 
     const targetUrl = toRelativeUrl(visit.url ?? '');
-    const currentUrl = toRelativeUrl(window.location.href);
+    if (!targetUrl) return;
 
-    if (!targetUrl || targetUrl === currentUrl) return;
+    const targetPath = targetUrl.split('?')[0];
+
+    if (!fullReloadPaths.has(targetPath)) return;
 
     event?.preventDefault?.();
     window.location.assign(targetUrl);
@@ -210,7 +216,7 @@ if (getCsrfToken()) {
     );
 }
 
-router.on('before', forceFullReloadOnNavigation);
+router.on('before', forceFullReloadForExports);
 
 /**
  * Helper global route() compatible con:
@@ -289,10 +295,8 @@ routeFn.has = (name) => {
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue', {
-            eager: true,
-        });
-        return pages[`./Pages/${name}.vue`];
+        const pages = import.meta.glob('./Pages/**/*.vue');
+        return pages[`./Pages/${name}.vue`]();
     },
     setup({ el, App, props, plugin }) {
         const initialPage =

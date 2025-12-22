@@ -6,6 +6,7 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,6 +15,8 @@ class ProductController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+        $owner = $user->kitchenOwner();
+        $ownerId = $user->kitchenOwnerId();
 
         $search     = $request->input('search');
         $locationId = $request->input('location_id');
@@ -21,7 +24,7 @@ class ProductController extends Controller
         $direction  = $request->input('direction', 'asc');
 
         $query = Product::with('location')
-            ->where('user_id', $user->id);
+            ->where('user_id', $ownerId);
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -46,12 +49,15 @@ class ProductController extends Controller
         $products = $query
             ->orderBy($sort, $direction)
             ->orderBy('id')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
-        $locations = $user->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $locations = Cache::remember("locations.list.{$ownerId}", 300, function () use ($owner) {
+            return $owner->locations()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        });
 
         return Inertia::render('Products/Index', [
             'products'  => $products,
@@ -68,11 +74,15 @@ class ProductController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
+        $owner = $user->kitchenOwner();
+        $ownerId = $user->kitchenOwnerId();
 
-        $locations = $user->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $locations = Cache::remember("locations.list.{$ownerId}", 300, function () use ($owner) {
+            return $owner->locations()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        });
 
         return Inertia::render('Products/Form', [
             'mode'      => 'create',
@@ -98,15 +108,19 @@ class ProductController extends Controller
     public function edit(Request $request, Product $product): Response
     {
         $user = $request->user();
+        $owner = $user->kitchenOwner();
+        $ownerId = $user->kitchenOwnerId();
 
         if ($product->user_id !== $user->id) {
             abort(403);
         }
 
-        $locations = $user->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $locations = Cache::remember("locations.list.{$ownerId}", 300, function () use ($owner) {
+            return $owner->locations()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        });
 
         return Inertia::render('Products/Form', [
             'mode'      => 'edit',

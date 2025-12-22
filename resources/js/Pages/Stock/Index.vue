@@ -8,7 +8,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     stockItems: {
-        type: Array,
+        type: [Array, Object],
         default: () => [],
     },
     products: {
@@ -49,9 +49,38 @@ const successMessage = computed(() => {
     return page.props.flash?.success ?? '';
 });
 
+const stockItemsList = computed(() => {
+    if (Array.isArray(props.stockItems)) {
+        return props.stockItems;
+    }
+
+    return props.stockItems?.data ?? [];
+});
+
+const paginationLinks = computed(() => {
+    if (Array.isArray(props.stockItems?.links)) {
+        return props.stockItems.links;
+    }
+
+    return [];
+});
+
+const paginationMeta = computed(() => props.stockItems?.meta ?? null);
+
+const canonicalUrl = computed(() => {
+    if (typeof window === 'undefined') {
+        return '';
+    }
+
+    return `${window.location.origin}${route('stock.index')}`;
+});
+
+const pageDescription =
+    'Gestiona el stock de tu cocina con filtros por ubicación, estado y caducidad.';
+
 // Lista de reposición (sobre los ítems ya filtrados)
 const lowStockItems = computed(() =>
-    props.stockItems.filter((item) => item.is_below_minimum === true),
+    stockItemsList.value.filter((item) => item.is_below_minimum === true),
 );
 
 // --- FILTROS ---
@@ -82,6 +111,14 @@ const clearFilters = () => {
         direction: 'asc',
     };
     applyFilters();
+};
+
+const goToPage = (link) => {
+    if (!link?.url || link.active) {
+        return;
+    }
+
+    router.get(link.url, {}, { preserveState: true, preserveScroll: true });
 };
 
 // --- BORRAR REGISTRO ---
@@ -189,7 +226,15 @@ const exportReplenishmentPdf = () => {
 
 <template>
     <AuthenticatedLayout>
-        <Head title="Stock" />
+        <Head title="Stock">
+            <meta name="description" :content="pageDescription" />
+            <link v-if="canonicalUrl" rel="canonical" :href="canonicalUrl" />
+            <meta property="og:title" content="Stock" />
+            <meta property="og:description" :content="pageDescription" />
+            <meta property="og:url" :content="canonicalUrl" />
+            <meta name="twitter:title" content="Stock" />
+            <meta name="twitter:description" :content="pageDescription" />
+        </Head>
 
         <div class="py-8">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
@@ -364,7 +409,7 @@ const exportReplenishmentPdf = () => {
                 <!-- Tabla de stock -->
                 <div class="km-card overflow-hidden">
                     <div
-                        v-if="!stockItems.length"
+                        v-if="!stockItemsList.length"
                         class="p-6 text-center text-[color:var(--km-muted)] text-sm"
                     >
                         Todavía no tienes stock registrado (o los filtros no devuelven resultados).
@@ -383,7 +428,7 @@ const exportReplenishmentPdf = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="item in stockItems" :key="item.id">
+                                <tr v-for="item in stockItemsList" :key="item.id">
                                     <td class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]">
                                         {{ item.product?.name ?? '—' }}
                                     </td>
@@ -462,6 +507,45 @@ const exportReplenishmentPdf = () => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <div
+                    v-if="paginationLinks.length > 1"
+                    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                    <p class="text-xs text-[color:var(--km-muted)]">
+                        Mostrando
+                        <span class="font-medium text-[color:var(--km-text)]">
+                            {{ paginationMeta?.from ?? 0 }}
+                        </span>
+                        -
+                        <span class="font-medium text-[color:var(--km-text)]">
+                            {{ paginationMeta?.to ?? 0 }}
+                        </span>
+                        de
+                        <span class="font-medium text-[color:var(--km-text)]">
+                            {{ paginationMeta?.total ?? stockItemsList.length }}
+                        </span>
+                        ítems
+                    </p>
+
+                    <nav class="flex flex-wrap gap-2">
+                        <button
+                            v-for="link in paginationLinks"
+                            :key="link.label"
+                            type="button"
+                            class="rounded-lg border px-3 py-1 text-xs"
+                            :class="
+                                link.active
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                    : 'border-[color:var(--km-border)] text-[color:var(--km-text)] hover:bg-[color:var(--km-bg-2)]'
+                            "
+                            :disabled="!link.url"
+                            @click="goToPage(link)"
+                        >
+                            <span v-html="link.label" />
+                        </button>
+                    </nav>
                 </div>
 
                 <!-- Lista de reposición -->
