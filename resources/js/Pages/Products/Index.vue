@@ -9,7 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     products: {
-        type: Array,
+        type: [Array, Object],
         default: () => [],
     },
     locations: {
@@ -44,6 +44,35 @@ const successMessage = computed(() => {
     return page.props.flash?.success ?? '';
 });
 
+const productItems = computed(() => {
+    if (Array.isArray(props.products)) {
+        return props.products;
+    }
+
+    return props.products?.data ?? [];
+});
+
+const paginationLinks = computed(() => {
+    if (Array.isArray(props.products?.links)) {
+        return props.products.links;
+    }
+
+    return [];
+});
+
+const paginationMeta = computed(() => props.products?.meta ?? null);
+
+const canonicalUrl = computed(() => {
+    if (typeof window === 'undefined') {
+        return '';
+    }
+
+    return `${window.location.origin}${route('products.index')}`;
+});
+
+const pageDescription =
+    'Listado de productos con ubicación habitual, cantidades base y notas.';
+
 // Filtros
 const applyFilters = () => {
     router.get(
@@ -72,6 +101,14 @@ const clearFilters = () => {
     applyFilters();
 };
 
+const goToPage = (link) => {
+    if (!link?.url || link.active) {
+        return;
+    }
+
+    router.get(link.url, {}, { preserveState: true, preserveScroll: true });
+};
+
 // Borrar producto
 const deleteProduct = (product) => {
     if (
@@ -90,7 +127,15 @@ const deleteProduct = (product) => {
 
 <template>
     <AuthenticatedLayout>
-        <Head title="Productos" />
+        <Head title="Productos">
+            <meta name="description" :content="pageDescription" />
+            <link v-if="canonicalUrl" rel="canonical" :href="canonicalUrl" />
+            <meta property="og:title" content="Productos" />
+            <meta property="og:description" :content="pageDescription" />
+            <meta property="og:url" :content="canonicalUrl" />
+            <meta name="twitter:title" content="Productos" />
+            <meta name="twitter:description" :content="pageDescription" />
+        </Head>
 
         <div class="py-8">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
@@ -229,7 +274,7 @@ const deleteProduct = (product) => {
                 <!-- Tabla -->
                 <div class="km-card overflow-hidden">
                     <div
-                        v-if="!products.length"
+                        v-if="!productItems.length"
                         class="p-6 text-center text-[color:var(--km-muted)] text-sm"
                     >
                         No hay productos que coincidan con los filtros
@@ -259,7 +304,7 @@ const deleteProduct = (product) => {
                             </thead>
                             <tbody>
                                 <tr
-                                    v-for="product in products"
+                                    v-for="product in productItems"
                                     :key="product.id"
                                 >
                                     <td
@@ -319,6 +364,45 @@ const deleteProduct = (product) => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <div
+                    v-if="paginationLinks.length > 1"
+                    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                    <p class="text-xs text-[color:var(--km-muted)]">
+                        Mostrando
+                        <span class="font-medium text-[color:var(--km-text)]">
+                            {{ paginationMeta?.from ?? 0 }}
+                        </span>
+                        -
+                        <span class="font-medium text-[color:var(--km-text)]">
+                            {{ paginationMeta?.to ?? 0 }}
+                        </span>
+                        de
+                        <span class="font-medium text-[color:var(--km-text)]">
+                            {{ paginationMeta?.total ?? productItems.length }}
+                        </span>
+                        productos
+                    </p>
+
+                    <nav class="flex flex-wrap gap-2">
+                        <button
+                            v-for="link in paginationLinks"
+                            :key="link.label"
+                            type="button"
+                            class="rounded-lg border px-3 py-1 text-xs"
+                            :class="
+                                link.active
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                    : 'border-[color:var(--km-border)] text-[color:var(--km-text)] hover:bg-[color:var(--km-bg-2)]'
+                            "
+                            :disabled="!link.url"
+                            @click="goToPage(link)"
+                        >
+                            <span v-html="link.label" />
+                        </button>
+                    </nav>
                 </div>
             </div>
         </div>

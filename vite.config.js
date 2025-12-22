@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 
@@ -16,5 +16,31 @@ export default defineConfig({
                 },
             },
         }),
+        splitVendorChunkPlugin(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes('node_modules')) {
+                        return undefined;
+                    }
+
+                    if (id.includes('vue')) {
+                        return 'vue';
+                    }
+
+                    if (id.includes('@inertiajs')) {
+                        return 'inertia';
+                    }
+
+                    if (id.includes('axios')) {
+                        return 'axios';
+                    }
+
+                    return 'vendor';
+                },
+            },
+        },
+    },
 });
