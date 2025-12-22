@@ -6,6 +6,7 @@ use App\Http\Requests\LocationRequest;
 use App\Models\Location;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,10 +19,16 @@ class LocationController extends Controller
     {
         $user = $request->user();
 
-        $locations = $user->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $locations = Cache::remember(
+            "locations:list:user:{$user->id}",
+            300,
+            function () use ($user) {
+                return $user->locations()
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
 
         return Inertia::render('Locations/Index', [
             'locations' => $locations,
@@ -69,6 +76,8 @@ class LocationController extends Controller
         }
 
         Location::create($data);
+        Cache::forget("locations:list:user:{$user->id}");
+        Cache::forget("locations:list:owner:{$user->kitchenOwnerId()}");
 
         return redirect()
             ->route('locations.index')
@@ -133,6 +142,8 @@ class LocationController extends Controller
         }
 
         $location->update($data);
+        Cache::forget("locations:list:user:{$user->id}");
+        Cache::forget("locations:list:owner:{$user->kitchenOwnerId()}");
 
         return redirect()
             ->route('locations.index')
@@ -151,6 +162,8 @@ class LocationController extends Controller
         }
 
         $location->delete();
+        Cache::forget("locations:list:user:{$user->id}");
+        Cache::forget("locations:list:owner:{$user->kitchenOwnerId()}");
 
         return redirect()
             ->route('locations.index')

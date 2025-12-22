@@ -8,6 +8,10 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     stockItems: {
+        type: Object,
+        default: () => ({}),
+    },
+    lowStockItems: {
         type: Array,
         default: () => [],
     },
@@ -49,10 +53,12 @@ const successMessage = computed(() => {
     return page.props.flash?.success ?? '';
 });
 
+const paginatedItems = computed(() => props.stockItems?.data ?? []);
+const paginationLinks = computed(() => props.stockItems?.links ?? []);
+const paginationMeta = computed(() => props.stockItems?.meta ?? null);
+
 // Lista de reposición (sobre los ítems ya filtrados)
-const lowStockItems = computed(() =>
-    props.stockItems.filter((item) => item.is_below_minimum === true),
-);
+const replenishmentItems = computed(() => props.lowStockItems ?? []);
 
 // --- FILTROS ---
 const applyFilters = () => {
@@ -364,7 +370,7 @@ const exportReplenishmentPdf = () => {
                 <!-- Tabla de stock -->
                 <div class="km-card overflow-hidden">
                     <div
-                        v-if="!stockItems.length"
+                        v-if="!paginatedItems.length"
                         class="p-6 text-center text-[color:var(--km-muted)] text-sm"
                     >
                         Todavía no tienes stock registrado (o los filtros no devuelven resultados).
@@ -383,7 +389,7 @@ const exportReplenishmentPdf = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="item in stockItems" :key="item.id">
+                                <tr v-for="item in paginatedItems" :key="item.id">
                                     <td class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]">
                                         {{ item.product?.name ?? '—' }}
                                     </td>
@@ -464,6 +470,35 @@ const exportReplenishmentPdf = () => {
                     </div>
                 </div>
 
+                <div
+                    v-if="paginationLinks.length > 3"
+                    class="flex flex-col items-center justify-between gap-3 px-2 text-sm text-[color:var(--km-muted)] sm:flex-row"
+                >
+                    <p v-if="paginationMeta">
+                        Mostrando {{ paginationMeta.from ?? 0 }}–{{ paginationMeta.to ?? 0 }}
+                        de {{ paginationMeta.total ?? 0 }} registros
+                    </p>
+
+                    <nav class="flex flex-wrap items-center gap-2" aria-label="Paginación">
+                        <template v-for="link in paginationLinks" :key="link.label">
+                            <Link
+                                v-if="link.url"
+                                :href="link.url"
+                                class="rounded-lg border border-[color:var(--km-border)] px-3 py-1 text-xs font-medium transition hover:bg-[color:var(--km-bg-2)]"
+                                :class="{
+                                    'bg-[color:var(--km-bg-2)] text-[color:var(--km-text)]': link.active,
+                                }"
+                                v-html="link.label"
+                            />
+                            <span
+                                v-else
+                                class="rounded-lg border border-transparent px-3 py-1 text-xs text-[color:var(--km-muted)]"
+                                v-html="link.label"
+                            />
+                        </template>
+                    </nav>
+                </div>
+
                 <!-- Lista de reposición -->
                 <div class="km-card overflow-hidden">
                     <div class="px-6 py-4 flex items-center justify-between">
@@ -473,7 +508,7 @@ const exportReplenishmentPdf = () => {
 
                         <div class="flex items-center gap-3">
                             <span class="text-xs text-[color:var(--km-muted)]">
-                                Total: {{ lowStockItems.length }}
+                                Total: {{ replenishmentItems.length }}
                             </span>
 
                             <button
@@ -496,7 +531,7 @@ const exportReplenishmentPdf = () => {
                     <div class="km-divider" />
 
                     <div
-                        v-if="!lowStockItems.length"
+                        v-if="!replenishmentItems.length"
                         class="p-6 text-sm text-[color:var(--km-muted)]"
                     >
                         De momento no hay ningún producto por debajo del mínimo. ✅
@@ -514,7 +549,7 @@ const exportReplenishmentPdf = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="item in lowStockItems" :key="item.id">
+                                <tr v-for="item in replenishmentItems" :key="item.id">
                                     <td class="whitespace-nowrap text-sm font-medium text-[color:var(--km-text)]">
                                         {{ item.product?.name ?? '—' }}
                                     </td>

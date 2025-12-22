@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\KitchenShareController;
 use App\Http\Controllers\BarcodeLookupController;
+use App\Http\Controllers\SitemapController;
 
 // ✅ Admin
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\AdminDatabaseController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,6 +30,9 @@ Route::get('/', function () {
         'phpVersion'     => PHP_VERSION,
     ]);
 });
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])
+    ->name('sitemap');
 
 /**
  * ✅ ADMIN: Dashboard + DB Browser (solo admin)
@@ -99,46 +104,66 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $today       = now()->startOfDay();
         $soonLimit   = $today->copy()->addDays(7);
         $urgentLimit = $today->copy()->addDays(2);
+        $cacheTtl    = 300;
+        $dateKey     = $today->toDateString();
 
-        $stats = [
-            'products_count'       => Product::where('user_id', $ownerId)->count(),
-            'locations_count'      => Location::where('user_id', $ownerId)->count(),
-            'stock_items_count'    => StockItem::where('user_id', $ownerId)->count(),
+        $stats = Cache::remember(
+            "dashboard:stats:{$ownerId}:{$dateKey}",
+            $cacheTtl,
+            function () use ($ownerId, $today, $soonLimit, $urgentLimit) {
+                return [
+                    'products_count'       => Product::where('user_id', $ownerId)->count(),
+                    'locations_count'      => Location::where('user_id', $ownerId)->count(),
+                    'stock_items_count'    => StockItem::where('user_id', $ownerId)->count(),
 
-            'low_stock_count' => StockItem::where('user_id', $ownerId)
-                ->whereNotNull('min_quantity')
-                ->whereColumn('quantity', '<', 'min_quantity')
-                ->count(),
+                    'low_stock_count' => StockItem::where('user_id', $ownerId)
+                        ->whereNotNull('min_quantity')
+                        ->whereColumn('quantity', '<', 'min_quantity')
+                        ->count(),
 
-            'soon_expiring_count' => StockItem::where('user_id', $ownerId)
-                ->whereNotNull('expires_at')
-                ->whereDate('expires_at', '>=', $today)
-                ->whereDate('expires_at', '<=', $soonLimit)
-                ->count(),
+                    'soon_expiring_count' => StockItem::where('user_id', $ownerId)
+                        ->whereNotNull('expires_at')
+                        ->whereDate('expires_at', '>=', $today)
+                        ->whereDate('expires_at', '<=', $soonLimit)
+                        ->count(),
 
-            'urgent_expiring_count' => StockItem::where('user_id', $ownerId)
-                ->whereNotNull('expires_at')
-                ->whereDate('expires_at', '>=', $today)
-                ->whereDate('expires_at', '<=', $urgentLimit)
-                ->count(),
-        ];
+                    'urgent_expiring_count' => StockItem::where('user_id', $ownerId)
+                        ->whereNotNull('expires_at')
+                        ->whereDate('expires_at', '>=', $today)
+                        ->whereDate('expires_at', '<=', $urgentLimit)
+                        ->count(),
+                ];
+            }
+        );
 
-        $lowStockItems = StockItem::with(['product', 'location'])
-            ->where('user_id', $ownerId)
-            ->whereNotNull('min_quantity')
-            ->whereColumn('quantity', '<', 'min_quantity')
-            ->orderByDesc('updated_at')
-            ->take(5)
-            ->get();
+        $lowStockItems = Cache::remember(
+            "dashboard:low-stock:{$ownerId}:{$dateKey}",
+            $cacheTtl,
+            function () use ($ownerId) {
+                return StockItem::with(['product', 'location'])
+                    ->where('user_id', $ownerId)
+                    ->whereNotNull('min_quantity')
+                    ->whereColumn('quantity', '<', 'min_quantity')
+                    ->orderByDesc('updated_at')
+                    ->take(5)
+                    ->get();
+            }
+        );
 
-        $soonExpiringItems = StockItem::with(['product', 'location'])
-            ->where('user_id', $ownerId)
-            ->whereNotNull('expires_at')
-            ->whereDate('expires_at', '>=', $today)
-            ->whereDate('expires_at', '<=', $soonLimit)
-            ->orderBy('expires_at')
-            ->take(10)
-            ->get();
+        $soonExpiringItems = Cache::remember(
+            "dashboard:soon-expiring:{$ownerId}:{$dateKey}",
+            $cacheTtl,
+            function () use ($ownerId, $today, $soonLimit) {
+                return StockItem::with(['product', 'location'])
+                    ->where('user_id', $ownerId)
+                    ->whereNotNull('expires_at')
+                    ->whereDate('expires_at', '>=', $today)
+                    ->whereDate('expires_at', '<=', $soonLimit)
+                    ->orderBy('expires_at')
+                    ->take(10)
+                    ->get();
+            }
+        );
 
         return Inertia::render('Dashboard', [
             'stats'             => $stats,

@@ -6,6 +6,7 @@ use App\Http\Requests\StockItemRequest;
 use App\Models\StockItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -56,24 +57,44 @@ class StockItemController extends Controller
             $direction = 'asc';
         }
 
-        $stockItems = $query
+        $stockItems = (clone $query)
             ->orderBy($sort, $direction)
+            ->orderBy('id')
+            ->paginate(25)
+            ->withQueryString();
+
+        $lowStockItems = (clone $query)
+            ->whereNotNull('min_quantity')
+            ->whereColumn('quantity', '<', 'min_quantity')
             ->orderBy('id')
             ->get();
 
         $owner = $user->kitchenOwner();
 
-        $products = $owner->products()
-            ->orderBy('name')
-            ->get();
+        $products = Cache::remember(
+            "products:list:owner:{$ownerId}",
+            300,
+            function () use ($owner) {
+                return $owner->products()
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
 
-        $locations = $owner->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $locations = Cache::remember(
+            "locations:list:owner:{$ownerId}",
+            300,
+            function () use ($owner) {
+                return $owner->locations()
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
 
         return Inertia::render('Stock/Index', [
             'stockItems' => $stockItems,
+            'lowStockItems' => $lowStockItems,
             'products'   => $products,
             'locations'  => $locations,
             'filters'    => [
@@ -93,9 +114,23 @@ class StockItemController extends Controller
     {
         $user  = $request->user();
         $owner = $user->kitchenOwner();
+        $ownerId = $user->kitchenOwnerId();
 
-        $products = $owner->products()->orderBy('name')->get();
-        $locations = $owner->locations()->orderBy('sort_order')->orderBy('name')->get();
+        $products = Cache::remember(
+            "products:list:owner:{$ownerId}",
+            300,
+            function () use ($owner) {
+                return $owner->products()->orderBy('name')->get();
+            }
+        );
+
+        $locations = Cache::remember(
+            "locations:list:owner:{$ownerId}",
+            300,
+            function () use ($owner) {
+                return $owner->locations()->orderBy('sort_order')->orderBy('name')->get();
+            }
+        );
 
         return Inertia::render('Stock/Form', [
             'mode'      => 'create',
@@ -160,8 +195,21 @@ class StockItemController extends Controller
 
         $owner = $request->user()->kitchenOwner();
 
-        $products = $owner->products()->orderBy('name')->get();
-        $locations = $owner->locations()->orderBy('sort_order')->orderBy('name')->get();
+        $products = Cache::remember(
+            "products:list:owner:{$ownerId}",
+            300,
+            function () use ($owner) {
+                return $owner->products()->orderBy('name')->get();
+            }
+        );
+
+        $locations = Cache::remember(
+            "locations:list:owner:{$ownerId}",
+            300,
+            function () use ($owner) {
+                return $owner->locations()->orderBy('sort_order')->orderBy('name')->get();
+            }
+        );
 
         return Inertia::render('Stock/Form', [
             'mode'      => 'edit',

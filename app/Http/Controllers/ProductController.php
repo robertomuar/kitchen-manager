@@ -6,6 +6,7 @@ use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,12 +47,19 @@ class ProductController extends Controller
         $products = $query
             ->orderBy($sort, $direction)
             ->orderBy('id')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
-        $locations = $user->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $locations = Cache::remember(
+            "locations:list:user:{$user->id}",
+            300,
+            function () use ($user) {
+                return $user->locations()
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
 
         return Inertia::render('Products/Index', [
             'products'  => $products,
@@ -69,10 +77,16 @@ class ProductController extends Controller
     {
         $user = $request->user();
 
-        $locations = $user->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $locations = Cache::remember(
+            "locations:list:user:{$user->id}",
+            300,
+            function () use ($user) {
+                return $user->locations()
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
 
         return Inertia::render('Products/Form', [
             'mode'      => 'create',
@@ -89,6 +103,8 @@ class ProductController extends Controller
         $data['user_id'] = $user->id;
 
         Product::create($data);
+        Cache::forget("products:list:user:{$user->id}");
+        Cache::forget("products:list:owner:{$user->kitchenOwnerId()}");
 
         return redirect()
             ->route('products.index')
@@ -103,10 +119,16 @@ class ProductController extends Controller
             abort(403);
         }
 
-        $locations = $user->locations()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $locations = Cache::remember(
+            "locations:list:user:{$user->id}",
+            300,
+            function () use ($user) {
+                return $user->locations()
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
 
         return Inertia::render('Products/Form', [
             'mode'      => 'edit',
@@ -151,6 +173,8 @@ class ProductController extends Controller
         $data = $request->validated();
 
         $product->update($data);
+        Cache::forget("products:list:user:{$user->id}");
+        Cache::forget("products:list:owner:{$user->kitchenOwnerId()}");
 
         return redirect()
             ->route('products.index')
@@ -166,6 +190,8 @@ class ProductController extends Controller
         }
 
         $product->delete();
+        Cache::forget("products:list:user:{$user->id}");
+        Cache::forget("products:list:owner:{$user->kitchenOwnerId()}");
 
         return redirect()
             ->route('products.index')

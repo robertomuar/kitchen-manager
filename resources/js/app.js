@@ -157,11 +157,29 @@ const refreshPageIfAuthChanged = (page) => {
  * Fuerza un refresco completo del navegador en cada navegación GET para
  * evitar estados raros.
  */
+const shouldForceFullReload = (url) => {
+    if (!url) return false;
+
+    try {
+        const parsed = new URL(url, window.location.origin);
+        const path = parsed.pathname ?? '';
+
+        return (
+            path.startsWith('/stock/export/') ||
+            path === '/stock/replenishment/export'
+        );
+    } catch (error) {
+        return false;
+    }
+};
+
 const forceFullReloadOnNavigation = (event) => {
     const visit = event?.detail?.visit ?? event;
     if (!visit) return;
 
     if ((visit.method ?? 'get').toLowerCase() !== 'get') return;
+
+    if (!shouldForceFullReload(visit.url ?? '')) return;
 
     const targetUrl = toRelativeUrl(visit.url ?? '');
     const currentUrl = toRelativeUrl(window.location.href);
@@ -286,13 +304,18 @@ routeFn.has = (name) => {
     return Object.prototype.hasOwnProperty.call(routeMap, name);
 };
 
+const pages = import.meta.glob('./Pages/**/*.vue');
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue', {
-            eager: true,
-        });
-        return pages[`./Pages/${name}.vue`];
+        const page = pages[`./Pages/${name}.vue`];
+
+        if (!page) {
+            throw new Error(`Página no encontrada: ${name}`);
+        }
+
+        return page();
     },
     setup({ el, App, props, plugin }) {
         const initialPage =

@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppMark from '@/Components/AppMark.vue';
 
@@ -12,11 +13,40 @@ const props = defineProps({
         default: true,
     },
 });
+
+const description =
+    'KitchenManager te ayuda a controlar el stock de tu cocina, organizar ubicaciones y evitar desperdicio de comida.';
+
+const canonicalUrl = computed(() => {
+    if (typeof window === 'undefined') {
+        return '';
+    }
+    return new URL('/', window.location.origin).toString();
+});
+
+const ogImage = computed(() => {
+    if (typeof window === 'undefined') {
+        return '';
+    }
+    return new URL('/sombrero.png', window.location.origin).toString();
+});
 </script>
 
 <template>
     <div class="km-page relative">
-        <Head title="Kitchen Manager - Control de stock de tu cocina" />
+        <Head title="Kitchen Manager - Control de stock de tu cocina">
+            <meta name="description" :content="description" head-key="description" />
+            <link rel="canonical" :href="canonicalUrl" head-key="canonical" />
+            <meta property="og:title" content="Kitchen Manager - Control de stock de tu cocina" head-key="og:title" />
+            <meta property="og:description" :content="description" head-key="og:description" />
+            <meta property="og:type" content="website" head-key="og:type" />
+            <meta property="og:url" :content="canonicalUrl" head-key="og:url" />
+            <meta property="og:image" :content="ogImage" head-key="og:image" />
+            <meta name="twitter:card" content="summary_large_image" head-key="twitter:card" />
+            <meta name="twitter:title" content="Kitchen Manager - Control de stock de tu cocina" head-key="twitter:title" />
+            <meta name="twitter:description" :content="description" head-key="twitter:description" />
+            <meta name="twitter:image" :content="ogImage" head-key="twitter:image" />
+        </Head>
 
         <!-- Fondo decorativo -->
         <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">

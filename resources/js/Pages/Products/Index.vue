@@ -9,8 +9,8 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     products: {
-        type: Array,
-        default: () => [],
+        type: Object,
+        default: () => ({}),
     },
     locations: {
         type: Array,
@@ -43,6 +43,10 @@ const hasSuccessMessage = computed(() => {
 const successMessage = computed(() => {
     return page.props.flash?.success ?? '';
 });
+
+const productItems = computed(() => props.products?.data ?? []);
+const paginationLinks = computed(() => props.products?.links ?? []);
+const paginationMeta = computed(() => props.products?.meta ?? null);
 
 // Filtros
 const applyFilters = () => {
@@ -229,7 +233,7 @@ const deleteProduct = (product) => {
                 <!-- Tabla -->
                 <div class="km-card overflow-hidden">
                     <div
-                        v-if="!products.length"
+                        v-if="!productItems.length"
                         class="p-6 text-center text-[color:var(--km-muted)] text-sm"
                     >
                         No hay productos que coincidan con los filtros
@@ -259,7 +263,7 @@ const deleteProduct = (product) => {
                             </thead>
                             <tbody>
                                 <tr
-                                    v-for="product in products"
+                                    v-for="product in productItems"
                                     :key="product.id"
                                 >
                                     <td
@@ -319,6 +323,35 @@ const deleteProduct = (product) => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <div
+                    v-if="paginationLinks.length > 3"
+                    class="flex flex-col items-center justify-between gap-3 px-2 text-sm text-[color:var(--km-muted)] sm:flex-row"
+                >
+                    <p v-if="paginationMeta">
+                        Mostrando {{ paginationMeta.from ?? 0 }}–{{ paginationMeta.to ?? 0 }}
+                        de {{ paginationMeta.total ?? 0 }} productos
+                    </p>
+
+                    <nav class="flex flex-wrap items-center gap-2" aria-label="Paginación">
+                        <template v-for="link in paginationLinks" :key="link.label">
+                            <Link
+                                v-if="link.url"
+                                :href="link.url"
+                                class="rounded-lg border border-[color:var(--km-border)] px-3 py-1 text-xs font-medium transition hover:bg-[color:var(--km-bg-2)]"
+                                :class="{
+                                    'bg-[color:var(--km-bg-2)] text-[color:var(--km-text)]': link.active,
+                                }"
+                                v-html="link.label"
+                            />
+                            <span
+                                v-else
+                                class="rounded-lg border border-transparent px-3 py-1 text-xs text-[color:var(--km-muted)]"
+                                v-html="link.label"
+                            />
+                        </template>
+                    </nav>
                 </div>
             </div>
         </div>
