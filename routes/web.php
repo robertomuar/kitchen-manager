@@ -11,32 +11,35 @@ use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\KitchenShareController;
 use App\Http\Controllers\BarcodeLookupController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\PublicPageController;
+use App\Http\Controllers\BlogController;
 
 // ✅ Admin
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDatabaseController;
 
-use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin'       => Route::has('login'),
-        'canRegister'    => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion'     => PHP_VERSION,
-    ]);
-});
+Route::get('/', [PublicPageController::class, 'home'])->name('home');
+Route::get('/features', [PublicPageController::class, 'features'])->name('features');
+Route::get('/faq', [PublicPageController::class, 'faq'])->name('faq');
+Route::get('/pricing', [PublicPageController::class, 'pricing'])->name('pricing');
+Route::get('/contact', [PublicPageController::class, 'contact'])->name('contact');
+Route::get('/privacy-policy', [PublicPageController::class, 'privacy'])->name('privacy');
+Route::get('/terms', [PublicPageController::class, 'terms'])->name('terms');
+
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 /**
  * ✅ ADMIN: Dashboard + DB Browser (solo admin)
  */
-Route::middleware(['auth', 'verified', 'admin'])
+Route::middleware(['auth', 'verified', 'admin', 'noindex'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -84,7 +87,7 @@ Route::get('/debug/barcode', function (Request $request) {
         'count' => $products->count(),
         'items' => $products,
     ]);
-})->middleware(['auth', 'verified', 'admin'])->name('debug.barcode');
+})->middleware(['auth', 'verified', 'admin', 'noindex'])->name('debug.barcode');
 
 /**
  * Lookup de código de barras (AJAX)
@@ -93,7 +96,7 @@ Route::post('/barcode/lookup', [BarcodeLookupController::class, 'lookup'])
     ->name('barcode.lookup');
 
 // Todo lo privado va con auth + verified
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'noindex'])->group(function () {
 
     // === DASHBOARD ===
     Route::get('/dashboard', function () {

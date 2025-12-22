@@ -62,6 +62,19 @@ const normalizeId = (params) => {
 };
 
 const routeMap = {
+    // --- Marketing public ---
+    home: () => '/',
+    features: () => '/features',
+    faq: () => '/faq',
+    pricing: () => '/pricing',
+    contact: () => '/contact',
+    privacy: () => '/privacy-policy',
+    terms: () => '/terms',
+
+    // --- Blog ---
+    'blog.index': () => '/blog',
+    'blog.show': (slug) => `/blog/${encodeURIComponent(normalizeId(slug))}`,
+
     // --- Auth ---
     login: () => '/login',
     register: () => '/register',
@@ -149,7 +162,7 @@ const refreshPageIfAuthChanged = (page) => {
     syncCsrf();
 
     if (hasChanged) {
-        window.location.reload();
+        router.reload({ preserveState: false, preserveScroll: false });
     }
 };
 

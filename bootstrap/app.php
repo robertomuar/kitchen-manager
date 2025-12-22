@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Alias de middlewares para rutas
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'noindex' => \App\Http\Middleware\NoIndex::class,
         ]);
 
         $middleware->web(append: [

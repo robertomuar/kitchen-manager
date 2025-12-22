@@ -7,17 +7,19 @@
         {{-- Token CSRF para Axios / Inertia --}}
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title inertia>{{ config('app.name', 'KitchenManager') }}</title>
+        <title inertia>{{ config('app.name', 'KitchenManager') }} - Inventario de cocina y despensa</title>
 
         @php
             $appName = config('app.name', 'KitchenManager');
             $baseUrl = rtrim(config('app.url'), '/');
             $path = '/' . ltrim(request()->path(), '/');
             $canonical = $baseUrl . ($path === '/' ? '' : $path);
-            $defaultDescription = 'Gestiona productos, ubicaciones y stock de cocina con alertas y reportes.';
+            $defaultDescription = 'Gestiona productos, ubicaciones y stock de cocina con alertas de caducidad y listas inteligentes.';
+            $robots = request()->attributes->get('seo_robots', 'index,follow');
         @endphp
 
         <meta name="description" content="{{ $defaultDescription }}">
+        <meta name="robots" content="{{ $robots }}">
         <link rel="canonical" href="{{ $canonical }}">
 
         <meta property="og:site_name" content="{{ $appName }}">
@@ -49,6 +51,17 @@
                 '@type' => 'Organization',
                 'name' => $appName,
                 'url' => $baseUrl,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+        </script>
+        <script type="application/ld+json">
+            {!! json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'SoftwareApplication',
+                'name' => $appName,
+                'operatingSystem' => 'Web',
+                'applicationCategory' => 'BusinessApplication',
+                'url' => $baseUrl,
+                'description' => $defaultDescription,
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
         </script>
 

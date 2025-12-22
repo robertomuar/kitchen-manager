@@ -1,6 +1,7 @@
 User-agent: *
 Disallow: /login
 Disallow: /register
+Disallow: /email
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /confirm-password
@@ -11,4 +12,4 @@ Disallow: /profile
 Disallow: /password
 Disallow: /logout
 
-Sitemap: /sitemap.xml
+Sitemap: https://kitchenmanager.duckdns.org/sitemap.xml
