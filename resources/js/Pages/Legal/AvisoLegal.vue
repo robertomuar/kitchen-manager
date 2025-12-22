@@ -4,7 +4,9 @@ import { computed } from 'vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import Breadcrumbs from '@/Components/Breadcrumbs.vue';
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const baseUrl = computed(() =>
+  usePage().props.app?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
+);
 const canonical = computed(() => `${baseUrl.value}/legal/aviso-legal`);
 
 const breadcrumbs = [
@@ -19,7 +21,7 @@ const breadcrumbs = [
       <title>Aviso legal | KitchenManager</title>
       <meta
         name="description"
-        content="Aviso legal de KitchenManager: titular, condiciones de uso, propiedad intelectual y responsabilidad del servicio doméstico de inventario." 
+        content="Aviso legal de KitchenManager: titular, condiciones de uso, propiedad intelectual y responsabilidad del servicio doméstico de inventario."
       >
       <link rel="canonical" :href="canonical">
       <meta property="og:title" content="Aviso legal | KitchenManager">
@@ -49,8 +51,8 @@ const breadcrumbs = [
       <section>
         <h2 class="text-lg font-semibold text-slate-900">Identificación del titular</h2>
         <p>
-          Titular: <strong>[Titular]</strong>. NIF/CIF: <strong>[NIF]</strong>. Domicilio: <strong>[Dirección]</strong>.
-          Contacto: <strong>[Email]</strong>.
+          Titular: <strong>KitchenManager</strong>. Domicilio social en España. Contacto general:
+          <strong>soporte@kitchenmanager.app</strong>.
         </p>
       </section>
 
@@ -87,6 +89,16 @@ const breadcrumbs = [
           El uso de KitchenManager es bajo tu responsabilidad. El titular no garantiza resultados
           concretos ni se hace responsable de decisiones tomadas por el usuario sobre compra, consumo
           o eliminación de alimentos.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-semibold text-slate-900">Baja y eliminación de cuenta</h2>
+        <p>
+          Puedes solicitar el borrado de tu cuenta. En ese caso eliminaremos los datos personales
+          identificativos y conservaremos únicamente información anonimizada e irreversible para
+          estadísticas y mejora del servicio. Si existiera una obligación legal o necesidad de defensa
+          ante reclamaciones, podremos bloquear datos mínimos durante el plazo exigido.
         </p>
       </section>
 

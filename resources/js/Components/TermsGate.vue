@@ -1,17 +1,27 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
 import { onMounted, ref, watch } from 'vue';
-import { acceptTerms, getTermsAcceptance, TERMS_VERSION } from '@/utils/consent';
+import { getJsonCookie, setJsonCookie } from '@/utils/cookies';
+import { TERMS_COOKIE, TERMS_VERSION } from '@/utils/consent';
 
 const isOpen = ref(false);
-const hasConfirmed = ref(false);
+
+const hasAcceptedTerms = () => {
+  const data = getJsonCookie(TERMS_COOKIE);
+  return data && data.version === TERMS_VERSION ? data : null;
+};
 
 const refreshState = () => {
-  isOpen.value = !getTermsAcceptance();
+  isOpen.value = !hasAcceptedTerms();
 };
 
 const handleAccept = () => {
-  acceptTerms();
+  const payload = {
+    version: TERMS_VERSION,
+    acceptedAt: new Date().toISOString(),
+  };
+
+  setJsonCookie(TERMS_COOKIE, payload, 365);
   isOpen.value = false;
 };
 
@@ -29,7 +39,7 @@ watch(isOpen, (value) => {
   <teleport to="body">
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4"
+      class="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-900/70 px-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="terms-title"
@@ -65,15 +75,6 @@ watch(isOpen, (value) => {
               </Link>
             </div>
           </div>
-
-          <label class="flex items-start gap-3 text-sm text-slate-700">
-            <input
-              v-model="hasConfirmed"
-              type="checkbox"
-              class="mt-1 h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
-            >
-            <span>He leído y acepto los términos (opcional).</span>
-          </label>
 
           <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button

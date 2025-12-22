@@ -1,67 +1,68 @@
 <script setup>
-import { Link, usePage } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
+import { computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { Link } from '@inertiajs/vue3'
 
 const props = defineProps({
-  items: {
-    type: Array,
-    required: true,
-  },
-});
+  items: { type: Array, default: () => [] },
+})
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const SCRIPT_ID = 'km-jsonld-breadcrumbs'
+
+function toAbsoluteUrl(href) {
+  if (!href) return null
+  try {
+    if (/^https?:\/\//i.test(href)) return href
+    return new URL(href, window.location.origin).toString()
+  } catch { return null }
+}
 
 const jsonLd = computed(() => {
-  const itemListElement = props.items.map((item, index) => ({
-    '@type': 'ListItem',
-    position: index + 1,
-    name: item.label,
-    item: `${baseUrl.value}${item.href}`,
-  }));
+  const items = Array.isArray(props.items) ? props.items : []
+  if (!items.length) return ''
+  const list = items.map((it, idx) => {
+    const name = String(it?.label ?? '').trim() || `Item ${idx + 1}`
+    const href = it?.href ?? it?.url ?? null
+    const abs = toAbsoluteUrl(href)
+    const obj = { '@type':'ListItem', position: idx + 1, name }
+    if (abs) obj.item = abs
+    return obj
+  })
+  return JSON.stringify({ '@context':'https://schema.org', '@type':'BreadcrumbList', itemListElement:list })
+})
 
-  return JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement,
-  });
-});
+function upsertJsonLdScript() {
+  if (typeof document === 'undefined') return
+  const content = jsonLd.value
+  if (!content) { const ex=document.getElementById(SCRIPT_ID); if(ex) ex.remove(); return }
+  let el = document.getElementById(SCRIPT_ID)
+  if (!el) { el=document.createElement('script'); el.id=SCRIPT_ID; el.type='application/ld+json'; document.head.appendChild(el) }
+  el.textContent = content
+}
 
-const scriptId = 'km-breadcrumbs-jsonld';
+function removeJsonLdScript() {
+  if (typeof document === 'undefined') return
+  const el = document.getElementById(SCRIPT_ID)
+  if (el) el.remove()
+}
 
-const updateJsonLd = () => {
-  if (typeof document === 'undefined') return;
-  let script = document.getElementById(scriptId);
-  if (!script) {
-    script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.id = scriptId;
-    document.head.appendChild(script);
-  }
-  script.textContent = jsonLd.value;
-};
-
-const removeJsonLd = () => {
-  if (typeof document === 'undefined') return;
-  const script = document.getElementById(scriptId);
-  if (script) {
-    script.remove();
-  }
-};
-
-onMounted(updateJsonLd);
-watch(jsonLd, updateJsonLd);
-onBeforeUnmount(removeJsonLd);
+onMounted(() => upsertJsonLdScript())
+watch(() => props.items, () => upsertJsonLdScript(), { deep: true })
+onBeforeUnmount(() => removeJsonLdScript())
 </script>
 
 <template>
-  <nav aria-label="Breadcrumb" class="mb-6 text-sm text-slate-500">
+  <nav v-if="items && items.length" aria-label="Breadcrumb" class="mb-6 text-sm text-slate-500">
     <ol class="flex flex-wrap items-center gap-2">
-      <li v-for="(item, index) in items" :key="item.href" class="flex items-center gap-2">
-        <Link v-if="index < items.length - 1" :href="item.href" class="hover:text-slate-700">
-          {{ item.label }}
-        </Link>
-        <span v-else class="text-slate-700">{{ item.label }}</span>
-        <span v-if="index < items.length - 1" aria-hidden="true">/</span>
+      <li v-for="(item, index) in items" :key="`${index}-${item?.label ?? ''}-${item?.href ?? item?.url ?? ''}`" class="flex items-center gap-2">
+        <template v-if="(item?.href || item?.url) && index !== items.length - 1">
+          <Link :href="item.href || item.url" class="hover:text-slate-700 underline-offset-2 hover:underline">
+            {{ item.label }}
+          </Link>
+        </template>
+        <template v-else>
+          <span class="text-slate-700 font-medium">{{ item?.label }}</span>
+        </template>
+        <span v-if="index !== items.length - 1" class="text-slate-400">/</span>
       </li>
     </ol>
   </nav>

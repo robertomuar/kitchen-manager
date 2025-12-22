@@ -42,7 +42,7 @@ const savePreferences = () => {
   <teleport to="body">
     <div
       v-if="canShow"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4"
+      class="fixed inset-0 z-[1150] flex items-center justify-center bg-slate-900/60 px-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="cookies-title"

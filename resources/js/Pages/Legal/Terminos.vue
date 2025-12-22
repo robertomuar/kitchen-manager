@@ -4,7 +4,9 @@ import { computed } from 'vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import Breadcrumbs from '@/Components/Breadcrumbs.vue';
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const baseUrl = computed(() =>
+  usePage().props.app?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
+);
 const canonical = computed(() => `${baseUrl.value}/legal/terminos`);
 
 const breadcrumbs = [
@@ -19,7 +21,7 @@ const breadcrumbs = [
       <title>Términos y condiciones | KitchenManager</title>
       <meta
         name="description"
-        content="Términos y condiciones de uso de KitchenManager para gestión doméstica de inventario, caducidades y compras." 
+        content="Términos y condiciones de uso de KitchenManager para gestión doméstica de inventario, caducidades y compras."
       >
       <link rel="canonical" :href="canonical">
       <meta property="og:title" content="Términos y condiciones | KitchenManager">
@@ -75,8 +77,8 @@ const breadcrumbs = [
         <h2 class="text-lg font-semibold text-slate-900">Disponibilidad y soporte</h2>
         <p>
           Podemos suspender temporalmente el servicio por tareas de mantenimiento o incidencias. No se
-          garantiza disponibilidad ininterrumpida. Puedes contactar con nosotros en [Email] para soporte
-          y consultas.
+          garantiza disponibilidad ininterrumpida. Puedes contactar con nosotros en
+          <strong>soporte@kitchenmanager.app</strong> para soporte y consultas.
         </p>
       </section>
 
