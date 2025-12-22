@@ -21,4 +21,18 @@ class SeoRoutesTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('<urlset', false);
     }
+
+    public function testTermsPageLoads(): void
+    {
+        $response = $this->get('/terms');
+
+        $response->assertStatus(200);
+    }
+
+    public function testCookiesPolicyPageLoads(): void
+    {
+        $response = $this->get('/cookies-policy');
+
+        $response->assertStatus(200);
+    }
 }

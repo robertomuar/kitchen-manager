@@ -31,6 +31,7 @@ Route::get('/pricing', [PublicPageController::class, 'pricing'])->name('pricing'
 Route::get('/contact', [PublicPageController::class, 'contact'])->name('contact');
 Route::get('/privacy-policy', [PublicPageController::class, 'privacy'])->name('privacy');
 Route::get('/terms', [PublicPageController::class, 'terms'])->name('terms');
+Route::get('/cookies-policy', [PublicPageController::class, 'cookiesPolicy'])->name('cookies-policy');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');

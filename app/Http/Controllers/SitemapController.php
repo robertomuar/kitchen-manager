@@ -74,7 +74,7 @@ class SitemapController extends Controller
                     'faq' => '0.8',
                     'blog' => '0.8',
                     'contact' => '0.6',
-                    'privacy-policy', 'terms' => '0.4',
+                    'privacy-policy', 'terms', 'cookies-policy' => '0.4',
                     default => '0.5',
                 };
 
