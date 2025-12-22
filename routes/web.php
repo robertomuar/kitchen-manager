@@ -4,9 +4,12 @@ use App\Models\Product;
 use App\Models\StockItem;
 use App\Models\Location;
 
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicPageController;
+use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\KitchenShareController;
 use App\Http\Controllers\BarcodeLookupController;
@@ -16,21 +19,23 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDatabaseController;
 
-use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin'       => Route::has('login'),
-        'canRegister'    => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion'     => PHP_VERSION,
-    ]);
-});
+Route::get('/', [PublicPageController::class, 'home'])->name('home');
+Route::get('/features', [PublicPageController::class, 'features'])->name('features');
+Route::get('/faq', [PublicPageController::class, 'faq'])->name('faq');
+Route::get('/pricing', [PublicPageController::class, 'pricing'])->name('pricing');
+Route::get('/contact', [PublicPageController::class, 'contact'])->name('contact');
+Route::get('/privacy-policy', [PublicPageController::class, 'privacy'])->name('privacy');
+Route::get('/terms', [PublicPageController::class, 'terms'])->name('terms');
 
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 /**
