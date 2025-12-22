@@ -46,4 +46,24 @@ class PublicPageController extends Controller
     {
         return Inertia::render('Public/CookiesPolicy');
     }
+
+    public function legalNotice(): Response
+    {
+        return Inertia::render('Legal/AvisoLegal');
+    }
+
+    public function legalTerms(): Response
+    {
+        return Inertia::render('Legal/Terminos');
+    }
+
+    public function legalPrivacy(): Response
+    {
+        return Inertia::render('Legal/Privacidad');
+    }
+
+    public function legalCookies(): Response
+    {
+        return Inertia::render('Legal/Cookies');
+    }
 }

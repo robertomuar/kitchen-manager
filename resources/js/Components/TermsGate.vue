@@ -57,10 +57,10 @@ watch(isOpen, (value) => {
               <li>Podemos actualizar estos términos; te avisaremos cuando cambien.</li>
             </ul>
             <div class="mt-4 flex flex-wrap gap-3 text-sm">
-              <Link href="/terms" class="font-semibold text-amber-600 hover:text-amber-700">
+              <Link href="/legal/terminos" class="font-semibold text-amber-600 hover:text-amber-700">
                 Leer términos completos
               </Link>
-              <Link href="/privacy-policy" class="font-semibold text-amber-600 hover:text-amber-700">
+              <Link href="/legal/privacidad" class="font-semibold text-amber-600 hover:text-amber-700">
                 Política de privacidad
               </Link>
             </div>

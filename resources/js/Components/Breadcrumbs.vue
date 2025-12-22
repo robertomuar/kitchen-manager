@@ -1,6 +1,6 @@
 <script setup>
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 
 const props = defineProps({
   items: {
@@ -25,12 +25,35 @@ const jsonLd = computed(() => {
     itemListElement,
   });
 });
+
+const scriptId = 'km-breadcrumbs-jsonld';
+
+const updateJsonLd = () => {
+  if (typeof document === 'undefined') return;
+  let script = document.getElementById(scriptId);
+  if (!script) {
+    script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = scriptId;
+    document.head.appendChild(script);
+  }
+  script.textContent = jsonLd.value;
+};
+
+const removeJsonLd = () => {
+  if (typeof document === 'undefined') return;
+  const script = document.getElementById(scriptId);
+  if (script) {
+    script.remove();
+  }
+};
+
+onMounted(updateJsonLd);
+watch(jsonLd, updateJsonLd);
+onBeforeUnmount(removeJsonLd);
 </script>
 
 <template>
-  <Head>
-    <script type="application/ld+json" v-html="jsonLd" />
-  </Head>
   <nav aria-label="Breadcrumb" class="mb-6 text-sm text-slate-500">
     <ol class="flex flex-wrap items-center gap-2">
       <li v-for="(item, index) in items" :key="item.href" class="flex items-center gap-2">

@@ -32,6 +32,10 @@ Route::get('/contact', [PublicPageController::class, 'contact'])->name('contact'
 Route::get('/privacy-policy', [PublicPageController::class, 'privacy'])->name('privacy');
 Route::get('/terms', [PublicPageController::class, 'terms'])->name('terms');
 Route::get('/cookies-policy', [PublicPageController::class, 'cookiesPolicy'])->name('cookies-policy');
+Route::get('/legal/aviso-legal', [PublicPageController::class, 'legalNotice'])->name('legal.notice');
+Route::get('/legal/terminos', [PublicPageController::class, 'legalTerms'])->name('legal.terms');
+Route::get('/legal/privacidad', [PublicPageController::class, 'legalPrivacy'])->name('legal.privacy');
+Route::get('/legal/cookies', [PublicPageController::class, 'legalCookies'])->name('legal.cookies');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');

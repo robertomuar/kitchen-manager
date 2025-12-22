@@ -15,9 +15,10 @@ const openSettings = () => {
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-4 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
       <div>© {{ new Date().getFullYear() }} KitchenManager. Todos los derechos reservados.</div>
       <div class="flex flex-wrap items-center gap-4">
-        <Link href="/terms" class="hover:text-slate-700">Términos</Link>
-        <Link href="/cookies-policy" class="hover:text-slate-700">Política de cookies</Link>
-        <Link href="/privacy-policy" class="hover:text-slate-700">Privacidad</Link>
+        <Link href="/legal/aviso-legal" class="hover:text-slate-700">Aviso legal</Link>
+        <Link href="/legal/terminos" class="hover:text-slate-700">Términos</Link>
+        <Link href="/legal/privacidad" class="hover:text-slate-700">Privacidad</Link>
+        <Link href="/legal/cookies" class="hover:text-slate-700">Cookies</Link>
         <button
           type="button"
           class="font-semibold text-amber-600 hover:text-amber-700"
