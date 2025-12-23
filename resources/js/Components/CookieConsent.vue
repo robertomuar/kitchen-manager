@@ -38,7 +38,7 @@ const openSettings = () => {
         </button>
         <button
           type="button"
-          class="rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
+          class="rounded-full bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800"
           @click="emit('accept-all')"
         >
           Aceptar todas

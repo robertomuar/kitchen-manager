@@ -109,7 +109,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
         Escríbenos y te ayudamos a organizar tu cocina con un plan personalizado.
       </p>
       <div class="mt-6 flex flex-wrap gap-3">
-        <Link href="/contact" class="rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600">
+        <Link href="/contact" class="rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-800">
           Contactar
         </Link>
         <Link href="/features" class="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-400">

@@ -135,7 +135,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
           (AEPD) en
           <a
             href="https://www.aepd.es"
-            class="font-semibold text-amber-600 hover:text-amber-700"
+            class="font-semibold text-amber-700 hover:text-amber-800"
             rel="noreferrer"
             target="_blank"
           >www.aepd.es</a>.

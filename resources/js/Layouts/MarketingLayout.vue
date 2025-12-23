@@ -34,7 +34,7 @@ const appName = computed(() => usePage().props.app?.name ?? 'KitchenManager');
           <Link href="/login" class="text-slate-600 hover:text-slate-900">Entrar</Link>
           <Link
             href="/register"
-            class="rounded-full bg-amber-500 px-4 py-2 font-semibold text-white shadow-sm hover:bg-amber-600"
+            class="rounded-full bg-amber-700 px-4 py-2 font-semibold text-white shadow-sm hover:bg-amber-800"
           >
             Crear cuenta
           </Link>
