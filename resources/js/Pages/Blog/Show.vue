@@ -11,7 +11,9 @@ const props = defineProps({
   },
 });
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const baseUrl = computed(() =>
+  usePage().props.app?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
+);
 const canonical = computed(() => props.post.canonical || `${baseUrl.value}/blog/${props.post.slug}`);
 
 const breadcrumbs = computed(() => [
@@ -33,6 +35,17 @@ const articleJsonLd = computed(() => JSON.stringify({
   },
   mainEntityOfPage: canonical.value,
 }));
+
+const breadcrumbJsonLd = computed(() => JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs.value.map((crumb, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: crumb.label,
+    item: `${baseUrl.value}${crumb.href === '/' ? '' : crumb.href}`,
+  })),
+}));
 </script>
 
 <template>
@@ -50,6 +63,7 @@ const articleJsonLd = computed(() => JSON.stringify({
       <meta v-if="props.post.og_image" property="og:image" :content="props.post.og_image">
       <link rel="canonical" :href="canonical">
       <script type="application/ld+json" v-html="articleJsonLd" />
+      <script type="application/ld+json" v-html="breadcrumbJsonLd" />
     </Head>
 
     <Breadcrumbs :items="breadcrumbs" />

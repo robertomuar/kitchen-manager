@@ -11,24 +11,44 @@ const props = defineProps({
   },
 });
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const baseUrl = computed(() =>
+  usePage().props.app?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
+);
 const canonical = computed(() => `${baseUrl.value}/blog`);
+const pageTitle = 'Blog de organización de cocina y control de stock';
+const description = 'Consejos prácticos sobre control de stock, caducidades, compras inteligentes y organización de despensa.';
 
 const breadcrumbs = [
   { label: 'Inicio', href: '/' },
   { label: 'Blog', href: '/blog' },
 ];
+
+const breadcrumbJsonLd = computed(() => JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs.map((crumb, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: crumb.label,
+    item: `${baseUrl.value}${crumb.href === '/' ? '' : crumb.href}`,
+  })),
+}));
 </script>
 
 <template>
   <MarketingLayout>
     <Head>
-      <title>Blog de organización de cocina y control de stock</title>
+      <title>{{ pageTitle }}</title>
       <meta
         name="description"
-        content="Consejos prácticos sobre control de stock, caducidades, compras inteligentes y organización de despensa."
+        :content="description"
       >
+      <meta property="og:type" content="website">
+      <meta property="og:title" :content="pageTitle">
+      <meta property="og:description" :content="description">
+      <meta property="og:url" :content="canonical">
       <link rel="canonical" :href="canonical">
+      <script type="application/ld+json" v-html="breadcrumbJsonLd" />
     </Head>
 
     <Breadcrumbs :items="breadcrumbs" />

@@ -13,6 +13,17 @@ const breadcrumbs = [
   { label: 'Inicio', href: '/' },
   { label: 'Aviso legal', href: '/legal/aviso-legal' },
 ];
+
+const breadcrumbJsonLd = computed(() => JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs.map((crumb, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: crumb.label,
+    item: `${baseUrl.value}${crumb.href === '/' ? '' : crumb.href}`,
+  })),
+}));
 </script>
 
 <template>
@@ -36,6 +47,7 @@ const breadcrumbs = [
         property="twitter:description"
         content="Conoce el aviso legal y las condiciones de uso de KitchenManager."
       >
+      <script type="application/ld+json" v-html="breadcrumbJsonLd" />
     </Head>
 
     <Breadcrumbs :items="breadcrumbs" />

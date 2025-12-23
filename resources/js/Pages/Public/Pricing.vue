@@ -4,24 +4,44 @@ import { computed } from 'vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import Breadcrumbs from '@/Components/Breadcrumbs.vue';
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const baseUrl = computed(() =>
+  usePage().props.app?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
+);
 const canonical = computed(() => `${baseUrl.value}/pricing`);
+const pageTitle = 'Precios de KitchenManager';
+const description = 'Plan gratuito para control de stock y caducidades con acceso completo a funciones esenciales.';
 
 const breadcrumbs = [
   { label: 'Inicio', href: '/' },
   { label: 'Precios', href: '/pricing' },
 ];
+
+const breadcrumbJsonLd = computed(() => JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs.map((crumb, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: crumb.label,
+    item: `${baseUrl.value}${crumb.href === '/' ? '' : crumb.href}`,
+  })),
+}));
 </script>
 
 <template>
   <MarketingLayout>
     <Head>
-      <title>Precios de KitchenManager</title>
+      <title>{{ pageTitle }}</title>
       <meta
         name="description"
-        content="Plan gratuito para control de stock y caducidades con acceso completo a funciones esenciales."
+        :content="description"
       >
+      <meta property="og:type" content="website">
+      <meta property="og:title" :content="pageTitle">
+      <meta property="og:description" :content="description">
+      <meta property="og:url" :content="canonical">
       <link rel="canonical" :href="canonical">
+      <script type="application/ld+json" v-html="breadcrumbJsonLd" />
     </Head>
 
     <Breadcrumbs :items="breadcrumbs" />

@@ -4,24 +4,44 @@ import { computed } from 'vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import Breadcrumbs from '@/Components/Breadcrumbs.vue';
 
-const baseUrl = computed(() => usePage().props.app?.url ?? '');
+const baseUrl = computed(() =>
+  usePage().props.app?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
+);
 const canonical = computed(() => `${baseUrl.value}/features`);
+const pageTitle = 'Funcionalidades para controlar stock, caducidades y compras';
+const description = 'Descubre las funcionalidades clave de KitchenManager: alertas de caducidad, ubicaciones, reportes de reposición, exportación y control colaborativo.';
 
 const breadcrumbs = [
   { label: 'Inicio', href: '/' },
   { label: 'Funcionalidades', href: '/features' },
 ];
+
+const breadcrumbJsonLd = computed(() => JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs.map((crumb, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: crumb.label,
+    item: `${baseUrl.value}${crumb.href === '/' ? '' : crumb.href}`,
+  })),
+}));
 </script>
 
 <template>
   <MarketingLayout>
     <Head>
-      <title>Funcionalidades para controlar stock, caducidades y compras</title>
+      <title>{{ pageTitle }}</title>
       <meta
         name="description"
-        content="Descubre las funcionalidades clave de KitchenManager: alertas de caducidad, ubicaciones, reportes de reposición, exportación y control colaborativo."
+        :content="description"
       >
+      <meta property="og:type" content="website">
+      <meta property="og:title" :content="pageTitle">
+      <meta property="og:description" :content="description">
+      <meta property="og:url" :content="canonical">
       <link rel="canonical" :href="canonical">
+      <script type="application/ld+json" v-html="breadcrumbJsonLd" />
     </Head>
 
     <Breadcrumbs :items="breadcrumbs" />

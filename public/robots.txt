@@ -5,10 +5,15 @@ Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /confirm-password
 Disallow: /email/verification-notification
-Disallow: /dashboard
 Disallow: /admin
 Disallow: /profile
 Disallow: /password
+Disallow: /dashboard
+Disallow: /products
+Disallow: /stock
+Disallow: /locations
+Disallow: /kitchen
+Disallow: /barcode
 Disallow: /logout
 
-Sitemap: /sitemap.xml
+Sitemap: https://kitchenmanager.duckdns.org/sitemap.xml
