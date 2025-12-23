@@ -17,7 +17,7 @@ const openSettings = () => {
 
 <template>
   <footer class="border-t border-slate-200 bg-white">
-    <div class="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-4 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-4 text-sm text-slate-700 md:flex-row md:items-center md:justify-between">
       <div>© {{ new Date().getFullYear() }} KitchenManager. Todos los derechos reservados.</div>
       <div class="flex flex-wrap items-center gap-4">
         <Link href="/legal/aviso-legal" class="hover:text-slate-700">Aviso legal</Link>
