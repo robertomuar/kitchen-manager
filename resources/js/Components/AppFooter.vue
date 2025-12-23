@@ -16,7 +16,7 @@ const openSettings = () => {
 </script>
 
 <template>
-  <footer class="border-t border-slate-200 bg-white">
+  <footer class="border-t border-slate-500 bg-white text-slate-700">
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-4 text-sm text-slate-700 md:flex-row md:items-center md:justify-between">
       <div>© {{ new Date().getFullYear() }} KitchenManager. Todos los derechos reservados.</div>
       <div class="flex flex-wrap items-center gap-4">
@@ -26,7 +26,7 @@ const openSettings = () => {
         <Link href="/legal/cookies" class="hover:text-slate-700">Cookies</Link>
         <button
           type="button"
-          class="font-semibold text-amber-600 hover:text-amber-700"
+          class="font-semibold text-amber-700 hover:text-amber-800"
           @click="openSettings"
         >
           Configurar cookies

@@ -57,7 +57,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
           prácticas: qué reponer, qué cocinar primero y qué ajustar para evitar desperdicio.
         </p>
         <div class="flex flex-wrap gap-3">
-          <Link href="/register" class="rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600">
+          <Link href="/register" class="rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-800">
             Crear cuenta gratis
           </Link>
           <Link href="/login" class="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-400">
@@ -112,7 +112,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
         En menos de una hora tendrás una visión completa del stock y una lista de compra lista para compartir.
       </p>
       <div class="flex flex-wrap gap-3">
-        <Link href="/register" class="rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600">
+        <Link href="/register" class="rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-800">
           Crear cuenta
         </Link>
         <Link href="/features" class="rounded-full border border-amber-400 px-6 py-3 text-sm font-semibold text-amber-700 hover:border-amber-500">

@@ -111,7 +111,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
         Registra tu inventario en minutos, configura tus alertas y empieza a comprar con datos reales.
       </p>
       <div class="mt-6 flex flex-wrap gap-3">
-        <Link href="/register" class="rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600">
+        <Link href="/register" class="rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-800">
           Crear cuenta
         </Link>
         <Link href="/pricing" class="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-400">

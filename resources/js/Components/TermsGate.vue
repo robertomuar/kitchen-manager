@@ -67,10 +67,10 @@ watch(isOpen, (value) => {
               <li>Podemos actualizar estos términos; te avisaremos cuando cambien.</li>
             </ul>
             <div class="mt-4 flex flex-wrap gap-3 text-sm">
-              <Link href="/legal/terminos" class="font-semibold text-amber-600 hover:text-amber-700">
+              <Link href="/legal/terminos" class="font-semibold text-amber-700 hover:text-amber-800">
                 Leer términos completos
               </Link>
-              <Link href="/legal/privacidad" class="font-semibold text-amber-600 hover:text-amber-700">
+              <Link href="/legal/privacidad" class="font-semibold text-amber-700 hover:text-amber-800">
                 Política de privacidad
               </Link>
             </div>
@@ -79,7 +79,7 @@ watch(isOpen, (value) => {
           <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
-              class="inline-flex items-center justify-center rounded-full bg-amber-500 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-600"
+              class="inline-flex items-center justify-center rounded-full bg-amber-700 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-800"
               @click="handleAccept"
             >
               Aceptar y continuar

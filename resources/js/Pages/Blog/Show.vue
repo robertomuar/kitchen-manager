@@ -79,7 +79,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
       <Link href="/blog" class="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-400">
         Volver al blog
       </Link>
-      <Link href="/register" class="rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600">
+      <Link href="/register" class="rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-800">
         Crear cuenta
       </Link>
     </div>

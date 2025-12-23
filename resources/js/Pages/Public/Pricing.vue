@@ -63,7 +63,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
           <li>• Reportes de reposición exportables.</li>
           <li>• Acceso desde cualquier dispositivo.</li>
         </ul>
-        <Link href="/register" class="mt-6 inline-flex rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600">
+        <Link href="/register" class="mt-6 inline-flex rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-800">
           Crear cuenta
         </Link>
       </div>
@@ -91,7 +91,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
         Regístrate en minutos y descubre cómo una buena organización reduce desperdicios y mejora tu rentabilidad.
       </p>
       <div class="mt-6 flex flex-wrap gap-3">
-        <Link href="/register" class="rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600">
+        <Link href="/register" class="rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-800">
           Crear cuenta gratis
         </Link>
         <Link href="/faq" class="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-400">
