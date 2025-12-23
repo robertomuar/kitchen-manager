@@ -41,9 +41,9 @@ server {
         try_files $uri =404;
     }
 
-    location ~* \.(?:js|css|woff2?|ttf|eot|svg|gif|png|jpg|jpeg)$ {
+    location ~* \.(?:png|jpe?g|webp|svg|woff2?|ttf|ico)$ {
         access_log off;
-        expires 7d;
+        expires 30d;
         add_header Cache-Control "public";
         try_files $uri =404;
     }
@@ -59,8 +59,47 @@ server {
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_pass php-fpm:9000;
         fastcgi_buffering on;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+        fastcgi_busy_buffers_size 64k;
     }
 }
+```
+
+## Build de frontend (Vite)
+
+- En producción, asegúrate de ejecutar:
+
+```bash
+npm ci
+npm run build
+```
+
+- No uses el servidor de desarrollo de Vite en producción (no debe aparecer `@vite/client` ni `http://localhost:5173` en el HTML).
+
+## Laravel en producción (TTFB)
+
+- Establece `APP_ENV=production` y `APP_DEBUG=false` en tu entorno.
+- Ejecuta en despliegue:
+
+```bash
+php artisan optimize
+```
+
+## PHP OPcache
+
+En contenedores Docker, añade un archivo `opcache.ini` (por ejemplo en `docker/php/conf.d/opcache.ini`) con valores seguros:
+
+```ini
+opcache.enable=1
+opcache.enable_cli=0
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=10000
+opcache.validate_timestamps=0
+opcache.revalidate_freq=0
+opcache.save_comments=1
+opcache.fast_shutdown=1
 ```
 
 ## Verificación con curl

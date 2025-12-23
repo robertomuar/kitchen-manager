@@ -51,7 +51,7 @@ onBeforeUnmount(() => removeJsonLdScript())
 </script>
 
 <template>
-  <nav v-if="items && items.length" aria-label="Breadcrumb" class="mb-6 text-sm text-slate-500">
+  <nav v-if="items && items.length" aria-label="Breadcrumb" class="mb-6 text-sm text-slate-600">
     <ol class="flex flex-wrap items-center gap-2">
       <li v-for="(item, index) in items" :key="`${index}-${item?.label ?? ''}-${item?.href ?? item?.url ?? ''}`" class="flex items-center gap-2">
         <template v-if="(item?.href || item?.url) && index !== items.length - 1">
@@ -62,7 +62,7 @@ onBeforeUnmount(() => removeJsonLdScript())
         <template v-else>
           <span class="text-slate-700 font-medium">{{ item?.label }}</span>
         </template>
-        <span v-if="index !== items.length - 1" class="text-slate-400">/</span>
+        <span v-if="index !== items.length - 1" class="text-slate-500">/</span>
       </li>
     </ol>
   </nav>

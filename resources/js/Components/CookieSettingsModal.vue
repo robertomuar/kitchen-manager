@@ -57,7 +57,7 @@ const savePreferences = () => {
           </div>
           <button
             type="button"
-            class="rounded-full p-2 text-slate-500 hover:bg-slate-100"
+            class="rounded-full p-2 text-slate-600 hover:bg-slate-100"
             aria-label="Cerrar"
             @click="emit('close')"
           >
@@ -70,7 +70,7 @@ const savePreferences = () => {
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm font-semibold text-slate-900">Cookies necesarias</p>
-                <p class="text-xs text-slate-500">Imprescindibles para el funcionamiento básico.</p>
+                <p class="text-xs text-slate-600">Imprescindibles para el funcionamiento básico.</p>
               </div>
               <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                 Siempre activas
@@ -82,7 +82,7 @@ const savePreferences = () => {
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm font-semibold text-slate-900">Cookies analíticas</p>
-                <p class="text-xs text-slate-500">
+                <p class="text-xs text-slate-600">
                   Nos ayudan a entender el uso de la app y mejorarla.
                 </p>
               </div>

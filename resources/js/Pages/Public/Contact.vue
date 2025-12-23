@@ -60,7 +60,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
           <li>• Horario: lunes a viernes, 9:00-18:00</li>
           <li>• Soporte en español</li>
         </ul>
-        <p class="mt-6 text-sm text-slate-500">
+        <p class="mt-6 text-sm text-slate-600">
           Respondemos normalmente en menos de 24 horas laborables.
         </p>
       </div>
