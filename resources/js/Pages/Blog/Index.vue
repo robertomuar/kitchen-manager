@@ -89,7 +89,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
         class="rounded-full border border-slate-200 px-4 py-2 text-sm"
         :class="{
           'bg-amber-500 text-white border-amber-500': link.active,
-          'text-slate-500 pointer-events-none': !link.url,
+          'text-slate-600 pointer-events-none': !link.url,
         }"
         v-html="link.label"
       />
