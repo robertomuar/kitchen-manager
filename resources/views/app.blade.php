@@ -12,9 +12,6 @@
         @php
             $appName = config('app.name', 'KitchenManager');
             $baseUrl = rtrim(config('app.url'), '/');
-            $path = '/' . ltrim(request()->path(), '/');
-            $canonical = $baseUrl . ($path === '/' ? '' : $path);
-            $defaultDescription = 'Gestiona productos, ubicaciones y stock de cocina con alertas y reportes.';
             $privatePatterns = [
                 'login',
                 'register',
@@ -35,61 +32,49 @@
                 'barcode*',
                 'debug*',
             ];
-            $shouldNoindex = request()->user() || request()->is($privatePatterns);
+            $shouldNoindex = request()->is($privatePatterns);
         @endphp
-
-        <meta name="description" content="{{ $defaultDescription }}">
-        <link rel="canonical" href="{{ $canonical }}">
 
         @if ($shouldNoindex)
             <meta name="robots" content="noindex, nofollow">
         @endif
-
-        <meta property="og:site_name" content="{{ $appName }}">
-        <meta property="og:title" content="{{ $appName }}">
-        <meta property="og:description" content="{{ $defaultDescription }}">
-        <meta property="og:type" content="website">
-        <meta property="og:url" content="{{ $canonical }}">
-
-        <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:title" content="{{ $appName }}">
-        <meta name="twitter:description" content="{{ $defaultDescription }}">
-
-        <script type="application/ld+json">
-            {!! json_encode([
-                '@context' => 'https://schema.org',
-                '@type' => 'WebSite',
-                'name' => $appName,
-                'url' => $baseUrl,
-                'potentialAction' => [
-                    '@type' => 'SearchAction',
-                    'target' => $baseUrl . '/?q={search_term_string}',
-                    'query-input' => 'required name=search_term_string',
-                ],
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
-        </script>
-        <script type="application/ld+json">
-            {!! json_encode([
-                '@context' => 'https://schema.org',
-                '@type' => 'Organization',
-                'name' => $appName,
-                'url' => $baseUrl,
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
-        </script>
-        <script type="application/ld+json">
-            {!! json_encode([
-                '@context' => 'https://schema.org',
-                '@type' => 'SoftwareApplication',
-                'name' => $appName,
-                'applicationCategory' => 'BusinessApplication',
-                'operatingSystem' => 'Web',
-                'offers' => [
-                    '@type' => 'Offer',
-                    'price' => '0',
-                    'priceCurrency' => 'EUR',
-                ],
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
-        </script>
+        @if (! $shouldNoindex)
+            <script type="application/ld+json">
+                {!! json_encode([
+                    '@context' => 'https://schema.org',
+                    '@type' => 'WebSite',
+                    'name' => $appName,
+                    'url' => $baseUrl,
+                    'potentialAction' => [
+                        '@type' => 'SearchAction',
+                        'target' => $baseUrl . '/?q={search_term_string}',
+                        'query-input' => 'required name=search_term_string',
+                    ],
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+            </script>
+            <script type="application/ld+json">
+                {!! json_encode([
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Organization',
+                    'name' => $appName,
+                    'url' => $baseUrl,
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+            </script>
+            <script type="application/ld+json">
+                {!! json_encode([
+                    '@context' => 'https://schema.org',
+                    '@type' => 'SoftwareApplication',
+                    'name' => $appName,
+                    'applicationCategory' => 'BusinessApplication',
+                    'operatingSystem' => 'Web',
+                    'offers' => [
+                        '@type' => 'Offer',
+                        'price' => '0',
+                        'priceCurrency' => 'EUR',
+                    ],
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+            </script>
+        @endif
 
         {{-- ✅ FAVICON (definitivo) --}}
         <link rel="icon" href="/favicon.ico?v=1" sizes="any">
