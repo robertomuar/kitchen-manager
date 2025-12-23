@@ -19,6 +19,8 @@ export default defineConfig({
         splitVendorChunkPlugin(),
     ],
     build: {
+        minify: 'esbuild',
+        cssMinify: true,
         rollupOptions: {
             output: {
                 manualChunks(id) {

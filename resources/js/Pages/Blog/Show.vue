@@ -69,7 +69,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
     <Breadcrumbs :items="breadcrumbs" />
 
     <article class="max-w-none">
-      <div class="text-xs uppercase tracking-wide text-slate-400">{{ props.post.published_at }}</div>
+      <div class="text-xs uppercase tracking-wide text-slate-600">{{ props.post.published_at }}</div>
       <h1 class="mt-2 text-4xl font-semibold text-slate-900">{{ props.post.title }}</h1>
       <p class="mt-4 text-lg text-slate-600">{{ props.post.excerpt }}</p>
       <div class="mt-8 space-y-4 text-base text-slate-700" v-html="props.post.content" />

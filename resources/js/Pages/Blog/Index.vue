@@ -64,7 +64,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
         :key="post.slug"
         class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
-        <div class="text-xs uppercase tracking-wide text-slate-400">{{ post.published_at }}</div>
+        <div class="text-xs uppercase tracking-wide text-slate-600">{{ post.published_at }}</div>
         <h2 class="mt-2 text-2xl font-semibold text-slate-900">
           <Link :href="`/blog/${post.slug}`" class="hover:text-amber-600">
             {{ post.title }}
@@ -89,7 +89,7 @@ const breadcrumbJsonLd = computed(() => JSON.stringify({
         class="rounded-full border border-slate-200 px-4 py-2 text-sm"
         :class="{
           'bg-amber-500 text-white border-amber-500': link.active,
-          'text-slate-400 pointer-events-none': !link.url,
+          'text-slate-500 pointer-events-none': !link.url,
         }"
         v-html="link.label"
       />

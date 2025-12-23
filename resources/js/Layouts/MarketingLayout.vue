@@ -20,7 +20,7 @@ const appName = computed(() => usePage().props.app?.name ?? 'KitchenManager');
           </div>
           <div>
             <div class="text-sm font-semibold tracking-tight">{{ appName }}</div>
-            <div class="text-xs text-slate-500">Control de stock y caducidades</div>
+            <div class="text-xs text-slate-600">Control de stock y caducidades</div>
           </div>
         </Link>
         <nav class="hidden items-center gap-6 text-sm text-slate-600 md:flex">
@@ -47,7 +47,7 @@ const appName = computed(() => usePage().props.app?.name ?? 'KitchenManager');
     </main>
 
     <footer class="border-t border-slate-200">
-      <div class="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-8 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+      <div class="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-8 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
         <div>© {{ new Date().getFullYear() }} {{ appName }}. Hecho para cocinas organizadas.</div>
         <div class="flex flex-wrap gap-4">
           <Link href="/privacy-policy" class="hover:text-slate-700">Política de privacidad</Link>
