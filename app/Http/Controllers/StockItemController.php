@@ -31,6 +31,8 @@ class StockItemController extends Controller
         $sort       = $request->input('sort', 'expires_at');
         $direction  = $request->input('direction', 'asc');
 
+        $availableSql = 'CASE WHEN (quantity - open_units) < 0 THEN 0 ELSE (quantity - open_units) END';
+
         $query = StockItem::with(['product', 'location'])
             ->where('user_id', $ownerId)
             ->where('kitchen_id', $kitchenId);
@@ -45,11 +47,11 @@ class StockItemController extends Controller
 
         if ($status === 'low') {
             $query->whereNotNull('min_quantity')
-                ->whereColumn('quantity', '<', 'min_quantity');
+                ->whereRaw("{$availableSql} < min_quantity");
         } elseif ($status === 'normal') {
-            $query->where(function ($q) {
+            $query->where(function ($q) use ($availableSql) {
                 $q->whereNull('min_quantity')
-                    ->orWhereColumn('quantity', '>=', 'min_quantity');
+                    ->orWhereRaw("{$availableSql} >= min_quantity");
             });
         }
 
@@ -61,9 +63,13 @@ class StockItemController extends Controller
             $direction = 'asc';
         }
 
-        $stockItems = $query
-            ->orderBy($sort, $direction)
-            ->orderBy('id')
+        if ($sort === 'quantity') {
+            $query->orderByRaw("{$availableSql} {$direction}");
+        } else {
+            $query->orderBy($sort, $direction);
+        }
+
+        $stockItems = $query->orderBy('id')
             ->paginate(25)
             ->withQueryString();
 
@@ -149,6 +155,8 @@ class StockItemController extends Controller
             $data['location_id'] = $location->id;
         }
 
+        $data['open_units'] = (int) ($data['open_units'] ?? 0);
+        $data['is_open'] = $data['open_units'] > 0;
         $data['user_id']    = $ownerId;
         $data['kitchen_id'] = $kitchenId;
         $data['product_id'] = $product->id;
@@ -251,6 +259,7 @@ class StockItemController extends Controller
         $this->authorize('update', $stockItem);
 
         $data = $request->validated();
+        $hasOpenUnits = array_key_exists('open_units', $data);
 
         $product = Product::where('id', $data['product_id'])
             ->where('user_id', $ownerId)
@@ -267,6 +276,10 @@ class StockItemController extends Controller
         }
 
         $previousQuantity = $stockItem->quantity;
+        $data['open_units'] = $hasOpenUnits
+            ? (int) ($data['open_units'] ?? 0)
+            : (int) ($stockItem->open_units ?? 0);
+        $data['is_open'] = $data['open_units'] > 0;
 
         DB::transaction(function () use ($data, $ownerId, $kitchenId, $product, $stockItem, $previousQuantity) {
             $stockItem->update($data + [
@@ -326,6 +339,44 @@ class StockItemController extends Controller
             ->with('success', 'Stock eliminado correctamente.');
     }
 
+    public function open(Request $request, StockItem $stockItem): RedirectResponse
+    {
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
+
+        $this->authorize('update', $stockItem);
+        abort_if($stockItem->user_id !== $ownerId || $stockItem->kitchen_id !== $kitchenId, 403);
+
+        $newOpenUnits = min((float) $stockItem->quantity, (int) $stockItem->open_units + 1);
+
+        $stockItem->update([
+            'open_units' => (int) $newOpenUnits,
+            'is_open'    => $newOpenUnits > 0,
+        ]);
+
+        $this->forgetDashboardCache($ownerId, $kitchenId);
+
+        return back()->with('success', 'Marcado como abierto.');
+    }
+
+    public function close(Request $request, StockItem $stockItem): RedirectResponse
+    {
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
+
+        $this->authorize('update', $stockItem);
+        abort_if($stockItem->user_id !== $ownerId || $stockItem->kitchen_id !== $kitchenId, 403);
+
+        $newOpenUnits = max(0, (int) $stockItem->open_units - 1);
+
+        $stockItem->update([
+            'open_units' => $newOpenUnits,
+            'is_open'    => $newOpenUnits > 0,
+        ]);
+
+        $this->forgetDashboardCache($ownerId, $kitchenId);
+
+        return back()->with('success', 'Marcado como cerrado.');
+    }
+
     /**
      * Exportar CSV de reposición (bajo mínimo).
      */
@@ -336,11 +387,13 @@ class StockItemController extends Controller
         $productId  = $request->query('product_id');
         $locationId = $request->query('location_id');
 
+        $availableSql = 'CASE WHEN (quantity - open_units) < 0 THEN 0 ELSE (quantity - open_units) END';
+
         $query = StockItem::with(['product', 'location'])
             ->where('user_id', $ownerId)
             ->where('kitchen_id', $kitchenId)
             ->whereNotNull('min_quantity')
-            ->whereColumn('quantity', '<', 'min_quantity');
+            ->whereRaw("{$availableSql} < min_quantity");
 
         if (!empty($productId)) {
             $query->where('product_id', $productId);
@@ -369,7 +422,7 @@ class StockItemController extends Controller
 
             $query->orderBy('id')->chunk(200, function ($itemsChunk) use ($out) {
                 foreach ($itemsChunk as $item) {
-                    $missing = max(0, (float)($item->min_quantity ?? 0) - (float)($item->quantity ?? 0));
+                    $missing = max(0, (float)($item->min_quantity ?? 0) - (float)($item->available_units ?? 0));
 
                     fputcsv($out, [
                         $item->product?->name ?? '',
@@ -401,11 +454,13 @@ class StockItemController extends Controller
         $productId  = $request->query('product_id');
         $locationId = $request->query('location_id');
 
+        $availableSql = 'CASE WHEN (quantity - open_units) < 0 THEN 0 ELSE (quantity - open_units) END';
+
         $query = StockItem::with(['product', 'location'])
             ->where('user_id', $ownerId)
             ->where('kitchen_id', $kitchenId)
             ->whereNotNull('min_quantity')
-            ->whereColumn('quantity', '<', 'min_quantity');
+            ->whereRaw("{$availableSql} < min_quantity");
 
         if (!empty($productId)) {
             $query->where('product_id', $productId);

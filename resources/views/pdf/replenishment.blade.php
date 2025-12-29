@@ -45,8 +45,10 @@
                 @foreach ($items as $item)
                     @php
                         $quantity = (float) ($item->quantity ?? 0);
+                        $openUnits = (int) ($item->open_units ?? 0);
+                        $available = max($quantity - $openUnits, 0);
                         $min      = (float) ($item->min_quantity ?? 0);
-                        $missing  = max(0, $min - $quantity);
+                        $missing  = max(0, $min - $available);
 
                         $expires = $item->expires_at;
                         if ($expires && !($expires instanceof \Illuminate\Support\Carbon)) {
@@ -56,7 +58,15 @@
                     <tr>
                         <td>{{ optional($item->product)->name ?? '—' }}</td>
                         <td>{{ optional($item->location)->name ?? 'Sin ubicación' }}</td>
-                        <td class="text-right">{{ number_format($quantity, 2, ',', '.') }}</td>
+                        <td class="text-right">
+                            {{ number_format($quantity, 2, ',', '.') }}
+                            @if ($openUnits > 0)
+                                <br>
+                                <span class="small">
+                                    ({{ $openUnits }} abiertas → disp {{ number_format($available, 2, ',', '.') }})
+                                </span>
+                            @endif
+                        </td>
                         <td>{{ $item->unit }}</td>
                         <td class="text-right">{{ number_format($min, 2, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($missing, 2, ',', '.') }}</td>

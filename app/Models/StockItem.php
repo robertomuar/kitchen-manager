@@ -15,6 +15,7 @@ class StockItem extends Model
         'product_id',
         'location_id',
         'quantity',
+        'open_units',
         'unit',
         'min_quantity',
         'expires_at',
@@ -26,6 +27,7 @@ class StockItem extends Model
 
     protected $casts = [
         'quantity' => 'float',
+        'open_units' => 'integer',
         'min_quantity' => 'float',
         'expires_at' => 'date',
         'is_open' => 'boolean',
@@ -33,6 +35,7 @@ class StockItem extends Model
 
     protected $appends = [
         'is_below_minimum',
+        'available_units',
     ];
 
     public function user()
@@ -56,7 +59,15 @@ class StockItem extends Model
             return false;
         }
 
-        return (float) $this->quantity < (float) $this->min_quantity;
+        return (float) $this->available_units < (float) $this->min_quantity;
+    }
+
+    public function getAvailableUnitsAttribute(): float
+    {
+        $quantity = (float) ($this->quantity ?? 0);
+        $openUnits = (float) ($this->open_units ?? 0);
+
+        return max($quantity - $openUnits, 0);
     }
 
     public function kitchen()

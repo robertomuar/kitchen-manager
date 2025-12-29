@@ -83,6 +83,17 @@ const lowStockItems = computed(() =>
     stockItemsList.value.filter((item) => item.is_below_minimum === true),
 );
 
+const formatQuantity = (item) => {
+    const unit = item.unit || 'uds';
+    const total = `${item.quantity} ${unit}`;
+
+    if ((item.open_units ?? 0) > 0) {
+        return `${total} (${item.open_units} abiertas → disponible ${item.available_units})`;
+    }
+
+    return total;
+};
+
 // --- FILTROS ---
 const applyFilters = () => {
     router.get(
@@ -455,7 +466,14 @@ const exportReplenishmentPdf = () => {
                                     </td>
 
                                     <td class="whitespace-nowrap text-sm text-[color:var(--km-text)]">
-                                        {{ item.quantity }} {{ item.unit }}
+                                        <div>{{ item.quantity }} {{ item.unit || 'uds' }}</div>
+                                        <div
+                                            v-if="(item.open_units ?? 0) > 0"
+                                            class="text-xs text-[color:var(--km-muted)]"
+                                        >
+                                            ({{ item.open_units }} abiertas) → disponible
+                                            {{ item.available_units }}
+                                        </div>
                                     </td>
 
                                     <td class="whitespace-nowrap text-sm text-[color:var(--km-muted)]">
@@ -481,7 +499,10 @@ const exportReplenishmentPdf = () => {
                                                 Bajo mínimo
                                             </span>
 
-                                            <span v-if="item.is_open" class="km-badge-amber">
+                                            <span
+                                                v-if="(item.open_units ?? 0) > 0"
+                                                class="km-badge-amber"
+                                            >
                                                 Abierto
                                             </span>
 
@@ -631,7 +652,12 @@ const exportReplenishmentPdf = () => {
                                     </td>
 
                                     <td class="whitespace-nowrap text-sm text-[color:var(--km-text)]">
-                                        {{ item.quantity }} {{ item.unit }}
+                                        <div class="font-medium text-[color:var(--km-text)]">
+                                            {{ item.available_units }} uds disponibles
+                                        </div>
+                                        <div class="text-xs text-[color:var(--km-muted)]">
+                                            {{ formatQuantity(item) }}
+                                        </div>
                                     </td>
 
                                     <td class="whitespace-nowrap text-sm text-[color:var(--km-text)]">
@@ -642,7 +668,7 @@ const exportReplenishmentPdf = () => {
                                         {{
                                             Math.max(
                                                 0,
-                                                (item.min_quantity ?? 0) - (item.quantity ?? 0),
+                                                (item.min_quantity ?? 0) - (item.available_units ?? 0),
                                             ).toFixed(2)
                                         }}
                                     </td>

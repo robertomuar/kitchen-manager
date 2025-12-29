@@ -119,6 +119,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $today       = now()->startOfDay();
         $soonLimit   = $today->copy()->addDays(7);
         $urgentLimit = $today->copy()->addDays(2);
+        $availableSql = 'CASE WHEN (quantity - open_units) < 0 THEN 0 ELSE (quantity - open_units) END';
 
         $stats = Cache::remember("dashboard.stats.{$ownerId}.{$kitchenId}", 300, function () use ($ownerId, $kitchenId, $today, $soonLimit, $urgentLimit) {
             return [
@@ -129,7 +130,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'low_stock_count' => StockItem::where('user_id', $ownerId)
                     ->where('kitchen_id', $kitchenId)
                     ->whereNotNull('min_quantity')
-                    ->whereColumn('quantity', '<', 'min_quantity')
+                    ->whereRaw("{$availableSql} < min_quantity")
                     ->count(),
 
                 'soon_expiring_count' => StockItem::where('user_id', $ownerId)
@@ -153,7 +154,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->where('user_id', $ownerId)
                 ->where('kitchen_id', $kitchenId)
                 ->whereNotNull('min_quantity')
-                ->whereColumn('quantity', '<', 'min_quantity')
+                ->whereRaw("{$availableSql} < min_quantity")
                 ->orderByDesc('updated_at')
                 ->take(5)
                 ->get();
@@ -202,6 +203,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ✅ NUEVO: PDF de reposición bajo mínimo
     Route::get('/stock/export/missing.pdf', [StockItemController::class, 'exportMissingToPdf'])
         ->name('stock.export.missing.pdf');
+
+    Route::patch('/stock/{stockItem}/open', [StockItemController::class, 'open'])
+        ->name('stock.open');
+    Route::patch('/stock/{stockItem}/close', [StockItemController::class, 'close'])
+        ->name('stock.close');
 
     Route::get('/stock/{stockItem}/edit', [StockItemController::class, 'edit'])->name('stock.edit');
 
