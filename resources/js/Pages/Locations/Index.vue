@@ -75,10 +75,22 @@ const deleteLocation = (location) => {
                 <div class="km-card overflow-hidden">
                     <div
                         v-if="!locations.length"
-                        class="p-6 text-center text-sm text-[color:var(--km-muted)]"
+                        class="flex flex-col items-center gap-3 p-6 text-center text-sm text-[color:var(--km-muted)]"
                     >
-                        Todavía no tienes ubicaciones creadas. Crea al menos
-                        una para empezar a organizar tu stock.
+                        <div>
+                            Todavía no tienes ubicaciones creadas. Crea al menos
+                            una para empezar a organizar tu stock.
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-center gap-2">
+                            <Link
+                                :href="route('locations.create')"
+                                class="km-btn px-4 py-2 text-xs"
+                                aria-label="Crear tu primera ubicación"
+                            >
+                                Crear ubicación
+                            </Link>
+                        </div>
                     </div>
 
                     <div v-else class="overflow-x-auto">
@@ -181,6 +193,7 @@ const deleteLocation = (location) => {
                                                     )
                                                 "
                                                 class="km-link text-xs"
+                                                :aria-label="`Editar ${location.name}`"
                                             >
                                                 Editar
                                             </Link>
@@ -190,6 +203,7 @@ const deleteLocation = (location) => {
                                                 @click="
                                                     deleteLocation(location)
                                                 "
+                                                :aria-label="`Borrar ${location.name}`"
                                             >
                                                 Borrar
                                             </button>

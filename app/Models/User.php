@@ -138,4 +138,22 @@ class User extends Authenticatable implements MustVerifyEmail
             ->first();
     }
 
+    /**
+     * Cocina activa según preferencia (ej. selector de cocina).
+     */
+    public function activeKitchen(?int $preferredKitchenId = null): ?Kitchen
+    {
+        if ($preferredKitchenId) {
+            $preferred = $this->kitchens()
+                ->where('kitchens.id', $preferredKitchenId)
+                ->first();
+
+            if ($preferred) {
+                return $preferred;
+            }
+        }
+
+        return $this->currentKitchen();
+    }
+
 }

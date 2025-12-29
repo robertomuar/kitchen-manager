@@ -275,10 +275,31 @@ const deleteProduct = (product) => {
                 <div class="km-card overflow-hidden">
                     <div
                         v-if="!productItems.length"
-                        class="p-6 text-center text-[color:var(--km-muted)] text-sm"
+                        class="flex flex-col items-center gap-3 p-6 text-center text-[color:var(--km-muted)] text-sm"
                     >
-                        No hay productos que coincidan con los filtros
-                        actuales.
+                        <div>
+                            No hay productos que coincidan con los filtros
+                            actuales.
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-center gap-2">
+                            <Link
+                                :href="route('products.create')"
+                                class="km-btn px-4 py-2 text-xs"
+                                aria-label="Crear tu primer producto"
+                            >
+                                Crear producto
+                            </Link>
+
+                            <button
+                                type="button"
+                                class="km-link text-xs"
+                                aria-label="Limpiar filtros de productos"
+                                @click="clearFilters"
+                            >
+                                Limpiar filtros
+                            </button>
+                        </div>
                     </div>
 
                     <div v-else class="overflow-x-auto">
@@ -348,12 +369,14 @@ const deleteProduct = (product) => {
                                                     )
                                                 "
                                                 class="km-link text-xs"
+                                                :aria-label="`Editar ${product.name}`"
                                             >
                                                 Editar
                                             </Link>
                                             <button
                                                 type="button"
                                                 class="text-xs px-3 py-1 rounded-lg border border-rose-500/50 text-rose-600 hover:bg-rose-500/10"
+                                                :aria-label="`Borrar ${product.name}`"
                                                 @click="deleteProduct(product)"
                                             >
                                                 Borrar
