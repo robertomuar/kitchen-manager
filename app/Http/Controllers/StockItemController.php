@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StockItemRequest;
+use App\Models\Location;
+use App\Models\Product;
 use App\Models\StockItem;
+use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -19,8 +23,7 @@ class StockItemController extends Controller
      */
     public function index(Request $request): Response
     {
-        $user    = $request->user();
-        $ownerId = $user->kitchenOwnerId();
+        [$owner, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
         $productId  = $request->input('product_id');
         $locationId = $request->input('location_id');
@@ -29,7 +32,8 @@ class StockItemController extends Controller
         $direction  = $request->input('direction', 'asc');
 
         $query = StockItem::with(['product', 'location'])
-            ->where('user_id', $ownerId);
+            ->where('user_id', $ownerId)
+            ->where('kitchen_id', $kitchenId);
 
         if (!empty($productId)) {
             $query->where('product_id', $productId);
@@ -63,16 +67,16 @@ class StockItemController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        $owner = $user->kitchenOwner();
-
-        $products = Cache::remember("products.list.{$ownerId}", 300, function () use ($owner) {
+        $products = Cache::remember("products.list.{$ownerId}.{$kitchenId}", 300, function () use ($owner, $kitchenId) {
             return $owner->products()
+                ->where('kitchen_id', $kitchenId)
                 ->orderBy('name')
                 ->get();
         });
 
-        $locations = Cache::remember("locations.list.{$ownerId}", 300, function () use ($owner) {
+        $locations = Cache::remember("locations.list.{$ownerId}.{$kitchenId}", 300, function () use ($owner, $kitchenId) {
             return $owner->locations()
+                ->where('kitchen_id', $kitchenId)
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get();
@@ -97,16 +101,21 @@ class StockItemController extends Controller
      */
     public function create(Request $request): Response
     {
-        $user  = $request->user();
-        $owner = $user->kitchenOwner();
-        $ownerId = $user->kitchenOwnerId();
+        [$owner, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        $products = Cache::remember("products.list.{$ownerId}", 300, function () use ($owner) {
-            return $owner->products()->orderBy('name')->get();
+        $products = Cache::remember("products.list.{$ownerId}.{$kitchenId}", 300, function () use ($owner, $kitchenId) {
+            return $owner->products()
+                ->where('kitchen_id', $kitchenId)
+                ->orderBy('name')
+                ->get();
         });
 
-        $locations = Cache::remember("locations.list.{$ownerId}", 300, function () use ($owner) {
-            return $owner->locations()->orderBy('sort_order')->orderBy('name')->get();
+        $locations = Cache::remember("locations.list.{$ownerId}.{$kitchenId}", 300, function () use ($owner, $kitchenId) {
+            return $owner->locations()
+                ->where('kitchen_id', $kitchenId)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
         });
 
         return Inertia::render('Stock/Form', [
@@ -114,6 +123,7 @@ class StockItemController extends Controller
             'stockItem' => null,
             'products'  => $products,
             'locations' => $locations,
+            'movements' => [],
         ]);
     }
 
@@ -122,13 +132,43 @@ class StockItemController extends Controller
      */
     public function store(StockItemRequest $request): RedirectResponse
     {
-        $user    = $request->user();
-        $ownerId = $user->kitchenOwnerId();
+        [$owner, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
         $data = $request->validated();
-        $data['user_id'] = $ownerId;
+        $product = Product::where('id', $data['product_id'])
+            ->where('user_id', $ownerId)
+            ->where('kitchen_id', $kitchenId)
+            ->firstOrFail();
 
-        StockItem::create($data);
+        if (!empty($data['location_id'])) {
+            $location = Location::where('id', $data['location_id'])
+                ->where('user_id', $ownerId)
+                ->where('kitchen_id', $kitchenId)
+                ->firstOrFail();
+
+            $data['location_id'] = $location->id;
+        }
+
+        $data['user_id']    = $ownerId;
+        $data['kitchen_id'] = $kitchenId;
+        $data['product_id'] = $product->id;
+
+        DB::transaction(function () use ($data, $kitchenId, $ownerId) {
+            $stockItem = StockItem::create($data);
+
+            StockMovement::create([
+                'stock_item_id'    => $stockItem->id,
+                'user_id'          => $ownerId,
+                'kitchen_id'       => $kitchenId,
+                'product_id'       => $stockItem->product_id,
+                'location_id'      => $stockItem->location_id,
+                'action'           => 'created',
+                'quantity_before'  => null,
+                'quantity_after'   => $stockItem->quantity,
+            ]);
+        });
+
+        $this->forgetDashboardCache($ownerId, $kitchenId);
 
         return redirect()
             ->route('stock.index')
@@ -140,11 +180,9 @@ class StockItemController extends Controller
      */
     public function show(Request $request, StockItem $stockItem)
     {
-        $ownerId = $request->user()->kitchenOwnerId();
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        if ($stockItem->user_id !== $ownerId) {
-            abort(403);
-        }
+        $this->authorize('view', $stockItem);
 
         if ($request->header('X-Inertia')) {
             return Inertia::location(route('stock.edit', $stockItem->id));
@@ -164,27 +202,42 @@ class StockItemController extends Controller
      */
     public function edit(Request $request, StockItem $stockItem): Response
     {
-        $ownerId = $request->user()->kitchenOwnerId();
+        [$owner, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        if ($stockItem->user_id !== $ownerId) {
-            abort(403);
-        }
+        $this->authorize('view', $stockItem);
 
-        $owner = $request->user()->kitchenOwner();
-
-        $products = Cache::remember("products.list.{$ownerId}", 300, function () use ($owner) {
-            return $owner->products()->orderBy('name')->get();
+        $products = Cache::remember("products.list.{$ownerId}.{$kitchenId}", 300, function () use ($owner, $kitchenId) {
+            return $owner->products()
+                ->where('kitchen_id', $kitchenId)
+                ->orderBy('name')
+                ->get();
         });
 
-        $locations = Cache::remember("locations.list.{$ownerId}", 300, function () use ($owner) {
-            return $owner->locations()->orderBy('sort_order')->orderBy('name')->get();
+        $locations = Cache::remember("locations.list.{$ownerId}.{$kitchenId}", 300, function () use ($owner, $kitchenId) {
+            return $owner->locations()
+                ->where('kitchen_id', $kitchenId)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
         });
+
+        $movements = $stockItem->movements()
+            ->orderByDesc('created_at')
+            ->take(10)
+            ->get([
+                'id',
+                'action',
+                'quantity_before',
+                'quantity_after',
+                'created_at',
+            ]);
 
         return Inertia::render('Stock/Form', [
             'mode'      => 'edit',
             'stockItem' => $stockItem->load(['product', 'location']),
             'products'  => $products,
             'locations' => $locations,
+            'movements' => $movements,
         ]);
     }
 
@@ -193,14 +246,48 @@ class StockItemController extends Controller
      */
     public function update(StockItemRequest $request, StockItem $stockItem): RedirectResponse
     {
-        $ownerId = $request->user()->kitchenOwnerId();
+        [$owner, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        if ($stockItem->user_id !== $ownerId) {
-            abort(403);
-        }
+        $this->authorize('update', $stockItem);
 
         $data = $request->validated();
-        $stockItem->update($data);
+
+        $product = Product::where('id', $data['product_id'])
+            ->where('user_id', $ownerId)
+            ->where('kitchen_id', $kitchenId)
+            ->firstOrFail();
+
+        if (!empty($data['location_id'])) {
+            $location = Location::where('id', $data['location_id'])
+                ->where('user_id', $ownerId)
+                ->where('kitchen_id', $kitchenId)
+                ->firstOrFail();
+
+            $data['location_id'] = $location->id;
+        }
+
+        $previousQuantity = $stockItem->quantity;
+
+        DB::transaction(function () use ($data, $ownerId, $kitchenId, $product, $stockItem, $previousQuantity) {
+            $stockItem->update($data + [
+                'user_id'    => $ownerId,
+                'kitchen_id' => $kitchenId,
+                'product_id' => $product->id,
+            ]);
+
+            StockMovement::create([
+                'stock_item_id'    => $stockItem->id,
+                'user_id'          => $ownerId,
+                'kitchen_id'       => $kitchenId,
+                'product_id'       => $stockItem->product_id,
+                'location_id'      => $stockItem->location_id,
+                'action'           => 'updated',
+                'quantity_before'  => $previousQuantity,
+                'quantity_after'   => $stockItem->quantity,
+            ]);
+        });
+
+        $this->forgetDashboardCache($ownerId, $kitchenId);
 
         return redirect()
             ->route('stock.index')
@@ -212,13 +299,27 @@ class StockItemController extends Controller
      */
     public function destroy(Request $request, StockItem $stockItem): RedirectResponse
     {
-        $ownerId = $request->user()->kitchenOwnerId();
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        if ($stockItem->user_id !== $ownerId) {
-            abort(403);
-        }
+        $this->authorize('delete', $stockItem);
 
-        $stockItem->delete();
+        $movementData = [
+            'stock_item_id'    => $stockItem->id,
+            'user_id'          => $ownerId,
+            'kitchen_id'       => $kitchenId,
+            'product_id'       => $stockItem->product_id,
+            'location_id'      => $stockItem->location_id,
+            'action'           => 'deleted',
+            'quantity_before'  => $stockItem->quantity,
+            'quantity_after'   => null,
+        ];
+
+        DB::transaction(function () use ($stockItem, $movementData) {
+            StockMovement::create($movementData);
+            $stockItem->delete();
+        });
+
+        $this->forgetDashboardCache($ownerId, $kitchenId);
 
         return redirect()
             ->route('stock.index')
@@ -230,13 +331,14 @@ class StockItemController extends Controller
      */
     public function exportMissingToCsv(Request $request): StreamedResponse
     {
-        $ownerId = $request->user()->kitchenOwnerId();
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
         $productId  = $request->query('product_id');
         $locationId = $request->query('location_id');
 
         $query = StockItem::with(['product', 'location'])
             ->where('user_id', $ownerId)
+            ->where('kitchen_id', $kitchenId)
             ->whereNotNull('min_quantity')
             ->whereColumn('quantity', '<', 'min_quantity');
 
@@ -248,11 +350,9 @@ class StockItemController extends Controller
             $query->where('location_id', $locationId);
         }
 
-        $items = $query->orderBy('id')->get();
-
         $filename = 'reposicion_bajo_minimo.csv';
 
-        return response()->streamDownload(function () use ($items) {
+        return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
 
             fputcsv($out, [
@@ -267,21 +367,23 @@ class StockItemController extends Controller
                 'Notas',
             ], ';');
 
-            foreach ($items as $item) {
-                $missing = max(0, (float)($item->min_quantity ?? 0) - (float)($item->quantity ?? 0));
+            $query->orderBy('id')->chunk(200, function ($itemsChunk) use ($out) {
+                foreach ($itemsChunk as $item) {
+                    $missing = max(0, (float)($item->min_quantity ?? 0) - (float)($item->quantity ?? 0));
 
-                fputcsv($out, [
-                    $item->product?->name ?? '',
-                    $item->location?->name ?? '',
-                    $item->quantity,
-                    $item->unit,
-                    $item->min_quantity,
-                    number_format($missing, 2, ',', ''),
-                    $item->expires_at ? substr((string)$item->expires_at, 0, 10) : '',
-                    $item->is_open ? 'sí' : 'no',
-                    $item->notes ?? '',
-                ], ';');
-            }
+                    fputcsv($out, [
+                        $item->product?->name ?? '',
+                        $item->location?->name ?? '',
+                        $item->quantity,
+                        $item->unit,
+                        $item->min_quantity,
+                        number_format($missing, 2, ',', ''),
+                        $item->expires_at ? substr((string)$item->expires_at, 0, 10) : '',
+                        $item->is_open ? 'sí' : 'no',
+                        $item->notes ?? '',
+                    ], ';');
+                }
+            });
 
             fclose($out);
         }, $filename, [
@@ -294,13 +396,14 @@ class StockItemController extends Controller
      */
     public function exportMissingToPdf(Request $request)
     {
-        $ownerId = $request->user()->kitchenOwnerId();
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
         $productId  = $request->query('product_id');
         $locationId = $request->query('location_id');
 
         $query = StockItem::with(['product', 'location'])
             ->where('user_id', $ownerId)
+            ->where('kitchen_id', $kitchenId)
             ->whereNotNull('min_quantity')
             ->whereColumn('quantity', '<', 'min_quantity');
 
@@ -312,7 +415,7 @@ class StockItemController extends Controller
             $query->where('location_id', $locationId);
         }
 
-        $items = $query->orderBy('id')->get();
+        $items = $query->orderBy('id')->lazy();
 
         $pdf = Pdf::loadView('pdf.replenishment', [
             'items'       => $items,

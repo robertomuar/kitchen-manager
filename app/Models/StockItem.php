@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\StockMovement;
 
 class StockItem extends Model
 {
@@ -61,5 +62,10 @@ class StockItem extends Model
     public function kitchen()
     {
         return $this->belongsTo(Kitchen::class);
+    }
+
+    public function movements()
+    {
+        return $this->hasMany(StockMovement::class);
     }
 }

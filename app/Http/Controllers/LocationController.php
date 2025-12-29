@@ -16,9 +16,10 @@ class LocationController extends Controller
      */
     public function index(Request $request): Response
     {
-        $user = $request->user();
+        [$owner, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        $locations = $user->locations()
+        $locations = Location::where('user_id', $ownerId)
+            ->where('kitchen_id', $kitchenId)
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -33,9 +34,11 @@ class LocationController extends Controller
      */
     public function create(Request $request): Response
     {
-        $user = $request->user();
+        [$owner, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        $nextSortOrder = ($user->locations()->max('sort_order') ?? 0) + 1;
+        $nextSortOrder = (Location::where('user_id', $ownerId)
+            ->where('kitchen_id', $kitchenId)
+            ->max('sort_order') ?? 0) + 1;
 
         return Inertia::render('Locations/Form', [
             'mode'          => 'create',
@@ -49,10 +52,11 @@ class LocationController extends Controller
      */
     public function store(LocationRequest $request): RedirectResponse
     {
-        $user = $request->user();
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
         $data = $request->validated();
-        $data['user_id'] = $user->id;
+        $data['user_id'] = $ownerId;
+        $data['kitchen_id'] = $kitchenId;
 
         // Si no viene is_active, la ponemos activa por defecto
         if (!array_key_exists('is_active', $data)) {
@@ -65,10 +69,14 @@ class LocationController extends Controller
             || $data['sort_order'] === null
             || $data['sort_order'] === ''
         ) {
-            $data['sort_order'] = ($user->locations()->max('sort_order') ?? 0) + 1;
+            $data['sort_order'] = (Location::where('user_id', $ownerId)
+                ->where('kitchen_id', $kitchenId)
+                ->max('sort_order') ?? 0) + 1;
         }
 
         Location::create($data);
+
+        $this->forgetDashboardCache($ownerId, $kitchenId);
 
         return redirect()
             ->route('locations.index')
@@ -80,11 +88,9 @@ class LocationController extends Controller
      */
     public function edit(Request $request, Location $location): Response
     {
-        $user = $request->user();
+        [, , $kitchenId] = $this->resolveKitchenContext($request);
 
-        if ($location->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('view', $location);
 
         return Inertia::render('Locations/Form', [
             'mode'     => 'edit',
@@ -97,11 +103,7 @@ class LocationController extends Controller
      */
     public function show(Request $request, Location $location)
     {
-        $user = $request->user();
-
-        if ($location->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('view', $location);
 
         if ($request->header('X-Inertia')) {
             return Inertia::location(route('locations.edit', $location->id));
@@ -119,11 +121,9 @@ class LocationController extends Controller
      */
     public function update(LocationRequest $request, Location $location): RedirectResponse
     {
-        $user = $request->user();
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        if ($location->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('update', $location);
 
         $data = $request->validated();
 
@@ -132,7 +132,12 @@ class LocationController extends Controller
             $data['is_active'] = false;
         }
 
-        $location->update($data);
+        $location->update($data + [
+            'user_id'    => $ownerId,
+            'kitchen_id' => $kitchenId,
+        ]);
+
+        $this->forgetDashboardCache($ownerId, $kitchenId);
 
         return redirect()
             ->route('locations.index')
@@ -144,16 +149,42 @@ class LocationController extends Controller
      */
     public function destroy(Request $request, Location $location): RedirectResponse
     {
-        $user = $request->user();
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
 
-        if ($location->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('delete', $location);
 
         $location->delete();
+
+        $this->forgetDashboardCache($ownerId, $kitchenId);
 
         return redirect()
             ->route('locations.index')
             ->with('success', 'Ubicación eliminada correctamente.');
+    }
+
+    /**
+     * Opciones paginadas para selects asíncronos.
+     */
+    public function options(Request $request)
+    {
+        [, $ownerId, $kitchenId] = $this->resolveKitchenContext($request);
+
+        $search = trim((string) $request->query('search', ''));
+
+        $query = Location::where('user_id', $ownerId)
+            ->where('kitchen_id', $kitchenId);
+
+        if ($search !== '') {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        return $query
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->paginate(15, [
+                'id',
+                'name',
+                'color',
+            ]);
     }
 }

@@ -1,9 +1,10 @@
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import { useCsrfForm } from '@/Composables/useCsrfForm';
+import axios from 'axios';
 
 const props = defineProps({
     stockItem: {
@@ -19,6 +20,10 @@ const props = defineProps({
         default: () => [],
     },
     locations: {
+        type: Array,
+        default: () => [],
+    },
+    movements: {
         type: Array,
         default: () => [],
     },
@@ -42,6 +47,19 @@ const UNIT_OPTIONS = [
 ];
 
 const baseItem = props.stockItem ?? props.item ?? null;
+
+const productOptions = ref(props.products ?? []);
+const productMeta = ref(null);
+const productSearch = ref('');
+const productLoading = ref(false);
+
+const locationOptions = ref(props.locations ?? []);
+const locationMeta = ref(null);
+const locationSearch = ref('');
+const locationLoading = ref(false);
+
+let productSearchTimeout;
+let locationSearchTimeout;
 
 const isEdit = computed(
     () => props.mode === 'edit' || !!baseItem?.id,
@@ -68,13 +86,88 @@ const submitLabel = computed(() =>
     isEdit.value ? 'Guardar cambios' : 'Guardar stock',
 );
 
+const fetchProductOptions = async (page = 1) => {
+    productLoading.value = true;
+
+    try {
+        const response = await axios.get(route('products.options'), {
+            params: {
+                search: productSearch.value || undefined,
+                page,
+            },
+        });
+
+        productOptions.value = response.data.data ?? [];
+        productMeta.value = response.data.meta ?? null;
+    } catch (error) {
+        console.error('No se pudieron cargar los productos', error);
+    } finally {
+        productLoading.value = false;
+    }
+};
+
+const fetchLocationOptions = async (page = 1) => {
+    locationLoading.value = true;
+
+    try {
+        const response = await axios.get(route('locations.options'), {
+            params: {
+                search: locationSearch.value || undefined,
+                page,
+            },
+        });
+
+        locationOptions.value = response.data.data ?? [];
+        locationMeta.value = response.data.meta ?? null;
+    } catch (error) {
+        console.error('No se pudieron cargar las ubicaciones', error);
+    } finally {
+        locationLoading.value = false;
+    }
+};
+
+const changeProductPage = (page) => {
+    if (!productMeta.value) return;
+
+    if (page < 1 || page > (productMeta.value.last_page ?? 1)) {
+        return;
+    }
+
+    fetchProductOptions(page);
+};
+
+const changeLocationPage = (page) => {
+    if (!locationMeta.value) return;
+
+    if (page < 1 || page > (locationMeta.value.last_page ?? 1)) {
+        return;
+    }
+
+    fetchLocationOptions(page);
+};
+
+watch(productSearch, () => {
+    clearTimeout(productSearchTimeout);
+    productSearchTimeout = setTimeout(() => fetchProductOptions(1), 250);
+});
+
+watch(locationSearch, () => {
+    clearTimeout(locationSearchTimeout);
+    locationSearchTimeout = setTimeout(() => fetchLocationOptions(1), 250);
+});
+
+onMounted(() => {
+    fetchProductOptions();
+    fetchLocationOptions();
+});
+
 // Autorellenar desde producto en modo create
 watch(
     () => form.product_id,
     (newValue) => {
         if (!newValue) return;
 
-        const selected = props.products.find(
+        const selected = productOptions.value.find(
             (p) => String(p.id) === String(newValue),
         );
         if (!selected) return;
@@ -142,30 +235,79 @@ const submit = () => {
                         <!-- Producto / Cantidad / Unidad -->
                         <div class="grid gap-6 md:grid-cols-3">
                             <!-- Producto -->
-                            <div class="md:col-span-2 space-y-1">
-                                <label
-                                    for="product_id"
-                                    class="block text-sm font-medium text-[color:var(--km-text)]"
-                                >
-                                    Producto *
-                                </label>
+                            <div class="md:col-span-2 space-y-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <label
+                                        for="product_id"
+                                        class="block text-sm font-medium text-[color:var(--km-text)]"
+                                    >
+                                        Producto *
+                                    </label>
+                                    <input
+                                        id="product_search"
+                                        v-model="productSearch"
+                                        type="search"
+                                        class="km-input h-9 w-48 text-xs"
+                                        placeholder="Buscar producto"
+                                        aria-label="Buscar producto"
+                                    />
+                                </div>
                                 <select
                                     id="product_id"
                                     v-model="form.product_id"
                                     required
                                     class="km-input"
+                                    :disabled="productLoading"
                                 >
                                     <option value="">
                                         Selecciona un producto
                                     </option>
                                     <option
-                                        v-for="product in products"
+                                        v-for="product in productOptions"
                                         :key="product.id"
                                         :value="product.id"
                                     >
                                         {{ product.name }}
                                     </option>
                                 </select>
+                                <div
+                                    v-if="productMeta?.last_page > 1"
+                                    class="flex items-center justify-between text-[11px] text-[color:var(--km-muted)]"
+                                >
+                                    <button
+                                        type="button"
+                                        class="km-link"
+                                        :disabled="productLoading || (productMeta?.current_page ?? 1) <= 1"
+                                        @click="
+                                            changeProductPage(
+                                                (productMeta?.current_page ?? 1) - 1,
+                                            )
+                                        "
+                                    >
+                                        Anterior
+                                    </button>
+                                    <span>
+                                        Página {{ productMeta?.current_page ?? 1 }}
+                                        de
+                                        {{ productMeta?.last_page ?? 1 }}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        class="km-link"
+                                        :disabled="
+                                            productLoading ||
+                                                (productMeta?.current_page ?? 1) >=
+                                                    (productMeta?.last_page ?? 1)
+                                        "
+                                        @click="
+                                            changeProductPage(
+                                                (productMeta?.current_page ?? 1) + 1,
+                                            )
+                                        "
+                                    >
+                                        Siguiente
+                                    </button>
+                                </div>
                                 <InputError
                                     class="mt-1 text-xs text-rose-600"
                                     :message="form.errors.product_id"
@@ -230,29 +372,78 @@ const submit = () => {
                             </div>
 
                             <!-- Ubicación -->
-                            <div class="space-y-1">
-                                <label
-                                    for="location_id"
-                                    class="block text-sm font-medium text-[color:var(--km-text)]"
-                                >
-                                    Ubicación
-                                </label>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <label
+                                        for="location_id"
+                                        class="block text-sm font-medium text-[color:var(--km-text)]"
+                                    >
+                                        Ubicación
+                                    </label>
+                                    <input
+                                        id="location_search"
+                                        v-model="locationSearch"
+                                        type="search"
+                                        class="km-input h-9 w-40 text-xs"
+                                        placeholder="Buscar ubicación"
+                                        aria-label="Buscar ubicación"
+                                    />
+                                </div>
                                 <select
                                     id="location_id"
                                     v-model="form.location_id"
                                     class="km-input"
+                                    :disabled="locationLoading"
                                 >
                                     <option value="">
                                         Sin ubicación asignada
                                     </option>
                                     <option
-                                        v-for="location in locations"
+                                        v-for="location in locationOptions"
                                         :key="location.id"
                                         :value="location.id"
                                     >
                                         {{ location.name }}
                                     </option>
                                 </select>
+                                <div
+                                    v-if="locationMeta?.last_page > 1"
+                                    class="flex items-center justify-between text-[11px] text-[color:var(--km-muted)]"
+                                >
+                                    <button
+                                        type="button"
+                                        class="km-link"
+                                        :disabled="locationLoading || (locationMeta?.current_page ?? 1) <= 1"
+                                        @click="
+                                            changeLocationPage(
+                                                (locationMeta?.current_page ?? 1) - 1,
+                                            )
+                                        "
+                                    >
+                                        Anterior
+                                    </button>
+                                    <span>
+                                        Página {{ locationMeta?.current_page ?? 1 }}
+                                        de
+                                        {{ locationMeta?.last_page ?? 1 }}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        class="km-link"
+                                        :disabled="
+                                            locationLoading ||
+                                                (locationMeta?.current_page ?? 1) >=
+                                                    (locationMeta?.last_page ?? 1)
+                                        "
+                                        @click="
+                                            changeLocationPage(
+                                                (locationMeta?.current_page ?? 1) + 1,
+                                            )
+                                        "
+                                    >
+                                        Siguiente
+                                    </button>
+                                </div>
                                 <InputError
                                     class="mt-1 text-xs text-rose-600"
                                     :message="form.errors.location_id"
@@ -368,6 +559,48 @@ const submit = () => {
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <div
+                    v-if="isEdit"
+                    class="mx-auto max-w-4xl p-6 km-card"
+                >
+                    <div class="flex items-center justify-between gap-2">
+                        <h2 class="text-lg font-semibold text-[color:var(--km-text)]">
+                            Historial de movimientos
+                        </h2>
+                        <span class="text-xs text-[color:var(--km-muted)]">
+                            Últimos 10 registros
+                        </span>
+                    </div>
+
+                    <div
+                        v-if="!movements.length"
+                        class="mt-3 text-sm text-[color:var(--km-muted)]"
+                    >
+                        Aún no hay movimientos registrados para este stock.
+                    </div>
+
+                    <ul v-else class="mt-4 divide-y divide-[color:var(--km-border)]">
+                        <li
+                            v-for="movement in movements"
+                            :key="movement.id"
+                            class="flex items-center justify-between py-2"
+                        >
+                            <div>
+                                <p class="text-sm font-medium text-[color:var(--km-text)] capitalize">
+                                    {{ movement.action }}
+                                </p>
+                                <p class="text-xs text-[color:var(--km-muted)]">
+                                    Antes: {{ movement.quantity_before ?? '—' }} ·
+                                    Después: {{ movement.quantity_after ?? '—' }}
+                                </p>
+                            </div>
+                            <div class="text-[11px] text-[color:var(--km-muted)]">
+                                {{ new Date(movement.created_at).toLocaleString('es-ES') }}
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>

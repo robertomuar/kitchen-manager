@@ -410,9 +410,30 @@ const exportReplenishmentPdf = () => {
                 <div class="km-card overflow-hidden">
                     <div
                         v-if="!stockItemsList.length"
-                        class="p-6 text-center text-[color:var(--km-muted)] text-sm"
+                        class="flex flex-col items-center gap-3 p-6 text-center text-[color:var(--km-muted)] text-sm"
                     >
-                        Todavía no tienes stock registrado (o los filtros no devuelven resultados).
+                        <div>
+                            Todavía no tienes stock registrado (o los filtros no devuelven resultados).
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-center gap-2">
+                            <Link
+                                :href="route('stock.create')"
+                                class="km-btn px-4 py-2 text-xs"
+                                aria-label="Crear tu primer registro de stock"
+                            >
+                                Crear registro
+                            </Link>
+
+                            <button
+                                type="button"
+                                class="km-link text-xs"
+                                aria-label="Limpiar filtros y ver todo el stock"
+                                @click="clearFilters"
+                            >
+                                Limpiar filtros
+                            </button>
+                        </div>
                     </div>
 
                     <div v-else class="overflow-x-auto">
@@ -489,6 +510,7 @@ const exportReplenishmentPdf = () => {
                                             <button
                                                 type="button"
                                                 class="km-link text-xs"
+                                                aria-label="Editar stock de {{ item.product?.name ?? 'producto' }}"
                                                 @click="goToEdit(item)"
                                             >
                                                 Editar
@@ -497,6 +519,7 @@ const exportReplenishmentPdf = () => {
                                             <button
                                                 type="button"
                                                 class="text-xs px-3 py-1 rounded-lg border border-rose-500/50 text-rose-600 hover:bg-rose-500/10"
+                                                aria-label="Borrar stock de {{ item.product?.name ?? 'producto' }}"
                                                 @click="deleteItem(item)"
                                             >
                                                 Borrar

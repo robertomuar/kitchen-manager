@@ -12,6 +12,7 @@ use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\StockItemController;
 use App\Http\Controllers\KitchenShareController;
+use App\Http\Controllers\KitchenSelectionController;
 use App\Http\Controllers\BarcodeLookupController;
 use App\Http\Controllers\SitemapController;
 
@@ -100,6 +101,7 @@ Route::get('/debug/barcode', function (Request $request) {
  * Lookup de código de barras (AJAX)
  */
 Route::post('/barcode/lookup', [BarcodeLookupController::class, 'lookup'])
+    ->middleware(['auth', 'verified', 'throttle:30,1'])
     ->name('barcode.lookup');
 
 // Todo lo privado va con auth + verified
@@ -108,30 +110,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // === DASHBOARD ===
     Route::get('/dashboard', function () {
         $user    = auth()->user();
+        $owner   = $user->kitchenOwner();
         $ownerId = $user->kitchenOwnerId();
+        $kitchenId = $owner->currentKitchen()?->id;
+
+        abort_if($kitchenId === null, 403, 'No hay una cocina activa seleccionada.');
 
         $today       = now()->startOfDay();
         $soonLimit   = $today->copy()->addDays(7);
         $urgentLimit = $today->copy()->addDays(2);
 
-        $stats = Cache::remember("dashboard.stats.{$ownerId}", 300, function () use ($ownerId, $today, $soonLimit, $urgentLimit) {
+        $stats = Cache::remember("dashboard.stats.{$ownerId}.{$kitchenId}", 300, function () use ($ownerId, $kitchenId, $today, $soonLimit, $urgentLimit) {
             return [
-                'products_count'       => Product::where('user_id', $ownerId)->count(),
-                'locations_count'      => Location::where('user_id', $ownerId)->count(),
-                'stock_items_count'    => StockItem::where('user_id', $ownerId)->count(),
+                'products_count'       => Product::where('user_id', $ownerId)->where('kitchen_id', $kitchenId)->count(),
+                'locations_count'      => Location::where('user_id', $ownerId)->where('kitchen_id', $kitchenId)->count(),
+                'stock_items_count'    => StockItem::where('user_id', $ownerId)->where('kitchen_id', $kitchenId)->count(),
 
                 'low_stock_count' => StockItem::where('user_id', $ownerId)
+                    ->where('kitchen_id', $kitchenId)
                     ->whereNotNull('min_quantity')
                     ->whereColumn('quantity', '<', 'min_quantity')
                     ->count(),
 
                 'soon_expiring_count' => StockItem::where('user_id', $ownerId)
+                    ->where('kitchen_id', $kitchenId)
                     ->whereNotNull('expires_at')
                     ->whereDate('expires_at', '>=', $today)
                     ->whereDate('expires_at', '<=', $soonLimit)
                     ->count(),
 
                 'urgent_expiring_count' => StockItem::where('user_id', $ownerId)
+                    ->where('kitchen_id', $kitchenId)
                     ->whereNotNull('expires_at')
                     ->whereDate('expires_at', '>=', $today)
                     ->whereDate('expires_at', '<=', $urgentLimit)
@@ -139,9 +148,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ];
         });
 
-        $lowStockItems = Cache::remember("dashboard.low-stock.{$ownerId}", 300, function () use ($ownerId) {
+        $lowStockItems = Cache::remember("dashboard.low-stock.{$ownerId}.{$kitchenId}", 300, function () use ($ownerId, $kitchenId) {
             return StockItem::with(['product', 'location'])
                 ->where('user_id', $ownerId)
+                ->where('kitchen_id', $kitchenId)
                 ->whereNotNull('min_quantity')
                 ->whereColumn('quantity', '<', 'min_quantity')
                 ->orderByDesc('updated_at')
@@ -149,9 +159,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->get();
         });
 
-        $soonExpiringItems = Cache::remember("dashboard.soon-expiring.{$ownerId}", 300, function () use ($ownerId, $today, $soonLimit) {
+        $soonExpiringItems = Cache::remember("dashboard.soon-expiring.{$ownerId}.{$kitchenId}", 300, function () use ($ownerId, $kitchenId, $today, $soonLimit) {
             return StockItem::with(['product', 'location'])
                 ->where('user_id', $ownerId)
+                ->where('kitchen_id', $kitchenId)
                 ->whereNotNull('expires_at')
                 ->whereDate('expires_at', '>=', $today)
                 ->whereDate('expires_at', '<=', $soonLimit)
@@ -171,6 +182,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::get('/products/options', [ProductController::class, 'options'])->name('products.options');
 
     // ✅ NUEVO: evita 405 en GET/HEAD /products/{id}
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
@@ -204,6 +216,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
     Route::get('/locations/create', [LocationController::class, 'create'])->name('locations.create');
     Route::get('/locations/{location}/edit', [LocationController::class, 'edit'])->name('locations.edit');
+    Route::get('/locations/options', [LocationController::class, 'options'])->name('locations.options');
 
     // ✅ NUEVO: evita 405 en GET/HEAD /locations/{id}
     Route::get('/locations/{location}', [LocationController::class, 'show'])->name('locations.show');
@@ -217,6 +230,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('kitchen.share.store');
     Route::delete('/kitchen/share/{share}', [KitchenShareController::class, 'destroy'])
         ->name('kitchen.share.destroy');
+
+    // === SELECCIONAR COCINA ===
+    Route::post('/kitchen/select', KitchenSelectionController::class)
+        ->name('kitchen.select');
 
     // === PERFIL ===
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

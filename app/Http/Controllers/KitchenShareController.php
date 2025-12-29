@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UserShare;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class KitchenShareController extends Controller
 {
@@ -20,31 +21,38 @@ class KitchenShareController extends Controller
             'email' => ['required', 'email', 'exists:users,email'],
         ]);
 
-        $invited = User::where('email', $data['email'])->firstOrFail();
+        [$share, $invitedEmail] = DB::transaction(function () use ($owner, $data) {
+            $invited = User::where('email', $data['email'])
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        if ($invited->id === $owner->id) {
-            return back()->withErrors([
-                'email' => 'No puedes compartir contigo mismo.',
-            ]);
-        }
+            if ($invited->id === $owner->id) {
+                abort(422, 'No puedes compartir contigo mismo.');
+            }
 
-        $share = UserShare::firstOrCreate(
-            [
-                'owner_id'        => $owner->id,
-                'invited_user_id' => $invited->id,
-            ],
-            [
-                'can_edit' => true,
-            ]
-        );
+            $share = UserShare::where('owner_id', $owner->id)
+                ->where('invited_user_id', $invited->id)
+                ->lockForUpdate()
+                ->first();
 
-        // Si el invitado no está actuando como nadie, lo ponemos a usar tu cocina.
-        if ($invited->acting_as_user_id === null) {
-            $invited->acting_as_user_id = $owner->id;
-            $invited->save();
-        }
+            if (! $share) {
+                $share = UserShare::create([
+                    'owner_id'        => $owner->id,
+                    'invited_user_id' => $invited->id,
+                    'can_edit'        => true,
+                ]);
+            }
 
-        return back()->with('success', 'Has compartido tu cocina con ' . $invited->email);
+            // Si el invitado no está actuando como nadie, lo ponemos a usar tu cocina.
+            if ($invited->acting_as_user_id === null) {
+                $invited->acting_as_user_id = $owner->id;
+                $invited->save();
+            }
+
+            return [$share, $invited->email];
+        });
+
+        return back()->with('success', 'Has compartido tu cocina con ' . $invitedEmail);
     }
 
     /**
@@ -54,19 +62,27 @@ class KitchenShareController extends Controller
     {
         $owner = $request->user();
 
-        if ($share->owner_id !== $owner->id) {
-            abort(403);
-        }
+        DB::transaction(function () use ($owner, $share) {
+            $shareLocked = UserShare::whereKey($share->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $invited = $share->invitedUser;
+            if ($shareLocked->owner_id !== $owner->id) {
+                abort(403);
+            }
 
-        $share->delete();
+            $invited = User::where('id', $shareLocked->invited_user_id)
+                ->lockForUpdate()
+                ->first();
 
-        // Si el invitado estaba usando esta cocina, lo devolvemos a la suya
-        if ($invited && $invited->acting_as_user_id === $owner->id) {
-            $invited->acting_as_user_id = null;
-            $invited->save();
-        }
+            $shareLocked->delete();
+
+            // Si el invitado estaba usando esta cocina, lo devolvemos a la suya
+            if ($invited && $invited->acting_as_user_id === $owner->id) {
+                $invited->acting_as_user_id = null;
+                $invited->save();
+            }
+        });
 
         return back()->with('success', 'Has revocado el acceso a tu cocina.');
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StockItemRequest extends FormRequest
 {
@@ -21,9 +22,22 @@ class StockItemRequest extends FormRequest
      */
     public function rules(): array
     {
+        $ownerId = $this->user()?->kitchenOwnerId();
+        $kitchenId = $this->user()?->kitchenOwner()->currentKitchen()?->id;
+
         return [
-            'product_id'    => ['required', 'exists:products,id'],
-            'location_id'   => ['nullable', 'exists:locations,id'],
+            'product_id'    => [
+                'required',
+                Rule::exists('products', 'id')
+                    ->where('user_id', $ownerId)
+                    ->where('kitchen_id', $kitchenId),
+            ],
+            'location_id'   => [
+                'nullable',
+                Rule::exists('locations', 'id')
+                    ->where('user_id', $ownerId)
+                    ->where('kitchen_id', $kitchenId),
+            ],
             'quantity'      => ['required', 'numeric', 'min:0'],
             'unit'          => ['nullable', 'string', 'max:20'],
             'min_quantity'  => ['nullable', 'numeric', 'min:0'],
