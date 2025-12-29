@@ -165,6 +165,21 @@ const changeLocationPage = (page) => {
     fetchLocationOptions(page);
 };
 
+function clampOpenUnits() {
+    const quantityNumber = Math.max(
+        0,
+        Math.trunc(Number(form.quantity ?? 0) || 0),
+    );
+    const openUnitsNumber = Math.trunc(Number(form.open_units ?? 0));
+
+    const clampedOpenUnits = Number.isFinite(openUnitsNumber)
+        ? Math.min(Math.max(openUnitsNumber, 0), quantityNumber)
+        : 0;
+
+    form.open_units = clampedOpenUnits;
+    form.is_open = clampedOpenUnits > 0;
+}
+
 watch(productSearch, () => {
     clearTimeout(productSearchTimeout);
     productSearchTimeout = setTimeout(() => fetchProductOptions(1), 250);
@@ -191,19 +206,6 @@ onMounted(() => {
     fetchProductOptions();
     fetchLocationOptions();
 });
-
-const clampOpenUnits = () => {
-    const quantityNumber = Number(form.quantity ?? 0) || 0;
-    const openUnitsNumber = Number(form.open_units ?? 0);
-
-    if (!Number.isFinite(openUnitsNumber) || openUnitsNumber < 0) {
-        form.open_units = 0;
-    } else if (openUnitsNumber > quantityNumber) {
-        form.open_units = quantityNumber;
-    }
-
-    form.is_open = Number(form.open_units ?? 0) > 0;
-};
 
 // Autorellenar desde producto en modo create
 watch(
