@@ -100,6 +100,7 @@ const routeMap = {
         `/products/${encodeURIComponent(normalizeId(product))}`,
     'products.destroy': (product) =>
         `/products/${encodeURIComponent(normalizeId(product))}`,
+    'products.options': () => '/products/options',
 
     // --- Stock ---
     'stock.index': () => '/stock',
@@ -123,6 +124,7 @@ const routeMap = {
         `/locations/${encodeURIComponent(normalizeId(location))}`,
     'locations.destroy': (location) =>
         `/locations/${encodeURIComponent(normalizeId(location))}`,
+    'locations.options': () => '/locations/options',
 
     // --- Compartir cocina ---
     'kitchen.share.store': () => '/kitchen/share',
