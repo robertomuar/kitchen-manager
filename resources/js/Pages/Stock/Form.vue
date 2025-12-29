@@ -65,9 +65,28 @@ const isEdit = computed(
     () => props.mode === 'edit' || !!baseItem?.id,
 );
 
+const selectedProduct = computed(() => {
+    const fromOptions = productOptions.value.find(
+        (p) => String(p.id) === String(form.product_id),
+    );
+
+    return fromOptions ?? baseItem?.product ?? null;
+});
+
+const unitHelper = computed(() => {
+    const product = selectedProduct.value;
+
+    if (product?.default_quantity && product?.default_unit) {
+        return `1 unidad = ${product.default_quantity}${product.default_unit}`;
+    }
+
+    return '';
+});
+
 const form = useCsrfForm({
     product_id: baseItem?.product_id ?? '',
     quantity: baseItem?.quantity ?? '',
+    open_units: baseItem?.open_units ?? (baseItem?.is_open ? 1 : 0),
     unit: baseItem?.unit ?? '',
     location_id: baseItem?.location_id ?? '',
     min_quantity: baseItem?.min_quantity ?? '',
@@ -156,10 +175,35 @@ watch(locationSearch, () => {
     locationSearchTimeout = setTimeout(() => fetchLocationOptions(1), 250);
 });
 
+watch(
+    () => form.quantity,
+    () => clampOpenUnits(),
+);
+
+watch(
+    () => form.open_units,
+    () => clampOpenUnits(),
+);
+
+clampOpenUnits();
+
 onMounted(() => {
     fetchProductOptions();
     fetchLocationOptions();
 });
+
+const clampOpenUnits = () => {
+    const quantityNumber = Number(form.quantity ?? 0) || 0;
+    const openUnitsNumber = Number(form.open_units ?? 0);
+
+    if (!Number.isFinite(openUnitsNumber) || openUnitsNumber < 0) {
+        form.open_units = 0;
+    } else if (openUnitsNumber > quantityNumber) {
+        form.open_units = quantityNumber;
+    }
+
+    form.is_open = Number(form.open_units ?? 0) > 0;
+};
 
 // Autorellenar desde producto en modo create
 watch(
@@ -320,7 +364,7 @@ const submit = () => {
                                     for="quantity"
                                     class="block text-sm font-medium text-[color:var(--km-text)]"
                                 >
-                                    Cantidad *
+                                    Cantidad (unidades) *
                                 </label>
                                 <input
                                     id="quantity"
@@ -332,6 +376,12 @@ const submit = () => {
                                     class="km-input"
                                     placeholder="1"
                                 />
+                                <p
+                                    v-if="unitHelper"
+                                    class="text-xs text-[color:var(--km-muted)]"
+                                >
+                                    {{ unitHelper }}
+                                </p>
                                 <InputError
                                     class="mt-1 text-xs text-rose-600"
                                     :message="form.errors.quantity"
@@ -501,28 +551,27 @@ const submit = () => {
 
                             <div class="space-y-2 md:col-span-2">
                                 <label
-                                    class="inline-flex items-center gap-2 mt-6"
+                                    for="open_units"
+                                    class="block text-sm font-medium text-[color:var(--km-text)] mt-6"
                                 >
-                                    <input
-                                        id="is_open"
-                                        v-model="form.is_open"
-                                        type="checkbox"
-                                        class="h-4 w-4 rounded border-[color:var(--km-border)] text-[color:var(--km-accent)] focus:ring-[color:var(--km-ring)]"
-                                    />
-                                    <span
-                                        class="text-sm font-medium text-[color:var(--km-text)]"
-                                    >
-                                        Envase abierto
-                                    </span>
+                                    Unidades abiertas
                                 </label>
+                                <input
+                                    id="open_units"
+                                    v-model.number="form.open_units"
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    :max="form.quantity || 0"
+                                    class="km-input"
+                                    placeholder="0"
+                                />
                                 <p class="text-xs text-[color:var(--km-muted)]">
-                                    Marca esta opción si el paquete ya está
-                                    empezado, para saber qué productos usar
-                                    primero.
+                                    Las unidades abiertas restan disponibilidad. No puede superar la cantidad total.
                                 </p>
                                 <InputError
                                     class="mt-1 text-xs text-rose-600"
-                                    :message="form.errors.is_open"
+                                    :message="form.errors.open_units"
                                 />
                             </div>
                         </div>

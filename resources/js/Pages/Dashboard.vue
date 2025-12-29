@@ -301,7 +301,15 @@ const goToStock = () => {
                                     <td
                                         class="whitespace-nowrap text-sm text-[color:var(--km-text)]"
                                     >
-                                        {{ item.quantity }} {{ item.unit }}
+                                        <div class="font-medium text-[color:var(--km-text)]">
+                                            {{ item.available_units }} uds disponibles
+                                        </div>
+                                        <div class="text-xs text-[color:var(--km-muted)]">
+                                            {{ item.quantity }} {{ item.unit || 'uds' }}
+                                            <span v-if="(item.open_units ?? 0) > 0">
+                                                ({{ item.open_units }} abiertas)
+                                            </span>
+                                        </div>
                                     </td>
                                     <td
                                         class="whitespace-nowrap text-sm text-[color:var(--km-text)]"

@@ -39,6 +39,7 @@ class StockItemRequest extends FormRequest
                     ->where('kitchen_id', $kitchenId),
             ],
             'quantity'      => ['required', 'numeric', 'min:0'],
+            'open_units'    => ['nullable', 'integer', 'min:0', 'lte:quantity'],
             'unit'          => ['nullable', 'string', 'max:20'],
             'min_quantity'  => ['nullable', 'numeric', 'min:0'],
             'expires_at'    => ['nullable', 'date'],
