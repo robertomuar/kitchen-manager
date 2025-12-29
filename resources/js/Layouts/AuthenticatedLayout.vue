@@ -3,9 +3,10 @@ import { ref, computed } from 'vue';
 import AppMark from '@/Components/AppMark.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
+import KitchenSwitcher from '@/Components/KitchenSwitcher.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, usePage, router } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { getCsrfToken } from '@/bootstrap';
 
 const showingNavigationDropdown = ref(false);
@@ -13,10 +14,7 @@ const showingNavigationDropdown = ref(false);
 const page = usePage();
 const isAdmin = computed(() => !!page.props?.auth?.user?.is_admin);
 
-const kitchenData = computed(() => page.props?.kitchens ?? null);
-const kitchenOptions = computed(() => kitchenData.value?.available ?? []);
-const currentKitchen = computed(() => kitchenData.value?.current ?? null);
-const kitchenSelectValue = computed(() => currentKitchen.value?.id ?? '');
+const kitchens = computed(() => page.props?.kitchens ?? null);
 
 // ✅ detectar si estamos en /admin para marcar “active” sin depender de Ziggy
 const currentUrl = computed(() => page.url ?? '');
@@ -27,20 +25,6 @@ const inAdminDb = computed(() => currentUrl.value.startsWith('/admin/db'));
 // evitar usar valores antiguos cuando la sesión se renueva o el token rota.
 const resolveCsrfToken = () => getCsrfToken() ?? '';
 
-const onKitchenChange = (event) => {
-    const target = event?.target;
-    const kitchenId = target?.value;
-
-    if (!kitchenId || kitchenId === kitchenSelectValue.value) {
-        return;
-    }
-
-    router.post(
-        route('kitchen.select'),
-        { kitchen_id: kitchenId },
-        { preserveScroll: true, preserveState: false },
-    );
-};
 </script>
 
 <template>
@@ -58,9 +42,9 @@ const onKitchenChange = (event) => {
         <div class="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col px-4">
             <!-- Navbar -->
             <nav
-                class="relative z-20 mt-4 mb-4 flex h-14 items-center justify-between rounded-2xl px-3 py-2 km-card"
+                class="relative z-20 mt-4 mb-4 flex h-14 items-center justify-between gap-3 rounded-2xl px-3 py-2 km-card"
             >
-                <div class="flex items-center gap-4">
+                <div class="min-w-0 flex items-center gap-4">
                     <!-- Logo + nombre app -->
                     <div class="flex items-center gap-2">
                         <Link :href="route('dashboard')">
@@ -134,36 +118,10 @@ const onKitchenChange = (event) => {
                 </div>
 
                 <!-- Zona derecha (usuario / logout) -->
-                <div class="hidden items-center gap-4 sm:flex">
-                    <div
-                        v-if="kitchenOptions.length"
-                        class="flex items-center gap-2"
-                    >
-                        <label for="kitchen_switcher" class="sr-only">
-                            Seleccionar cocina
-                        </label>
-                        <span
-                            v-if="currentKitchen?.color"
-                            class="inline-flex h-3 w-3 rounded-full border border-[color:var(--km-border)]"
-                            :style="{ backgroundColor: currentKitchen.color || 'transparent' }"
-                        ></span>
-                        <select
-                            id="kitchen_switcher"
-                            class="km-input h-9 w-44 text-xs"
-                            :value="kitchenSelectValue"
-                            @change="onKitchenChange"
-                        >
-                            <option
-                                v-for="kitchen in kitchenOptions"
-                                :key="kitchen.id"
-                                :value="kitchen.id"
-                            >
-                                {{ kitchen.name }}
-                            </option>
-                        </select>
-                    </div>
+                <div class="hidden items-center gap-3 sm:flex">
+                    <KitchenSwitcher v-if="kitchens" />
 
-                    <div class="text-xs text-[color:var(--km-muted)]">
+                    <div class="max-w-[12rem] truncate text-xs text-[color:var(--km-muted)]">
                         {{ $page.props.auth.user.email }}
                     </div>
 
@@ -312,30 +270,8 @@ const onKitchenChange = (event) => {
                     </ResponsiveNavLink>
                 </div>
 
-                <div
-                    v-if="kitchenOptions.length"
-                    class="mt-3 space-y-2 rounded-xl border border-[color:var(--km-border)] bg-[color:var(--km-bg-2)] p-3"
-                >
-                    <label
-                        for="mobile_kitchen_switcher"
-                        class="block text-xs font-medium text-[color:var(--km-text)]"
-                    >
-                        Seleccionar cocina
-                    </label>
-                    <select
-                        id="mobile_kitchen_switcher"
-                        class="km-input h-10 text-sm"
-                        :value="kitchenSelectValue"
-                        @change="onKitchenChange"
-                    >
-                        <option
-                            v-for="kitchen in kitchenOptions"
-                            :key="kitchen.id"
-                            :value="kitchen.id"
-                        >
-                            {{ kitchen.name }}
-                        </option>
-                    </select>
+                <div v-if="kitchens" class="mt-3">
+                    <KitchenSwitcher class="w-full" />
                 </div>
 
                 <!-- Opciones de usuario móviles -->
