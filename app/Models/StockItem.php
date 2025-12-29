@@ -59,7 +59,7 @@ class StockItem extends Model
             return false;
         }
 
-        return (float) $this->available_units < (float) $this->min_quantity;
+        return (float) $this->available_units <= (float) $this->min_quantity;
     }
 
     public function getAvailableUnitsAttribute(): float
