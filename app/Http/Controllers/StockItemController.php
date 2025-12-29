@@ -31,7 +31,7 @@ class StockItemController extends Controller
         $sort       = $request->input('sort', 'expires_at');
         $direction  = $request->input('direction', 'asc');
 
-        $availableSql = 'CASE WHEN (quantity - open_units) < 0 THEN 0 ELSE (quantity - open_units) END';
+        $availableSql = 'CASE WHEN (quantity - COALESCE(open_units, 0)) < 0 THEN 0 ELSE (quantity - COALESCE(open_units, 0)) END';
 
         $query = StockItem::with(['product', 'location'])
             ->where('user_id', $ownerId)
@@ -47,11 +47,11 @@ class StockItemController extends Controller
 
         if ($status === 'low') {
             $query->whereNotNull('min_quantity')
-                ->whereRaw("{$availableSql} < min_quantity");
+                ->whereRaw("{$availableSql} <= min_quantity");
         } elseif ($status === 'normal') {
             $query->where(function ($q) use ($availableSql) {
                 $q->whereNull('min_quantity')
-                    ->orWhereRaw("{$availableSql} >= min_quantity");
+                    ->orWhereRaw("{$availableSql} > min_quantity");
             });
         }
 
@@ -387,13 +387,13 @@ class StockItemController extends Controller
         $productId  = $request->query('product_id');
         $locationId = $request->query('location_id');
 
-        $availableSql = 'CASE WHEN (quantity - open_units) < 0 THEN 0 ELSE (quantity - open_units) END';
+        $availableSql = 'CASE WHEN (quantity - COALESCE(open_units, 0)) < 0 THEN 0 ELSE (quantity - COALESCE(open_units, 0)) END';
 
         $query = StockItem::with(['product', 'location'])
             ->where('user_id', $ownerId)
             ->where('kitchen_id', $kitchenId)
             ->whereNotNull('min_quantity')
-            ->whereRaw("{$availableSql} < min_quantity");
+            ->whereRaw("{$availableSql} <= min_quantity");
 
         if (!empty($productId)) {
             $query->where('product_id', $productId);
@@ -454,13 +454,13 @@ class StockItemController extends Controller
         $productId  = $request->query('product_id');
         $locationId = $request->query('location_id');
 
-        $availableSql = 'CASE WHEN (quantity - open_units) < 0 THEN 0 ELSE (quantity - open_units) END';
+        $availableSql = 'CASE WHEN (quantity - COALESCE(open_units, 0)) < 0 THEN 0 ELSE (quantity - COALESCE(open_units, 0)) END';
 
         $query = StockItem::with(['product', 'location'])
             ->where('user_id', $ownerId)
             ->where('kitchen_id', $kitchenId)
             ->whereNotNull('min_quantity')
-            ->whereRaw("{$availableSql} < min_quantity");
+            ->whereRaw("{$availableSql} <= min_quantity");
 
         if (!empty($productId)) {
             $query->where('product_id', $productId);

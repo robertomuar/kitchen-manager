@@ -66,6 +66,44 @@ class StockUnitsTest extends TestCase
         $this->assertTrue($item->is_below_minimum);
     }
 
+    public function test_low_stock_includes_equal_available_units(): void
+    {
+        [$user, $kitchen] = $this->createUserWithKitchen();
+        $product = $this->createProduct($user, $kitchen);
+
+        $item = StockItem::create([
+            'user_id'      => $user->id,
+            'kitchen_id'   => $kitchen->id,
+            'product_id'   => $product->id,
+            'quantity'     => 2,
+            'open_units'   => 1,
+            'unit'         => 'unidad',
+            'min_quantity' => 1,
+        ]);
+
+        $this->assertSame(1.0, $item->available_units);
+        $this->assertTrue($item->is_below_minimum);
+    }
+
+    public function test_low_stock_is_false_when_above_minimum(): void
+    {
+        [$user, $kitchen] = $this->createUserWithKitchen();
+        $product = $this->createProduct($user, $kitchen);
+
+        $item = StockItem::create([
+            'user_id'      => $user->id,
+            'kitchen_id'   => $kitchen->id,
+            'product_id'   => $product->id,
+            'quantity'     => 2,
+            'open_units'   => 0,
+            'unit'         => 'unidad',
+            'min_quantity' => 1,
+        ]);
+
+        $this->assertSame(2.0, $item->available_units);
+        $this->assertFalse($item->is_below_minimum);
+    }
+
     public function test_open_units_cannot_exceed_quantity(): void
     {
         [$user, $kitchen] = $this->createUserWithKitchen();

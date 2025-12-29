@@ -116,10 +116,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         abort_if($kitchenId === null, 403, 'No hay una cocina activa seleccionada.');
 
-        $today       = now()->startOfDay();
-        $soonLimit   = $today->copy()->addDays(7);
-        $urgentLimit = $today->copy()->addDays(2);
-        $availableSql = 'CASE WHEN (quantity - open_units) < 0 THEN 0 ELSE (quantity - open_units) END';
+        $today         = now()->startOfDay();
+        $soonLimit     = $today->copy()->addDays(7);
+        $urgentLimit   = $today->copy()->addDays(2);
+        $availableSql  = 'CASE WHEN (quantity - COALESCE(open_units, 0)) < 0 THEN 0 ELSE (quantity - COALESCE(open_units, 0)) END';
 
         $stats = Cache::remember("dashboard.stats.{$ownerId}.{$kitchenId}", 300, function () use ($ownerId, $kitchenId, $today, $soonLimit, $urgentLimit) {
             return [
@@ -130,7 +130,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'low_stock_count' => StockItem::where('user_id', $ownerId)
                     ->where('kitchen_id', $kitchenId)
                     ->whereNotNull('min_quantity')
-                    ->whereRaw("{$availableSql} < min_quantity")
+                    ->whereRaw("{$availableSql} <= min_quantity")
                     ->count(),
 
                 'soon_expiring_count' => StockItem::where('user_id', $ownerId)
@@ -154,7 +154,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->where('user_id', $ownerId)
                 ->where('kitchen_id', $kitchenId)
                 ->whereNotNull('min_quantity')
-                ->whereRaw("{$availableSql} < min_quantity")
+                ->whereRaw("{$availableSql} <= min_quantity")
                 ->orderByDesc('updated_at')
                 ->take(5)
                 ->get();
